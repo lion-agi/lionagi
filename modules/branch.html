@@ -3,40 +3,41 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Abstract Concepts" href="concepts.html" /><link rel="prev" title="Adapter" href="adapter.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Abstract Concepts" href="concepts.html" /><link rel="prev" title="Branch-Level Operations" href="branch_operations.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Branch - LionAGI Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+        <title>Branch: The Orchestrator - LionAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -213,23 +214,26 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="action.html">Action</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Branch: The Orchestrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="event.html">Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail</a></li>
-<li class="toctree-l2"><a class="reference internal" href="message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processor.html">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
@@ -238,11 +242,12 @@
 <li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -283,217 +288,47 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="branch">
-<h1>Branch<a class="headerlink" href="#branch" title="Link to this heading">¶</a></h1>
-<p>A <strong>Branch</strong> in LionAGI coordinates multiple subsystems—<strong>messages</strong>,
-<strong>tools</strong> (action manager), <strong>models</strong> (iModel manager), and <strong>logs</strong>—into
-a single “conversation or operation” context. It acts as a high-level
-orchestrator for conversation flows, tool invocation, log recording,
-and even inter-branch messaging (via a <code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code>).</p>
-<section id="module-lionagi.session.branch">
-<span id="the-branch-class"></span><h2>1. The <code class="docutils literal notranslate"><span class="pre">Branch</span></code> Class<a class="headerlink" href="#module-lionagi.session.branch" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.session.branch.Branch">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.session.branch.</span></span><span class="sig-name descname"><span class="pre">Branch</span></span><a class="headerlink" href="#lionagi.session.branch.Branch" title="Link to this definition">¶</a></dt>
-<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Communicatable</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code></p>
-<p>A Branch in LionAGI ties together:</p>
+          <section id="module-lionagi.session.branch">
+<span id="branch-the-orchestrator"></span><span id="lionagi-branch-class"></span><h1>Branch: The Orchestrator<a class="headerlink" href="#module-lionagi.session.branch" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code> represents a single “branch” of conversation in LionAGI.
+It <strong>manages</strong>:</p>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MessageManager</span></code> (<cite>msgs</cite> property):
-Manages conversation messages. Provides adding instructions, assistant
-responses, or other specialized messages.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code> (<cite>acts</cite> property):
-Registers and invokes <strong>tools</strong> (functions). E.g. calls
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">ActionManager.invoke(...)()</span></code> for a given function name + arguments.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">iModelManager</span></code> (<cite>mdls</cite> property):
-Holds references to a “chat” model and a “parse” model,
-enabling LLM calls for both conversation and parsing tasks.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code>:
-For storing logs when the user or system performs an action
-or receives new data.</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mailbox</span></code>:
-A <code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code> for sending/receiving “Mail” objects to other
-branches or external systems in a multi-agent scenario.</p></li>
+<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code> for storing logs,</p></li>
+<li><p>A <a class="reference internal" href="log.html#lionagi.protocols.generic.log.LogManagerConfig" title="lionagi.protocols.generic.log.LogManagerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManagerConfig</span></code></a> (if needed),</p></li>
+<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code> as the base object,</p></li>
+<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Communicatable</span></code> mailbox for cross-branch communication,</p></li>
+<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code> link,</p></li>
+<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">SenderRecipient</span></code> to identify user or role,</p></li>
+<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">MessageManager</span></code> for messages (system instructions, user instructions, model responses),</p></li>
+<li><p>An <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code> for tools,</p></li>
+<li><p>An <code class="xref py py-class docutils literal notranslate"><span class="pre">iModelManager</span></code> for multiple LLM or model references (like “chat”, “parse”),</p></li>
+<li><p>Utility methods for “chat,” “operate,” “parse,” “act,” etc. (documented in <a class="reference internal" href="branch_operations.html#lionagi-branch-operations"><span class="std std-ref">Branch-Level Operations</span></a>).</p></li>
 </ul>
-<p><strong>Key Methods</strong>:</p>
+</section>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
+</section>
+<section id="branch">
+<h2>Branch<a class="headerlink" href="#branch" title="Link to this heading">¶</a></h2>
+</section>
+<section id="key-differences-from-a-basic-session">
+<h2>Key Differences from a Basic Session<a class="headerlink" href="#key-differences-from-a-basic-session" title="Link to this heading">¶</a></h2>
+<p>Where a simpler “session” might just store messages + call an LLM,
+<strong>Branch</strong> expands that concept by:</p>
 <ul class="simple">
-<li><p><strong>Conversation</strong>:</p>
-<ul>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">communicate(...)()</span></code>:
-A simpler approach to sending user instructions to the LLM
-(the chat model) and optionally parsing the result into
-a Pydantic model.</p></li>
+<li><p>Integrating advanced log management with a <code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code>.</p></li>
+<li><p>Holding a mailbox (like an email or queue system) so that branches
+can pass <code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code> objects to each other.</p></li>
+<li><p>Tying in a <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code> for immediate function or tool calls.</p></li>
+<li><p>Potentially linking to a “Graph” node or referencing relations
+(due to the <code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code> inheritance).</p></li>
+<li><p>Providing <strong>clone</strong> operations if you want to copy the conversation
+state to a new branch.</p></li>
 </ul>
-</li>
-<li><p><strong>Action</strong>:</p>
-<ul>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke_action(...)()</span></code>:
-Directly calls the <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code> to run a tool
-with arguments provided (from an <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code>
-object or dict).</p></li>
-</ul>
-</li>
-<li><p><strong>Orchestration</strong>:</p>
-<ul>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">operate(...)()</span></code>:
-A more advanced flow that can unify conversation
-(“chat” with the LLM) <strong>and</strong> tool invocation in one step,
-guided by an <code class="xref py py-class docutils literal notranslate"><span class="pre">Operative</span></code> or typed request/response
-definitions.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse(...)()</span></code>:
-Attempts to parse or validate the raw LLM response
-(string) into structured data, using the “parse” model
-from the iModelManager or fallback logic.</p></li>
-</ul>
-</li>
-<li><p><strong>Mail</strong>:</p>
-<ul>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">send(...)()</span></code> / <code class="xref py py-meth docutils literal notranslate"><span class="pre">receive(...)()</span></code>:
-Moves data in or out of the mailbox to other branches.
-E.g. you might “send” a tool or message to another agent
-(branch), or “receive” an iModel from them.</p></li>
-</ul>
-</li>
-</ul>
-<p><strong>Usage Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.session.branch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Branch</span>
-
-<span class="c1"># 1) Create a Branch</span>
-<span class="n">branch</span> <span class="o">=</span> <span class="n">Branch</span><span class="p">(</span>
-    <span class="n">user</span><span class="o">=</span><span class="s2">&quot;external_user&quot;</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ChatBranch&quot;</span>
-<span class="p">)</span>
-
-<span class="c1"># 2) Add some message or system context</span>
-<span class="n">branch</span><span class="o">.</span><span class="n">msgs</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span>
-    <span class="n">system</span><span class="o">=</span><span class="s2">&quot;You are a system with advanced knowledge...&quot;</span>
-<span class="p">)</span>
-
-<span class="c1"># 3) Communicate with the LLM</span>
-<span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">branch</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
-    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">,</span>
-    <span class="n">guidance</span><span class="o">=</span><span class="s2">&quot;Be concise&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-<span class="c1"># =&gt; raw text from the chat model</span>
-
-<span class="c1"># 4) Tools</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
-
-<span class="n">branch</span><span class="o">.</span><span class="n">acts</span><span class="o">.</span><span class="n">register_tool</span><span class="p">(</span><span class="n">add</span><span class="p">)</span>
-<span class="c1"># or</span>
-<span class="c1"># branch.invoke_action({&quot;function&quot;: &quot;add&quot;, &quot;arguments&quot;: {&quot;x&quot;:1,&quot;y&quot;:2}})</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</section>
-<section id="branch-detailed-apis">
-<h2>2. Branch Detailed APIs<a class="headerlink" href="#branch-detailed-apis" title="Link to this heading">¶</a></h2>
-<dl class="py method">
-<dt class="sig sig-object py" id="lionagi.session.branch.operate">
-<span class="sig-prename descclassname"><span class="pre">lionagi.session.branch.</span></span><span class="sig-name descname"><span class="pre">operate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.session.branch.operate" title="Link to this definition">¶</a></dt>
-<dd><p>The “big orchestrator” method that can both converse with the model
-<strong>and</strong> check if any tools were requested. If so, it automatically
-calls <a class="reference internal" href="#lionagi.session.branch.invoke_action" title="lionagi.session.branch.invoke_action"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke_action()</span></code></a>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lionagi.session.branch.communicate">
-<span class="sig-prename descclassname"><span class="pre">lionagi.session.branch.</span></span><span class="sig-name descname"><span class="pre">communicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.session.branch.communicate" title="Link to this definition">¶</a></dt>
-<dd><p>A simpler method for calling the chat model with a new user instruction.
-If you want no “tool invocation,” this is often enough.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lionagi.session.branch.parse">
-<span class="sig-prename descclassname"><span class="pre">lionagi.session.branch.</span></span><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.session.branch.parse" title="Link to this definition">¶</a></dt>
-<dd><p>Helper to re-check or refine an LLM response using
-the “parse model,” potentially applying fuzzy matching
-or partial validation.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="lionagi.session.branch.invoke_action">
-<span class="sig-prename descclassname"><span class="pre">lionagi.session.branch.</span></span><span class="sig-name descname"><span class="pre">invoke_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.session.branch.invoke_action" title="Link to this definition">¶</a></dt>
-<dd><p>A direct call to <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager.invoke(...)</span></code>,
-but integrated into the branch’s logs and message system.</p>
-</dd></dl>
-
-</section>
-<section id="multi-branch-multi-agent-usage">
-<h2>3. Multi-branch / Multi-agent Usage<a class="headerlink" href="#multi-branch-multi-agent-usage" title="Link to this heading">¶</a></h2>
-<p>If you have multiple <a class="reference internal" href="#lionagi.session.branch.Branch" title="lionagi.session.branch.Branch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code></a> objects, you can treat them
-like separate “agents” or conversation threads:</p>
-<ol class="arabic simple">
-<li><p>Each has its own messages, tools, iModels, logs, and a mailbox.</p></li>
-<li><p>You can <code class="xref py py-meth docutils literal notranslate"><span class="pre">send()</span></code> a package from one branch’s mailbox
-to another’s ID. The second branch must <code class="xref py py-meth docutils literal notranslate"><span class="pre">receive()</span></code> it
-to incorporate that new data (which might be a new tool,
-a new system message, or an updated model).</p></li>
-</ol>
-<p>The mailbox approach fosters a <strong>loose coupling</strong>: branches only
-exchange exactly what you mail.</p>
-</section>
-<section id="cloning-a-branch">
-<h2>4. Cloning a Branch<a class="headerlink" href="#cloning-a-branch" title="Link to this heading">¶</a></h2>
-<dl class="py method">
-<dt class="sig sig-object py" id="lionagi.session.branch.clone">
-<span class="sig-prename descclassname"><span class="pre">lionagi.session.branch.</span></span><span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.session.branch.Branch" title="lionagi.session.branch.Branch"><span class="pre">Branch</span></a></span></span><a class="headerlink" href="#lionagi.session.branch.clone" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p>Duplicates all messages, logs, and tools into a new instance:</p>
-<ul class="simple">
-<li><p>Typically used if you want to “branch out” the conversation
-or scenario from a given state, preserving all data so far
-but continuing in a new direction.</p></li>
-<li><p>The optional <code class="docutils literal notranslate"><span class="pre">sender</span></code> argument sets the <strong>sender</strong> ID on
-all cloned messages.</p></li>
-</ul>
-</section>
-<section id="example-flow">
-<h2>5. Example Flow<a class="headerlink" href="#example-flow" title="Link to this heading">¶</a></h2>
-<p>Below is a short pseudo-code showing usage:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.session.branch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Branch</span>
-
-<span class="c1"># 1) Create initial branch</span>
-<span class="n">br</span> <span class="o">=</span> <span class="n">Branch</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ExampleBranch&quot;</span><span class="p">)</span>
-
-<span class="c1"># 2) Communicate with LLM</span>
-<span class="n">res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">br</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;Summarize recent logs&quot;</span><span class="p">)</span>
-
-<span class="c1"># 3) Suppose we want to parse the response with a custom model</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">SummModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">summary</span><span class="p">:</span> <span class="nb">str</span>
-
-<span class="n">summary_res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">br</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
-    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;Now parse the summary properly&quot;</span><span class="p">,</span>
-    <span class="n">response_format</span><span class="o">=</span><span class="n">SummModel</span>
-<span class="p">)</span>
-<span class="c1"># =&gt; returns a SummModel instance with a &#39;summary&#39; field</span>
-
-<span class="c1"># 4) If we define a tool that processes the summary:</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">refine_summary</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">text</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span>  <span class="c1"># truncated for example</span>
-
-<span class="n">br</span><span class="o">.</span><span class="n">acts</span><span class="o">.</span><span class="n">register_tool</span><span class="p">(</span><span class="n">refine_summary</span><span class="p">)</span>
-<span class="c1"># 5) Possibly operate</span>
-<span class="n">final</span> <span class="o">=</span> <span class="k">await</span> <span class="n">br</span><span class="o">.</span><span class="n">operate</span><span class="p">(</span>
-    <span class="n">instruction</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="s2">&quot;Refine the existing summary&quot;</span><span class="p">},</span>
-    <span class="n">actions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># allow or require tool usage</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
-<p><strong>Branch</strong> ties together multiple sub-managers (messages, actions, iModels, logs)
-and provides high-level methods (like <a class="reference internal" href="#lionagi.session.branch.operate" title="lionagi.session.branch.operate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">operate()</span></code></a>) that handle <strong>both</strong>
-LLM calls and <strong>tool invocation</strong> seamlessly. For advanced multi-agent or
-multi-step scenarios, the Branch class is your main orchestrator, ensuring
-<strong>consistency</strong> and <strong>integration</strong> among the subsystems.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -511,14 +346,14 @@ multi-step scenarios, the Branch class is your main orchestrator, ensuring
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="adapter.html">
+          <a class="prev-page" href="branch_operations.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Adapter</div>
+                <div class="title">Branch-Level Operations</div>
                 
               </div>
             </a>
@@ -552,25 +387,11 @@ multi-step scenarios, the Branch class is your main orchestrator, ensuring
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Branch</a><ul>
-<li><a class="reference internal" href="#module-lionagi.session.branch">1. The <code class="docutils literal notranslate"><span class="pre">Branch</span></code> Class</a><ul>
-<li><a class="reference internal" href="#lionagi.session.branch.Branch"><code class="docutils literal notranslate"><span class="pre">Branch</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#branch-detailed-apis">2. Branch Detailed APIs</a><ul>
-<li><a class="reference internal" href="#lionagi.session.branch.operate"><code class="docutils literal notranslate"><span class="pre">operate()</span></code></a></li>
-<li><a class="reference internal" href="#lionagi.session.branch.communicate"><code class="docutils literal notranslate"><span class="pre">communicate()</span></code></a></li>
-<li><a class="reference internal" href="#lionagi.session.branch.parse"><code class="docutils literal notranslate"><span class="pre">parse()</span></code></a></li>
-<li><a class="reference internal" href="#lionagi.session.branch.invoke_action"><code class="docutils literal notranslate"><span class="pre">invoke_action()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#multi-branch-multi-agent-usage">3. Multi-branch / Multi-agent Usage</a></li>
-<li><a class="reference internal" href="#cloning-a-branch">4. Cloning a Branch</a><ul>
-<li><a class="reference internal" href="#lionagi.session.branch.clone"><code class="docutils literal notranslate"><span class="pre">clone()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#example-flow">5. Example Flow</a></li>
-<li><a class="reference internal" href="#summary">Summary</a></li>
+<li><a class="reference internal" href="#">Branch: The Orchestrator</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#branch">Branch</a></li>
+<li><a class="reference internal" href="#key-differences-from-a-basic-session">Key Differences from a Basic Session</a></li>
 </ul>
 </li>
 </ul>
@@ -582,7 +403,7 @@ multi-step scenarios, the Branch class is your main orchestrator, ensuring
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="../_static/documentation_options.js?v=5a5a329e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

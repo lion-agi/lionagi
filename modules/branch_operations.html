@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Node, Edge, and Graph" href="graph.html" /><link rel="prev" title="Event, EventStatus, and Execution" href="event.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Branch: The Orchestrator" href="branch.html" /><link rel="prev" title="Adapter System" href="adapter.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Form &amp; Report - LionAGI Documentation</title>
+        <title>Branch-Level Operations - LionAGI Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
@@ -216,12 +216,12 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Branch-Level Operations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="branch.html">Branch: The Orchestrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
 <li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Form &amp; Report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
@@ -268,7 +268,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/modules/form.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/modules/branch_operations.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -288,169 +288,148 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="form-report">
-<h1>Form &amp; Report<a class="headerlink" href="#form-report" title="Link to this heading">¶</a></h1>
-<p>This module provides <strong>form-based data structures</strong> for tasks that involve
-collecting inputs, producing outputs, and managing intermediate fields. A form
-can be seen as a specialized, dynamic Pydantic model (extending LionAGI’s
-<code class="xref py py-class docutils literal notranslate"><span class="pre">OperableModel</span></code>) that captures:</p>
+          <section id="branch-level-operations">
+<span id="lionagi-branch-operations"></span><h1>Branch-Level Operations<a class="headerlink" href="#branch-level-operations" title="Link to this heading">¶</a></h1>
+<p>These operations define how a <code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code>
+actually <strong>does</strong> things—ranging from direct LLM calls (<cite>chat</cite>, <cite>communicate</cite>)
+to advanced flows (<cite>operate</cite>, <cite>instruct</cite>, <cite>interpret</cite>, <cite>ReAct</cite>, etc.). Each
+is implemented as a separate function and exposed as an <strong>asynchronous</strong>
+method on <code class="docutils literal notranslate"><span class="pre">Branch</span></code>.</p>
+<p>For convenience, they can be categorized as:</p>
 <ul class="simple">
-<li><p><strong>Required</strong> fields (input vs. request)</p></li>
-<li><p><strong>Optional</strong> or dynamically added fields</p></li>
-<li><p><strong>Validation</strong> (check if inputs are complete)</p></li>
-<li><p><strong>Task assignment</strong> logic (mapping input fields to requested outputs)</p></li>
+<li><p><strong>Simple conversation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">chat()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">communicate()</span></code></p></li>
+<li><p><strong>Structured conversation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">operate()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">instruct()</span></code></p></li>
+<li><p><strong>Short or specialized</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">interpret()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">translate()</span></code></p></li>
+<li><p><strong>Action invocation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">_act()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">act()</span></code></p></li>
+<li><p><strong>Selection</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">select()</span></code></p></li>
+<li><p><strong>ReAct</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">ReAct()</span></code> for multi-step reasoning</p></li>
+<li><p><strong>Parsing</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">parse()</span></code> to convert text to a structured model</p></li>
 </ul>
-<p>Three core classes are provided:</p>
-<ol class="arabic simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseForm</span></code> - Foundation for form handling (output fields, checks).</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code> - Builds on <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseForm</span></code> for typical “input -&gt; output”
-tasks. Automates assignment parsing and input/request field distinction.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Report</span></code> - Aggregates multiple completed forms, storing tasks that
-have been processed and generating a final “report.”</p></li>
-</ol>
-<section id="module-lionagi.form.base">
-<span id="baseform"></span><h2>1. BaseForm<a class="headerlink" href="#module-lionagi.form.base" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.form.base.BaseForm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.base.</span></span><span class="sig-name descname"><span class="pre">BaseForm</span></span><a class="headerlink" href="#lionagi.form.base.BaseForm" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p>A minimal form that tracks:</p>
-<ul class="simple">
-<li><p><strong>Assignment</strong>: The objective or mapping from inputs to outputs.</p></li>
-<li><p><strong>Output fields</strong>: The subset of fields to present as results.</p></li>
-<li><p><strong>has_processed</strong>: Whether the form was fully validated/used.</p></li>
-<li><p><strong>none_as_valid_value</strong>: If True, treating <cite>None</cite> as a valid field.</p></li>
-</ul>
-<p><strong>Key Methods</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">check_is_completed(handle_how='raise'|'return_missing')()</span></code>:
-Ensures required fields are populated; either raise an error or
-return the missing fields list.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_completed()</span> <span class="pre">-&gt;</span> <span class="pre">bool()</span></code>:
-True if form is fully valid (no missing fields).</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_results(suppress=False,</span> <span class="pre">valid_only=False)</span> <span class="pre">-&gt;</span> <span class="pre">dict()</span></code>:
-Gather the output fields as a dictionary, optionally ignoring invalid fields.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.form.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseForm</span>
-
-<span class="n">form</span> <span class="o">=</span> <span class="n">BaseForm</span><span class="p">(</span>
-    <span class="n">assignment</span><span class="o">=</span><span class="s2">&quot;some_field -&gt; output_field&quot;</span><span class="p">,</span>
-    <span class="n">output_fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;output_field&quot;</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="c1"># Suppose we add a new field</span>
-<span class="n">form</span><span class="o">.</span><span class="n">add_field</span><span class="p">(</span><span class="s2">&quot;some_field&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
-<span class="c1"># Now get results</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>  <span class="c1"># =&gt; {&#39;output_field&#39;: UNDEFINED}, since not assigned</span>
-</pre></div>
-</div>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 </section>
-<section id="form">
-<h2>2. Form<a class="headerlink" href="#form" title="Link to this heading">¶</a></h2>
-<dl class="py class" id="module-lionagi.form.form">
-<dt class="sig sig-object py" id="lionagi.form.form.Form">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.form.</span></span><span class="sig-name descname"><span class="pre">Form</span></span><a class="headerlink" href="#lionagi.form.form.Form" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p>This class distinguishes three sets of fields:</p>
-<ol class="arabic simple">
-<li><p><strong>input_fields</strong> (provided by user or environment).</p></li>
-<li><p><strong>request_fields</strong> (which an “intelligent process” should fill).</p></li>
-<li><p><strong>output_fields</strong> (which are ultimately displayed or returned).</p></li>
-</ol>
-<p>Additionally:</p>
-<ul class="simple">
-<li><p><strong>strict_form</strong> (bool): If True, you cannot modify input/request fields or
-assignment after initialization.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_input_fields(...)()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_request_fields(...)()</span></code>
-let you programmatically populate these sets of fields from another form
-or via direct keyword arguments.</p></li>
-</ul>
-<p><strong>Assignment</strong>:</p>
-<p>By default, a string in the format <code class="docutils literal notranslate"><span class="pre">input1,</span> <span class="pre">input2</span> <span class="pre">-&gt;</span> <span class="pre">request1,</span> <span class="pre">request2</span></code>
-defines which fields are “inputs” vs. “requests.” The class automatically
-parses them if you pass an <code class="docutils literal notranslate"><span class="pre">assignment</span></code>.</p>
-<p><strong>Key Methods</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">check_is_workable()</span></code> / <code class="xref py py-meth docutils literal notranslate"><span class="pre">is_workable()</span></code>:
-Verify input fields are filled so the form can proceed.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_form(...)()</span></code>:
-Clone or derive a new <a class="reference internal" href="#lionagi.form.form.Form" title="lionagi.form.form.Form"><code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code></a> from an existing <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseForm</span></code>.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_form(...)()</span></code>:
-(In <code class="xref py py-class docutils literal notranslate"><span class="pre">Report</span></code>) to create a new <a class="reference internal" href="#lionagi.form.form.Form" title="lionagi.form.form.Form"><code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code></a> with specified
-assignment or fields.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.form.form</span><span class="w"> </span><span class="kn">import</span> <span class="n">Form</span>
-
-<span class="c1"># assignment = &quot;user_name, user_age -&gt; recommended_action&quot;</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="n">assignment</span><span class="o">=</span><span class="s2">&quot;user_name, user_age -&gt; recommended_action&quot;</span><span class="p">)</span>
-
-<span class="c1"># Now we add or fill the input fields</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_input_fields</span><span class="p">(</span><span class="n">user_name</span><span class="o">=</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="n">user_age</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
-<span class="c1"># The request field is &#39;recommended_action&#39;</span>
-<span class="c1"># We can fill it or let the AI fill it</span>
-
-<span class="n">f</span><span class="o">.</span><span class="n">check_is_workable</span><span class="p">()</span>     <span class="c1"># ensures inputs exist</span>
-<span class="c1"># ...</span>
-<span class="c1"># Later we fill request</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_request_fields</span><span class="p">(</span><span class="n">recommended_action</span><span class="o">=</span><span class="s2">&quot;Provide discounts&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_results</span><span class="p">())</span>    <span class="c1"># =&gt; {&quot;recommended_action&quot;: &quot;Provide discounts&quot;}</span>
-</pre></div>
-</div>
+<section id="act">
+<h2><code class="docutils literal notranslate"><span class="pre">_act</span></code><a class="headerlink" href="#act" title="Link to this heading">¶</a></h2>
 </section>
-<section id="report">
-<h2>3. Report<a class="headerlink" href="#report" title="Link to this heading">¶</a></h2>
-<dl class="py class" id="module-lionagi.form.report">
-<dt class="sig sig-object py" id="lionagi.form.report.Report">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.report.</span></span><span class="sig-name descname"><span class="pre">Report</span></span><a class="headerlink" href="#lionagi.form.report.Report" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p>Designed to collect <strong>multiple tasks</strong> (forms) into one object:</p>
-<ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">completed_tasks</span></code>: A pile of <code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code> instances that are done.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_completed_form(form,</span> <span class="pre">update_results=False)()</span></code>:
-Store a completed form in the report. Optionally update the report’s
-fields with the form’s results.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_form(...)()</span></code>:
-Helper for building new tasks (forms) from the report’s perspective.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_form(...)()</span></code>:
-Alternative constructor that transforms an existing form into a report.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.form.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">Report</span><span class="p">,</span> <span class="n">Form</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">Report</span><span class="p">()</span>
-<span class="c1"># Suppose we create a form</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">create_form</span><span class="p">(</span><span class="n">assignment</span><span class="o">=</span><span class="s2">&quot;input1 -&gt; output1&quot;</span><span class="p">)</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_input_fields</span><span class="p">(</span><span class="n">input1</span><span class="o">=</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
-
-<span class="c1"># Mark the form as completed</span>
-<span class="c1"># In reality you&#39;d fill the request field as well</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_request_fields</span><span class="p">(</span><span class="n">output1</span><span class="o">=</span><span class="s2">&quot;World&quot;</span><span class="p">)</span>
-<span class="n">f</span><span class="o">.</span><span class="n">check_is_completed</span><span class="p">()</span>
-
-<span class="c1"># Save into report</span>
-<span class="n">r</span><span class="o">.</span><span class="n">save_completed_form</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">update_results</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">completed_tasks</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>       <span class="c1"># =&gt; 1</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">output1</span><span class="p">)</span>                      <span class="c1"># =&gt; &quot;World&quot; (copied from the form)</span>
-</pre></div>
-</div>
+<section id="id2">
+<h2><code class="docutils literal notranslate"><span class="pre">act</span></code><a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 </section>
-<section id="additional-utilities">
-<h2>Additional Utilities<a class="headerlink" href="#additional-utilities" title="Link to this heading">¶</a></h2>
-<p><strong>Parsing</strong>:</p>
-<p><code class="xref py py-func docutils literal notranslate"><span class="pre">get_input_output_fields(str_)</span> <span class="pre">-&gt;</span> <span class="pre">(list[str],</span> <span class="pre">list[str])()</span></code>
-Splits an assignment string of the form <cite>input1, input2 -&gt; request1, request2</cite>
-into two lists (input fields, request fields).</p>
-<p>Used internally by <code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code> to auto-generate <cite>input_fields</cite> and <cite>request_fields</cite>.</p>
-<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
-from lionagi.form.utils import get_input_output_fields</p>
-<p>inp, req = get_input_output_fields(“name, age -&gt; greeting”)
-print(inp)  # [“name”, “age”]
-print(req)  # [“greeting”]</p>
+<section id="chat">
+<h2><code class="docutils literal notranslate"><span class="pre">chat</span></code><a class="headerlink" href="#chat" title="Link to this heading">¶</a></h2>
+</section>
+<section id="communicate">
+<h2><code class="docutils literal notranslate"><span class="pre">communicate</span></code><a class="headerlink" href="#communicate" title="Link to this heading">¶</a></h2>
+</section>
+<section id="operate">
+<h2><code class="docutils literal notranslate"><span class="pre">operate</span></code><a class="headerlink" href="#operate" title="Link to this heading">¶</a></h2>
+</section>
+<section id="parse">
+<h2><code class="docutils literal notranslate"><span class="pre">parse</span></code><a class="headerlink" href="#parse" title="Link to this heading">¶</a></h2>
+</section>
+<section id="instruct">
+<h2><code class="docutils literal notranslate"><span class="pre">instruct</span></code><a class="headerlink" href="#instruct" title="Link to this heading">¶</a></h2>
+</section>
+<section id="interpret">
+<h2><code class="docutils literal notranslate"><span class="pre">interpret</span></code><a class="headerlink" href="#interpret" title="Link to this heading">¶</a></h2>
+</section>
+<section id="react">
+<h2><code class="docutils literal notranslate"><span class="pre">ReAct</span></code><a class="headerlink" href="#react" title="Link to this heading">¶</a></h2>
+</section>
+<section id="select">
+<h2><code class="docutils literal notranslate"><span class="pre">select</span></code><a class="headerlink" href="#select" title="Link to this heading">¶</a></h2>
+</section>
+<section id="translate">
+<h2><code class="docutils literal notranslate"><span class="pre">translate</span></code><a class="headerlink" href="#translate" title="Link to this heading">¶</a></h2>
+</section>
+<section id="differences-and-usage-notes">
+<h2>Differences and Usage Notes<a class="headerlink" href="#differences-and-usage-notes" title="Link to this heading">¶</a></h2>
+<ul>
+<li><p><strong>chat</strong> vs. <strong>communicate</strong>:
+- <code class="docutils literal notranslate"><span class="pre">chat</span></code> is more manual: you supply how the conversation</p>
+<blockquote>
+<div><p>is built, and it returns an <code class="xref py py-class docutils literal notranslate"><span class="pre">AssistantResponse</span></code>.
+It does <strong>not</strong> automatically store those messages unless you do so.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">communicate</span></code> is simpler: it automatically adds new messages
+(user + response) to the conversation, optionally validates
+the LLM output with a pydantic model or partial fields.</p></li>
+</ul>
+</li>
+<li><p><strong>operate</strong> vs. <strong>instruct</strong>:
+- <code class="docutils literal notranslate"><span class="pre">operate</span></code> is an advanced, multi-step approach with an</p>
+<blockquote>
+<div><p>internal “Operative” model. It can parse a structured response
+and run any requested tool calls.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">instruct</span></code> is a simpler convenience method that decides
+between “communicate” or “operate” based on the user’s
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Instruct</span></code> contents.</p></li>
+</ul>
+</li>
+<li><p><strong>ReAct</strong>:
+- A subset of advanced usage where the model is expected to</p>
+<blockquote>
+<div><p>produce chain-of-thought or partial reasoning steps that
+may loop if it finds it needs further expansions.</p>
+</div></blockquote>
+</li>
+<li><p><strong>_act</strong> vs. <strong>act</strong>:
+- <code class="docutils literal notranslate"><span class="pre">_act</span></code> is an internal helper that does the actual invocation</p>
+<blockquote>
+<div><p>of a tool, returning an <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionResponse</span></code>.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">act</span></code> is the user-facing method for one or multiple
+function calls, supporting concurrency, error suppression,
+or basic retry logic.</p></li>
+</ul>
+</li>
+<li><p><strong>interpret</strong>:
+- Focused on rewriting or “polishing” user text into a more</p>
+<blockquote>
+<div><p>formal/explicit prompt. Doesn’t store new messages.</p>
+</div></blockquote>
+</li>
+<li><p><strong>parse</strong>:
+- Takes a final text and converts it to a pydantic model or</p>
+<blockquote>
+<div><p>dictionary. Usually used if you need structured data from
+a raw LLM response but don’t want that to be part of the
+conversation.</p>
+</div></blockquote>
+</li>
+</ul>
+<p>In practice, these operations can be freely combined to build
+complex pipelines—<strong>for example</strong>, you might
+<code class="xref py py-func docutils literal notranslate"><span class="pre">interpret()</span></code> the user input, then <code class="xref py py-func docutils literal notranslate"><span class="pre">operate()</span></code>,
+then parse final results or call custom logic.</p>
+</section>
+<hr class="docutils" />
+<section id="file-references">
+<h2>File References<a class="headerlink" href="#file-references" title="Link to this heading">¶</a></h2>
+<p>These operations are scattered in files (like <cite>_act.py</cite>,
+<cite>chat.py</cite>, <cite>communicate.py</cite>, etc.), but each is also exposed
+directly as a method on <code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">_act</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations._act.act._act</span></code>
+<code class="docutils literal notranslate"><span class="pre">chat</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.chat.chat</span></code>
+<code class="docutils literal notranslate"><span class="pre">communicate</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.communicate.communicate</span></code>
+<code class="docutils literal notranslate"><span class="pre">operate</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.operate.operate</span></code>
+<code class="docutils literal notranslate"><span class="pre">parse</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.parse.parse</span></code>
+<code class="docutils literal notranslate"><span class="pre">instruct</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.instruct.instruct</span></code>
+<code class="docutils literal notranslate"><span class="pre">interpret</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.interpret.interpret</span></code>
+<code class="docutils literal notranslate"><span class="pre">ReAct</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.ReAct.ReAct</span></code>
+<code class="docutils literal notranslate"><span class="pre">select</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.select.select</span></code>
+<code class="docutils literal notranslate"><span class="pre">translate</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.translate.translate</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">act</span></code> is simply a method in
+<code class="docutils literal notranslate"><span class="pre">lionagi.session.branch.Branch.act</span></code> that calls
+<code class="docutils literal notranslate"><span class="pre">_act</span></code> for each request.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Branch</span></code> itself is documented separately in
+<a class="reference internal" href="branch.html#lionagi-branch-class"><span class="std std-ref">Branch: The Orchestrator</span></a>.</p>
+<hr class="docutils" />
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -459,23 +438,23 @@ print(req)  # [“greeting”]</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="graph.html">
+          <a class="next-page" href="branch.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Node, Edge, and Graph</div>
+                <div class="title">Branch: The Orchestrator</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="event.html">
+          <a class="prev-page" href="adapter.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Event, EventStatus, and Execution</div>
+                <div class="title">Adapter System</div>
                 
               </div>
             </a>
@@ -509,20 +488,21 @@ print(req)  # [“greeting”]</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Form &amp; Report</a><ul>
-<li><a class="reference internal" href="#module-lionagi.form.base">1. BaseForm</a><ul>
-<li><a class="reference internal" href="#lionagi.form.base.BaseForm"><code class="docutils literal notranslate"><span class="pre">BaseForm</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#form">2. Form</a><ul>
-<li><a class="reference internal" href="#lionagi.form.form.Form"><code class="docutils literal notranslate"><span class="pre">Form</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#report">3. Report</a><ul>
-<li><a class="reference internal" href="#lionagi.form.report.Report"><code class="docutils literal notranslate"><span class="pre">Report</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#additional-utilities">Additional Utilities</a></li>
+<li><a class="reference internal" href="#">Branch-Level Operations</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#act"><code class="docutils literal notranslate"><span class="pre">_act</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">act</span></code></a></li>
+<li><a class="reference internal" href="#chat"><code class="docutils literal notranslate"><span class="pre">chat</span></code></a></li>
+<li><a class="reference internal" href="#communicate"><code class="docutils literal notranslate"><span class="pre">communicate</span></code></a></li>
+<li><a class="reference internal" href="#operate"><code class="docutils literal notranslate"><span class="pre">operate</span></code></a></li>
+<li><a class="reference internal" href="#parse"><code class="docutils literal notranslate"><span class="pre">parse</span></code></a></li>
+<li><a class="reference internal" href="#instruct"><code class="docutils literal notranslate"><span class="pre">instruct</span></code></a></li>
+<li><a class="reference internal" href="#interpret"><code class="docutils literal notranslate"><span class="pre">interpret</span></code></a></li>
+<li><a class="reference internal" href="#react"><code class="docutils literal notranslate"><span class="pre">ReAct</span></code></a></li>
+<li><a class="reference internal" href="#select"><code class="docutils literal notranslate"><span class="pre">select</span></code></a></li>
+<li><a class="reference internal" href="#translate"><code class="docutils literal notranslate"><span class="pre">translate</span></code></a></li>
+<li><a class="reference internal" href="#differences-and-usage-notes">Differences and Usage Notes</a></li>
+<li><a class="reference internal" href="#file-references">File References</a></li>
 </ul>
 </li>
 </ul>

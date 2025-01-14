@@ -3,40 +3,41 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Messages &amp; Conversation" href="message.html" /><link rel="prev" title="Instruct" href="instruct.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Messages Subsystem" href="message.html" /><link rel="prev" title="Log, LogManager, and Config" href="log.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Mail - LionAGI Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+        <title>Mail System - LionAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -213,23 +214,26 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="action.html">Action</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch: The Orchestrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="event.html">Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Mail</a></li>
-<li class="toctree-l2"><a class="reference internal" href="message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Mail System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processor.html">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
@@ -238,11 +242,12 @@
 <li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -283,272 +288,94 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="mail">
-<h1>Mail<a class="headerlink" href="#mail" title="Link to this heading">¶</a></h1>
-<p>The LionAGI <strong>mail system</strong> provides a framework for sending and receiving
-messages (or “mail”) among <strong>communicatable</strong> entities. This is useful for
-agent-to-agent communication, scheduling tasks, and distributing work packages
-in a multi-agent or distributed LionAGI environment.</p>
-<section id="key-concepts">
-<h2>Key Concepts<a class="headerlink" href="#key-concepts" title="Link to this heading">¶</a></h2>
+          <section id="module-lionagi.protocols.mail">
+<span id="mail-system"></span><span id="lionagi-mail-system"></span><h1>Mail System<a class="headerlink" href="#module-lionagi.protocols.mail" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>The <strong>mail system</strong> in LionAGI enables asynchronous exchange of messages (mail)
+across multiple sources that implement <code class="xref py py-class docutils literal notranslate"><span class="pre">Communicatable</span></code>. The components
+include:</p>
 <ul class="simple">
-<li><p><strong>Mail</strong>: Represents an atomic message or package, carrying a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code> with some data. It includes sender and recipient
-IDs (both referencing <strong>Communicatable</strong> objects).</p></li>
-<li><p><strong>Mailbox</strong>: A container holding incoming and outgoing <code class="docutils literal notranslate"><span class="pre">Mail</span></code> items
-for a given communicatable entity.</p></li>
-<li><p><strong>Exchange</strong>: Manages a set of communicatable sources, collecting mail
-from each source’s outbox and delivering it to the intended recipient’s
-inbox, optionally in an asynchronous loop.</p></li>
-<li><p><strong>MailManager</strong>: An alternative manager for mail distribution,
-collecting and sending mail from a set of sources in a loop
-(somewhat parallel to <code class="docutils literal notranslate"><span class="pre">Exchange</span></code>).</p></li>
-<li><p><strong>Package</strong>: The payload carried by a <code class="docutils literal notranslate"><span class="pre">Mail</span></code>. Has a category
-(e.g., <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, <code class="docutils literal notranslate"><span class="pre">TOOL</span></code>, etc.) and an item (data).</p></li>
-<li><p><strong>PackageCategory</strong>: An enum listing possible categories (like
-<code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, <code class="docutils literal notranslate"><span class="pre">TOOL</span></code>, <code class="docutils literal notranslate"><span class="pre">IMODEL</span></code>, etc.).</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Exchange</span></code>: Coordinates mail flow among sources in a buffer-based approach.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Mail</span></code>: The fundamental message unit, containing a <code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code>.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code>: Local storage for inbound and outbound mail at a single source.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MailManager</span></code>: An alternative (often higher-level) manager for mail distribution.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">PackageCategory</span></code>: Wraps the content or payload with a categorized type.</p></li>
 </ul>
-<p>All classes leverage LionAGI’s base concepts (e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>
-for unique IDs and timestamps, <code class="xref py py-class docutils literal notranslate"><span class="pre">Communicatable</span></code> for objects
-that can send/receive mail).</p>
-<section id="module-lionagi.protocols.mail.mail">
-<span id="the-mail-class"></span><h3>1. The <code class="docutils literal notranslate"><span class="pre">Mail</span></code> Class<a class="headerlink" href="#module-lionagi.protocols.mail.mail" title="Link to this heading">¶</a></h3>
-<p>A single piece of mail, referencing a <code class="xref py py-attr docutils literal notranslate"><span class="pre">sender</span></code>, a <code class="xref py py-attr docutils literal notranslate"><span class="pre">recipient</span></code>,
-and carrying a <code class="xref py py-attr docutils literal notranslate"><span class="pre">package</span></code>.</p>
-<p><strong>Key Attributes</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">sender</span></code>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code> of the entity sending this mail
-(must be a <strong>Communicatable</strong>).</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">recipient</span></code>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code> of the entity receiving this mail
-(also a <strong>Communicatable</strong>).</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">package</span></code>: A <code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code> instance holding the actual data.</p></li>
-</ul>
-<p><strong>Properties</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">category</span></code>: Shortcut to <code class="docutils literal notranslate"><span class="pre">mail.package.category</span></code> (the
-<code class="xref py py-class docutils literal notranslate"><span class="pre">PackageCategory</span></code> of the payload).</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.mail</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mail</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.package</span><span class="w"> </span><span class="kn">import</span> <span class="n">Package</span><span class="p">,</span> <span class="n">PackageCategory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.element</span><span class="w"> </span><span class="kn">import</span> <span class="n">IDType</span>
-
-<span class="n">mail</span> <span class="o">=</span> <span class="n">Mail</span><span class="p">(</span>
-    <span class="n">sender</span><span class="o">=</span><span class="n">IDType</span><span class="o">.</span><span class="n">create</span><span class="p">(),</span>
-    <span class="n">recipient</span><span class="o">=</span><span class="n">IDType</span><span class="o">.</span><span class="n">create</span><span class="p">(),</span>
-    <span class="n">package</span><span class="o">=</span><span class="n">Package</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">PackageCategory</span><span class="o">.</span><span class="n">MESSAGE</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="s2">&quot;Hello!&quot;</span><span class="p">)</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">mail</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>    <span class="c1"># =&gt; PackageCategory.MESSAGE</span>
-</pre></div>
-</div>
 </section>
-<section id="module-lionagi.protocols.mail.package">
-<span id="the-package-category"></span><h3>2. The <code class="docutils literal notranslate"><span class="pre">Package</span></code> + Category<a class="headerlink" href="#module-lionagi.protocols.mail.package" title="Link to this heading">¶</a></h3>
-<p>Wraps the actual payload in <code class="xref py py-attr docutils literal notranslate"><span class="pre">item</span></code> along with a <code class="xref py py-attr docutils literal notranslate"><span class="pre">category</span></code>
-(for instance, <code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, <code class="docutils literal notranslate"><span class="pre">TOOL</span></code>, <code class="docutils literal notranslate"><span class="pre">NODE_ID</span></code>, etc.) and an optional
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">request_source</span></code> indicating who requested this package.</p>
-<p><strong>Fields</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">category</span></code>: A <a class="reference internal" href="#lionagi.protocols.mail.package.PackageCategory" title="lionagi.protocols.mail.package.PackageCategory"><code class="xref py py-class docutils literal notranslate"><span class="pre">PackageCategory</span></code></a> enumerating the type of content.</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">item</span></code>: Arbitrary data carried by the package.</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">request_source</span></code>: If relevant, identifies the original communicator
-that requested the item.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.package</span><span class="w"> </span><span class="kn">import</span> <span class="n">Package</span><span class="p">,</span> <span class="n">PackageCategory</span>
-
-<span class="n">p</span> <span class="o">=</span> <span class="n">Package</span><span class="p">(</span>
-    <span class="n">category</span><span class="o">=</span><span class="n">PackageCategory</span><span class="o">.</span><span class="n">MESSAGE</span><span class="p">,</span>
-    <span class="n">item</span><span class="o">=</span><span class="s2">&quot;Any content goes here&quot;</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>         <span class="c1"># =&gt; &quot;Any content goes here&quot;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>     <span class="c1"># =&gt; PackageCategory.MESSAGE</span>
-</pre></div>
-</div>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.mail.package.PackageCategory">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.package.</span></span><span class="sig-name descname"><span class="pre">PackageCategory</span></span><a class="headerlink" href="#lionagi.protocols.mail.package.PackageCategory" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p>An <code class="docutils literal notranslate"><span class="pre">Enum</span></code> listing possible categories for a <code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code>. Examples:
-<code class="docutils literal notranslate"><span class="pre">MESSAGE</span></code>, <code class="docutils literal notranslate"><span class="pre">TOOL</span></code>, <code class="docutils literal notranslate"><span class="pre">IMODEL</span></code>, <code class="docutils literal notranslate"><span class="pre">NODE_ID</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGNAL</span></code>, etc.</p>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.package</span><span class="w"> </span><span class="kn">import</span> <span class="n">PackageCategory</span>
-
-<span class="n">cat</span> <span class="o">=</span> <span class="n">PackageCategory</span><span class="o">.</span><span class="n">MESSAGE</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># =&gt; &quot;message&quot;</span>
-</pre></div>
-</div>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 </section>
-<section id="module-lionagi.protocols.mail.mailbox">
-<span id="mailbox"></span><h3>3. <code class="docutils literal notranslate"><span class="pre">Mailbox</span></code><a class="headerlink" href="#module-lionagi.protocols.mail.mailbox" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.mail.mailbox.Mailbox">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.mailbox.</span></span><span class="sig-name descname"><span class="pre">Mailbox</span></span><a class="headerlink" href="#lionagi.protocols.mail.mailbox.Mailbox" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p>Each <strong>Communicatable</strong> entity typically has a <code class="docutils literal notranslate"><span class="pre">Mailbox</span></code> to store mail.
-There are separate structures for <strong>incoming</strong> (<code class="docutils literal notranslate"><span class="pre">append_in</span></code>) and
-<strong>outgoing</strong> (<code class="docutils literal notranslate"><span class="pre">append_out</span></code>) mail, plus a shared <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a>
-where everything is kept.</p>
-<p><strong>Attributes</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">pile_</span></code>:
-A <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> containing all mail known
-to the mailbox (incoming + outgoing).</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">pending_ins</span></code>:
-A dictionary mapping <strong>sender</strong> ID to a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a>
-of mail items from that sender.</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">pending_outs</span></code>:
-A <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a> listing
-mail items to be sent out from this mailbox.</p></li>
-</ul>
-<p><strong>Key Methods</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">append_in(item)()</span></code>: Mark a mail item as incoming (from some sender).</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">append_out(item)()</span></code>: Mark a mail item as outgoing (ready to be
-collected and delivered).</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">exclude(item)()</span></code>: Remove a mail from the mailbox entirely.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.mailbox</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mailbox</span>
+<section id="exchange">
+<h2>Exchange<a class="headerlink" href="#exchange" title="Link to this heading">¶</a></h2>
+</section>
+<section id="mail">
+<h2>Mail<a class="headerlink" href="#mail" title="Link to this heading">¶</a></h2>
+</section>
+<section id="mailbox">
+<h2>Mailbox<a class="headerlink" href="#mailbox" title="Link to this heading">¶</a></h2>
+</section>
+<section id="mailmanager">
+<h2>MailManager<a class="headerlink" href="#mailmanager" title="Link to this heading">¶</a></h2>
+</section>
+<section id="package-and-packagecategory">
+<h2>Package and PackageCategory<a class="headerlink" href="#package-and-packagecategory" title="Link to this heading">¶</a></h2>
+<section id="usage-example">
+<h3>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading">¶</a></h3>
+<p>Below is a simple usage scenario demonstrating these components:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.exchange</span><span class="w"> </span><span class="kn">import</span> <span class="n">Exchange</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.mail</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mail</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.mail_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">MailManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.package</span><span class="w"> </span><span class="kn">import</span> <span class="n">PackageCategory</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols._concepts</span><span class="w"> </span><span class="kn">import</span> <span class="n">Communicatable</span>
 
-<span class="n">box</span> <span class="o">=</span> <span class="n">Mailbox</span><span class="p">()</span>
-<span class="c1"># Suppose we have a mail object &#39;m&#39;</span>
-<span class="n">box</span><span class="o">.</span><span class="n">append_in</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>   <span class="c1"># now &#39;m&#39; is in incoming</span>
-<span class="c1"># or</span>
-<span class="n">box</span><span class="o">.</span><span class="n">append_out</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>  <span class="c1"># now &#39;m&#39; is pending to be sent out</span>
-</pre></div>
-</div>
-</section>
-<section id="module-lionagi.protocols.mail.exchange">
-<span id="exchange"></span><h3>4. <code class="docutils literal notranslate"><span class="pre">Exchange</span></code><a class="headerlink" href="#module-lionagi.protocols.mail.exchange" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.mail.exchange.Exchange">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.exchange.</span></span><span class="sig-name descname"><span class="pre">Exchange</span></span><a class="headerlink" href="#lionagi.protocols.mail.exchange.Exchange" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="k">class</span><span class="w"> </span><span class="nc">MySource</span><span class="p">(</span><span class="n">Communicatable</span><span class="p">):</span>
+    <span class="c1"># Must define &#39;mailbox&#39; and &#39;send&#39; method for Communicatable</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="o">...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mailbox</span> <span class="o">=</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mail</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mailbox</span><span class="o">.</span><span class="n">append_out</span><span class="p">(</span><span class="n">mail</span><span class="p">)</span>
 
-<p>Manages a set of <strong>Communicatable</strong> sources, each having a mailbox.
-<strong>Collect</strong> mail from each source’s <code class="docutils literal notranslate"><span class="pre">pending_outs</span></code>, buffer it, then
-<strong>deliver</strong> it to the intended recipient’s mailbox (<code class="docutils literal notranslate"><span class="pre">append_in</span></code>).
-An optional asynchronous <code class="xref py py-meth docutils literal notranslate"><span class="pre">execute()</span></code> loop can repeatedly gather
-and send all mail.</p>
-<p><strong>Attributes</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">sources</span></code>: A <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> of
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Communicatable</span></code> objects.</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">buffer</span></code>: A dict that temporarily stores mail for each recipient
-until it’s delivered.</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mailboxes</span></code>: A dict mapping each communicator’s ID to its <code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code>.</p></li>
-</ul>
-<p><strong>Key Methods</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_source(sources)()</span></code>: Registers new communicator(s).</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">collect(sender)()</span></code>: Collect mail from the sender’s outbox into the buffer.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">deliver(recipient)()</span></code>: Deliver buffered mail to a recipient’s inbox.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">collect_all()</span></code> / <code class="xref py py-meth docutils literal notranslate"><span class="pre">deliver_all()</span></code>: Collect from all, deliver to all.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">execute(refresh_time=1)()</span></code>: Runs a loop that repeatedly calls
-collect_all/deliver_all.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.exchange</span><span class="w"> </span><span class="kn">import</span> <span class="n">Exchange</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.mail</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mail</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.package</span><span class="w"> </span><span class="kn">import</span> <span class="n">Package</span><span class="p">,</span> <span class="n">PackageCategory</span>
-<span class="c1"># Suppose we have a few Communicatable entities, each with a mailbox.</span>
+<span class="c1"># Create two sources</span>
+<span class="n">srcA</span><span class="p">,</span> <span class="n">srcB</span> <span class="o">=</span> <span class="n">MySource</span><span class="p">(),</span> <span class="n">MySource</span><span class="p">()</span>
 
-<span class="n">exch</span> <span class="o">=</span> <span class="n">Exchange</span><span class="p">([</span><span class="n">comm1</span><span class="p">,</span> <span class="n">comm2</span><span class="p">,</span> <span class="n">comm3</span><span class="p">])</span>
-<span class="c1"># Create a mail item from comm1 to comm2</span>
-<span class="n">mail</span> <span class="o">=</span> <span class="n">exch</span><span class="o">.</span><span class="n">create_mail</span><span class="p">(</span>
-    <span class="n">sender</span><span class="o">=</span><span class="n">comm1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-    <span class="n">recipient</span><span class="o">=</span><span class="n">comm2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+<span class="c1"># Approach 1: Use Exchange</span>
+<span class="n">exchange</span> <span class="o">=</span> <span class="n">Exchange</span><span class="p">([</span><span class="n">srcA</span><span class="p">,</span> <span class="n">srcB</span><span class="p">])</span>
+<span class="n">mail</span> <span class="o">=</span> <span class="n">exchange</span><span class="o">.</span><span class="n">create_mail</span><span class="p">(</span>
+    <span class="n">sender</span><span class="o">=</span><span class="n">srcA</span><span class="p">,</span>
+    <span class="n">recipient</span><span class="o">=</span><span class="n">srcB</span><span class="p">,</span>
     <span class="n">category</span><span class="o">=</span><span class="n">PackageCategory</span><span class="o">.</span><span class="n">MESSAGE</span><span class="p">,</span>
-    <span class="n">item</span><span class="o">=</span><span class="s2">&quot;Hello from comm1!&quot;</span>
+    <span class="n">item</span><span class="o">=</span><span class="s2">&quot;Hello from A!&quot;</span>
 <span class="p">)</span>
-<span class="c1"># Place mail in comm1&#39;s outbox</span>
-<span class="n">comm1</span><span class="o">.</span><span class="n">mailbox</span><span class="o">.</span><span class="n">append_out</span><span class="p">(</span><span class="n">mail</span><span class="p">)</span>
+<span class="n">srcA</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">mail</span><span class="p">)</span>
+<span class="n">exchange</span><span class="o">.</span><span class="n">collect_all</span><span class="p">()</span>
+<span class="n">exchange</span><span class="o">.</span><span class="n">deliver_all</span><span class="p">()</span>
 
-<span class="c1"># Collect from comm1 -&gt; exch.buffer</span>
-<span class="n">exch</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">comm1</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
-<span class="c1"># Deliver to comm2&#39;s mailbox</span>
-<span class="n">exch</span><span class="o">.</span><span class="n">deliver</span><span class="p">(</span><span class="n">recipient</span><span class="o">=</span><span class="n">comm2</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="c1"># Approach 2: Use MailManager</span>
+<span class="n">manager</span> <span class="o">=</span> <span class="n">MailManager</span><span class="p">([</span><span class="n">srcA</span><span class="p">,</span> <span class="n">srcB</span><span class="p">])</span>
+<span class="n">mail2</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">create_mail</span><span class="p">(</span>
+    <span class="n">sender</span><span class="o">=</span><span class="n">srcA</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="n">recipient</span><span class="o">=</span><span class="n">srcB</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="n">category</span><span class="o">=</span><span class="n">PackageCategory</span><span class="o">.</span><span class="n">MESSAGE</span><span class="p">,</span>
+    <span class="n">package</span><span class="o">=</span><span class="s2">&quot;Another greeting&quot;</span>
+<span class="p">)</span>
+<span class="c1"># Normally you&#39;d place mail2 in srcA&#39;s mailbox, then manager.collect_all() -&gt; manager.send_all().</span>
 </pre></div>
 </div>
 </section>
-<section id="module-lionagi.protocols.mail.mail_manager">
-<span id="mailmanager"></span><h3>5. <code class="docutils literal notranslate"><span class="pre">MailManager</span></code><a class="headerlink" href="#module-lionagi.protocols.mail.mail_manager" title="Link to this heading">¶</a></h3>
-<p>Another manager for mail flow among multiple sources. It holds a
-<a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> of sources (like
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Exchange</span></code> does), offering <cite>collect</cite>/<cite>send</cite> methods to route mail.
-It can also run an async <code class="xref py py-meth docutils literal notranslate"><span class="pre">execute()</span></code> method in a loop.</p>
-<p><strong>Attributes</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">sources</span></code>: Pile of observable entities (each presumably communicatable).</p></li>
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">mails</span></code>: A dictionary that temporarily caches mail for each recipient.</p></li>
-</ul>
-<p><strong>Key Methods</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_sources(...)()</span></code>: Add new sources.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_mail(...)()</span></code>: Create a new <code class="xref py py-class docutils literal notranslate"><span class="pre">Mail</span></code>.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_source(...)()</span></code>: Remove a source from management.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">collect(sender)()</span></code>: Gather mail from a sender’s outbox.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">send(recipient)()</span></code>: Send all mail queued up for the given recipient.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">collect_all()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">send_all()</span></code></p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">execute(...)()</span></code>: Run the collection/sending cycle asynchronously in a loop.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.mail.mail_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">MailManager</span>
-
-<span class="n">mm</span> <span class="o">=</span> <span class="n">MailManager</span><span class="p">([</span><span class="n">comm1</span><span class="p">,</span> <span class="n">comm2</span><span class="p">,</span> <span class="n">comm3</span><span class="p">])</span>
-<span class="c1"># Create a mail object</span>
-<span class="n">mail</span> <span class="o">=</span> <span class="n">mm</span><span class="o">.</span><span class="n">create_mail</span><span class="p">(</span>
-    <span class="n">sender</span><span class="o">=</span><span class="n">comm1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-    <span class="n">recipient</span><span class="o">=</span><span class="n">comm2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-    <span class="n">category</span><span class="o">=</span><span class="s2">&quot;message&quot;</span><span class="p">,</span>
-    <span class="n">package</span><span class="o">=</span><span class="s2">&quot;Hello from comm1!&quot;</span>
-<span class="p">)</span>
-<span class="c1"># Put mail into comm1&#39;s outbox</span>
-<span class="n">comm1</span><span class="o">.</span><span class="n">mailbox</span><span class="o">.</span><span class="n">append_out</span><span class="p">(</span><span class="n">mail</span><span class="p">)</span>
-
-<span class="c1"># Now, do a cycle of collecting and sending</span>
-<span class="n">mm</span><span class="o">.</span><span class="n">collect_all</span><span class="p">()</span>
-<span class="n">mm</span><span class="o">.</span><span class="n">send_all</span><span class="p">()</span>
-<span class="c1"># comm2 should now have the mail in its mailbox</span>
-</pre></div>
-</div>
 </section>
-<section id="usage-scenarios">
-<h3>Usage Scenarios<a class="headerlink" href="#usage-scenarios" title="Link to this heading">¶</a></h3>
-<ol class="arabic simple">
-<li><p><strong>Agent Communication</strong>
-Each agent (Communicatable) can place mail into its outbox, which is then
-collected by an <code class="xref py py-class docutils literal notranslate"><span class="pre">Exchange</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">MailManager</span></code> and delivered
-to the correct recipient. This decouples agents from direct function calls.</p></li>
-<li><p><strong>Distributing Work</strong>
-In a multi-component system, tasks or job requests can be wrapped as
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code> objects. Each agent sees only the mail relevant to it.</p></li>
-<li><p><strong>Asynchronous Execution</strong>
-Both <code class="xref py py-class docutils literal notranslate"><span class="pre">Exchange</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">MailManager</span></code> offer an <code class="xref py py-meth docutils literal notranslate"><span class="pre">execute()</span></code>
-method that loops with a <cite>refresh_time</cite>, repeatedly calling “collect all”
-and “deliver all.” This suits situations where mail must be polled or
-delivered in real-time intervals.</p></li>
-</ol>
-</section>
-<section id="summary">
-<h3>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h3>
-<p>The mail system in LionAGI provides a flexible approach for <strong>intra- or
-inter-agent communication</strong>, built upon:</p>
+<section id="file-locations">
+<h2>File Locations<a class="headerlink" href="#file-locations" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><strong>Mail</strong> (individual messages with payloads).</p></li>
-<li><p><strong>Mailbox</strong> (per-agent storage for outbox/inbox).</p></li>
-<li><p><strong>Exchange</strong> or <strong>MailManager</strong> (managers for collecting and distributing mail).</p></li>
+<li><p><strong>Exchange</strong>: <code class="docutils literal notranslate"><span class="pre">lionagi/protocols/mail/exchange.py</span></code></p></li>
+<li><p><strong>Mail</strong>: <code class="docutils literal notranslate"><span class="pre">lionagi/protocols/mail/mail.py</span></code></p></li>
+<li><p><strong>Mailbox</strong>: <code class="docutils literal notranslate"><span class="pre">lionagi/protocols/mail/mailbox.py</span></code></p></li>
+<li><p><strong>MailManager</strong>: <code class="docutils literal notranslate"><span class="pre">lionagi/protocols/mail/manager.py</span></code></p></li>
+<li><p><strong>Package</strong> &amp; <strong>PackageCategory</strong>: <code class="docutils literal notranslate"><span class="pre">lionagi/protocols/mail/package.py</span></code></p></li>
 </ul>
-<p>By associating each agent (Communicatable) with a mailbox, you can easily
-<strong>decouple</strong> communication, track usage or logs, and integrate with concurrency
-mechanisms such as <cite>asyncio</cite>. This promotes <strong>modular</strong> design for complex
-LionAGI scenarios where multiple components or agents must exchange tasks and
-data in a controlled manner.</p>
-</section>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -562,18 +389,18 @@ data in a controlled manner.</p>
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Messages &amp; Conversation</div>
+                <div class="title">Messages Subsystem</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="instruct.html">
+          <a class="prev-page" href="log.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Instruct</div>
+                <div class="title">Log, LogManager, and Config</div>
                 
               </div>
             </a>
@@ -607,26 +434,18 @@ data in a controlled manner.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Mail</a><ul>
-<li><a class="reference internal" href="#key-concepts">Key Concepts</a><ul>
-<li><a class="reference internal" href="#module-lionagi.protocols.mail.mail">1. The <code class="docutils literal notranslate"><span class="pre">Mail</span></code> Class</a></li>
-<li><a class="reference internal" href="#module-lionagi.protocols.mail.package">2. The <code class="docutils literal notranslate"><span class="pre">Package</span></code> + Category</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.mail.package.PackageCategory"><code class="docutils literal notranslate"><span class="pre">PackageCategory</span></code></a></li>
+<li><a class="reference internal" href="#">Mail System</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#exchange">Exchange</a></li>
+<li><a class="reference internal" href="#mail">Mail</a></li>
+<li><a class="reference internal" href="#mailbox">Mailbox</a></li>
+<li><a class="reference internal" href="#mailmanager">MailManager</a></li>
+<li><a class="reference internal" href="#package-and-packagecategory">Package and PackageCategory</a><ul>
+<li><a class="reference internal" href="#usage-example">Usage Example</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-lionagi.protocols.mail.mailbox">3. <code class="docutils literal notranslate"><span class="pre">Mailbox</span></code></a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.mail.mailbox.Mailbox"><code class="docutils literal notranslate"><span class="pre">Mailbox</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-lionagi.protocols.mail.exchange">4. <code class="docutils literal notranslate"><span class="pre">Exchange</span></code></a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.mail.exchange.Exchange"><code class="docutils literal notranslate"><span class="pre">Exchange</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-lionagi.protocols.mail.mail_manager">5. <code class="docutils literal notranslate"><span class="pre">MailManager</span></code></a></li>
-<li><a class="reference internal" href="#usage-scenarios">Usage Scenarios</a></li>
-<li><a class="reference internal" href="#summary">Summary</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#file-locations">File Locations</a></li>
 </ul>
 </li>
 </ul>
@@ -638,7 +457,7 @@ data in a controlled manner.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="../_static/documentation_options.js?v=5a5a329e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

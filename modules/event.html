@@ -3,40 +3,41 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Form &amp; Report" href="form.html" /><link rel="prev" title="Abstract Concepts" href="concepts.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Form &amp; Report" href="form.html" /><link rel="prev" title="Element, IDType, and ID" href="element_id.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Event Architecture - LionAGI Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+        <title>Event, EventStatus, and Execution - LionAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -213,23 +214,26 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="action.html">Action</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch: The Orchestrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Event, EventStatus, and Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail</a></li>
-<li class="toctree-l2"><a class="reference internal" href="message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processor.html">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
@@ -238,11 +242,12 @@
 <li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -283,35 +288,126 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="event-architecture">
-<h1>Event Architecture<a class="headerlink" href="#event-architecture" title="Link to this heading">¶</a></h1>
-<p>The <strong>Event system</strong> in LionAGI provides a uniform way to <strong>track, log, and
-process</strong> actions or requests. Events typically carry execution details,
-status, timings, and potential errors. Two primary examples are:</p>
+          <section id="module-lionagi.protocols.generic.event">
+<span id="event-eventstatus-and-execution"></span><span id="lionagi-protocols-generic-event"></span><h1>Event, EventStatus, and Execution<a class="headerlink" href="#module-lionagi.protocols.generic.event" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>This module provides a specialized <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> class, which extends the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code> base with a structured
+<a class="reference internal" href="#lionagi.protocols.generic.event.Execution" title="lionagi.protocols.generic.event.Execution"><code class="xref py py-class docutils literal notranslate"><span class="pre">Execution</span></code></a> state. It also introduces <a class="reference internal" href="#lionagi.protocols.generic.event.EventStatus" title="lionagi.protocols.generic.event.EventStatus"><code class="xref py py-class docutils literal notranslate"><span class="pre">EventStatus</span></code></a>, an
+enumeration that clarifies the state (pending, processing, completed, or
+failed) of an ongoing or finished event.</p>
+</section>
+<section id="eventstatus">
+<h2>EventStatus<a class="headerlink" href="#eventstatus" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.event.EventStatus">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.event.</span></span><span class="sig-name descname"><span class="pre">EventStatus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Enum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.event.EventStatus" title="Link to this definition">¶</a></dt>
+<dd><p>Represents the <strong>lifecycle states</strong> for an action or task execution.
+Each event can transition from PENDING to PROCESSING, and finally
+to either COMPLETED or FAILED.</p>
+<section id="members">
+<h3>Members<a class="headerlink" href="#members" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code> — for <strong>local Python function</strong> invocation
-with optional pre/post-processing.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">APICalling</span></code> — for <strong>external HTTP/AI service</strong> invocation,
-potentially with token usage, streaming, and caching.</p></li>
+<li><p><strong>PENDING</strong> : str
+Initial state before execution starts.</p></li>
+<li><p><strong>PROCESSING</strong> : str
+Indicates that the event is currently in progress.</p></li>
+<li><p><strong>COMPLETED</strong> : str
+The event action completed successfully.</p></li>
+<li><p><strong>FAILED</strong> : str
+The event action encountered an error or otherwise failed.</p></li>
 </ul>
-<p>All event classes extend a common <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> base, storing an
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">execution</span></code> object (representing duration, status, response, and errors).</p>
-<section id="module-lionagi.protocols.types">
-<span id="the-event-base-class"></span><h2>The <code class="docutils literal notranslate"><span class="pre">Event</span></code> Base Class<a class="headerlink" href="#module-lionagi.protocols.types" title="Link to this heading">¶</a></h2>
-<p>In LionAGI, an event is typically a subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>, which itself
-inherits from <a class="reference internal" href="concepts.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>. The
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> base class provides:</p>
-<ul class="simple">
-<li><p>An <code class="xref py py-attr docutils literal notranslate"><span class="pre">execution</span></code> field holding <code class="xref py py-class docutils literal notranslate"><span class="pre">Execution</span></code> metadata
-(status, duration, response, error).</p></li>
-<li><p>A standard <code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke()</span></code> method that child classes can override,
-capturing start/end times, updating <code class="xref py py-attr docutils literal notranslate"><span class="pre">execution.status</span></code>, and
-storing errors or results.</p></li>
-</ul>
-<p>For instance, both <code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">APICalling</span></code>
-subclass <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> and implement their <strong>own</strong> asynchronous
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke()</span></code> logic, plus domain-specific attributes (e.g., arguments
-for function calls, or headers/payloads for API calls).</p>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.event</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventStatus</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">EventStatus</span><span class="o">.</span><span class="n">PENDING</span><span class="p">)</span>  <span class="c1"># &quot;pending&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">EventStatus</span><span class="o">.</span><span class="n">COMPLETED</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># &quot;completed&quot;</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+<section id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.event.Execution">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.event.</span></span><span class="sig-name descname"><span class="pre">Execution</span></span><a class="headerlink" href="#lionagi.protocols.generic.event.Execution" title="Link to this definition">¶</a></dt>
+<dd><p>Tracks the <strong>runtime details</strong> of an event, including status, duration,
+response, and any error messages. Designed to store partial or final results
+and the overall outcome of an event’s execution.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>status<span class="classifier">EventStatus</span></dt><dd><p>The current status of the event’s execution.</p>
+</dd>
+<dt>duration<span class="classifier">float | None</span></dt><dd><p>Time in seconds that the event took to execute (if known).</p>
+</dd>
+<dt>response<span class="classifier">Any</span></dt><dd><p>The result or output of the execution. Could be data or a message.</p>
+</dd>
+<dt>error<span class="classifier">str | None</span></dt><dd><p>Holds an error message if the execution failed.</p>
+</dd>
+</dl>
+</section>
+<section id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.event.Execution.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.generic.event.EventStatus" title="lionagi.protocols.generic.event.EventStatus"><span class="pre">EventStatus</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">EventStatus.PENDING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.event.Execution.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes an <code class="docutils literal notranslate"><span class="pre">Execution</span></code> instance with optional duration, response,
+status (defaults to <code class="xref py py-attr docutils literal notranslate"><span class="pre">EventStatus.PENDING</span></code>), and error message.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>duration<span class="classifier">float | None</span></dt><dd><p>Number of seconds the execution took. If unknown, leave as None.</p>
+</dd>
+<dt>response<span class="classifier">Any</span></dt><dd><p>The result or output of the execution, if any.</p>
+</dd>
+<dt>status<span class="classifier">EventStatus</span></dt><dd><p>Current status of the execution. Defaults to PENDING.</p>
+</dd>
+<dt>error<span class="classifier">str | None</span></dt><dd><p>Optional error message if the execution has failed.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.event.Execution.__str__">
+<span class="sig-name descname"><span class="pre">__str__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.event.Execution.__str__" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a string representation of the execution, indicating the current
+<code class="docutils literal notranslate"><span class="pre">status</span></code>, <code class="docutils literal notranslate"><span class="pre">duration</span></code>, <code class="docutils literal notranslate"><span class="pre">response</span></code>, and <code class="docutils literal notranslate"><span class="pre">error</span></code> fields.</p>
+</dd></dl>
+
+</section>
+<section id="id1">
+<h3>Example<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.event</span><span class="w"> </span><span class="kn">import</span> <span class="n">Execution</span><span class="p">,</span> <span class="n">EventStatus</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">Execution</span><span class="p">(</span>
+    <span class="n">duration</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span>
+    <span class="n">response</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">},</span>
+    <span class="n">status</span><span class="o">=</span><span class="n">EventStatus</span><span class="o">.</span><span class="n">COMPLETED</span><span class="p">,</span>
+    <span class="n">error</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">exe</span><span class="p">)</span>  <span class="c1"># e.g. &quot;Execution(status=completed, duration=3.5, response={&#39;result&#39;: 42}, error=None)&quot;</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
+</section>
+<section id="event">
+<h2>Event<a class="headerlink" href="#event" title="Link to this heading">¶</a></h2>
+</section>
+<section id="file-location">
+<h2>File Location<a class="headerlink" href="#file-location" title="Link to this heading">¶</a></h2>
+<p><strong>Source File</strong>:
+<code class="docutils literal notranslate"><span class="pre">lionagi/protocols/generic/event.py</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -329,14 +425,14 @@ for function calls, or headers/payloads for API calls).</p>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="concepts.html">
+          <a class="prev-page" href="element_id.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Abstract Concepts</div>
+                <div class="title">Element, IDType, and ID</div>
                 
               </div>
             </a>
@@ -370,8 +466,22 @@ for function calls, or headers/payloads for API calls).</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Event Architecture</a><ul>
-<li><a class="reference internal" href="#module-lionagi.protocols.types">The <code class="docutils literal notranslate"><span class="pre">Event</span></code> Base Class</a></li>
+<li><a class="reference internal" href="#">Event, EventStatus, and Execution</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#eventstatus">EventStatus</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.event.EventStatus"><code class="docutils literal notranslate"><span class="pre">EventStatus</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#execution">Execution</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.event.Execution"><code class="docutils literal notranslate"><span class="pre">Execution</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.event.Execution.__init__"><code class="docutils literal notranslate"><span class="pre">Execution.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.event.Execution.__str__"><code class="docutils literal notranslate"><span class="pre">Execution.__str__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#event">Event</a></li>
+<li><a class="reference internal" href="#file-location">File Location</a></li>
 </ul>
 </li>
 </ul>
@@ -383,7 +493,7 @@ for function calls, or headers/payloads for API calls).</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="../_static/documentation_options.js?v=5a5a329e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

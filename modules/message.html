@@ -3,40 +3,41 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Model System" href="models.html" /><link rel="prev" title="Mail" href="mail.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Model System" href="models.html" /><link rel="prev" title="Mail System" href="mail.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Messages &amp; Conversation - LionAGI Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+        <title>Messages Subsystem - LionAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -213,23 +214,26 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="action.html">Action</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch: The Orchestrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="event.html">Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail System</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processor.html">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
@@ -238,11 +242,12 @@
 <li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -283,312 +288,105 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="messages-conversation">
-<h1>Messages &amp; Conversation<a class="headerlink" href="#messages-conversation" title="Link to this heading">¶</a></h1>
-<p>This document provides an overview of LionAGI’s <strong>message system</strong>, which
-supports structured, multi-turn conversations, user instructions, and
-action requests/responses. Each message class (e.g., <code class="docutils literal notranslate"><span class="pre">System</span></code>, <code class="docutils literal notranslate"><span class="pre">Instruction</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ActionRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">ActionResponse</span></code>, <code class="docutils literal notranslate"><span class="pre">AssistantResponse</span></code>) inherits
-from a shared base (<code class="xref py py-class docutils literal notranslate"><span class="pre">RoledMessage</span></code>), itself extending LionAGI’s
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>. This design ensures each message has a unique UUID,
-metadata, and can be integrated with concurrency/event structures (like
-a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> or
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code>).</p>
-<section id="core-architecture">
-<h2>1. Core Architecture<a class="headerlink" href="#core-architecture" title="Link to this heading">¶</a></h2>
-<p>Each <strong>message class</strong> in this subsystem inherits (directly or indirectly) from:</p>
-<ol class="arabic simple">
-<li><p><strong>:class:`Element`</strong>
-Provides a UUID-based identifier (<code class="xref py py-attr docutils literal notranslate"><span class="pre">id</span></code>), creation timestamp
-(<code class="xref py py-attr docutils literal notranslate"><span class="pre">created_at</span></code>), and a metadata dict for custom fields.</p></li>
-<li><p><strong>:class:`RoledMessage`</strong> (defined in <code class="docutils literal notranslate"><span class="pre">message.py</span></code>)
-Adds conversation-specific attributes:
-- <code class="xref py py-attr docutils literal notranslate"><span class="pre">role</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, <code class="docutils literal notranslate"><span class="pre">USER</span></code>, <code class="docutils literal notranslate"><span class="pre">ASSISTANT</span></code>, <code class="docutils literal notranslate"><span class="pre">ACTION</span></code>)
-- <code class="xref py py-attr docutils literal notranslate"><span class="pre">content</span></code> (a dictionary of data)
-- Optional <code class="xref py py-attr docutils literal notranslate"><span class="pre">template</span></code> (for rendering text).
-Also implements <a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Sendable" title="lionagi.protocols._concepts.Sendable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sendable</span></code></a>—allowing
-each message to specify <code class="docutils literal notranslate"><span class="pre">sender</span></code> and <code class="docutils literal notranslate"><span class="pre">recipient</span></code> as roles, strings,
-or other Elements.</p></li>
-</ol>
+          <section id="module-lionagi.protocols.messages">
+<span id="messages-subsystem"></span><span id="lionagi-messages"></span><h1>Messages Subsystem<a class="headerlink" href="#module-lionagi.protocols.messages" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>This subsystem handles <strong>structured messages</strong> in LionAGI, enabling:
+- <strong>User instructions</strong> (with context, images, or tool references),
+- <strong>System</strong> messages that define context or constraints,
+- <strong>Assistant</strong> responses capturing AI output,
+- <strong>ActionRequests</strong> and <strong>ActionResponses</strong> to call code or tools.</p>
+<p>All are subclasses of <code class="xref py py-class docutils literal notranslate"><span class="pre">RoledMessage</span></code>, which defines a <em>role</em>, <em>sender</em>, <em>recipient</em>, and <em>content</em>.</p>
 </section>
-<section id="high-level-message-classes">
-<h2>2. High-Level Message Classes<a class="headerlink" href="#high-level-message-classes" title="Link to this heading">¶</a></h2>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
+</section>
+<section id="base-types">
+<h2>Base Types<a class="headerlink" href="#base-types" title="Link to this heading">¶</a></h2>
+<p id="lionagi-messages-base">Key enumerations like <code class="xref py py-class docutils literal notranslate"><span class="pre">MessageRole</span></code> (<code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, <code class="docutils literal notranslate"><span class="pre">USER</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ASSISTANT</span></code>, etc.) and the basic notion of a “sender/recipient”
+reside here.</p>
+</section>
+<section id="roledmessage">
+<h2>RoledMessage<a class="headerlink" href="#roledmessage" title="Link to this heading">¶</a></h2>
+<p id="lionagi-messages-message">Defines a general base class for typed messages with a <strong>role</strong>.
+Every specialized message (like system instructions, user instructions,
+or AI responses) inherits from <code class="xref py py-class docutils literal notranslate"><span class="pre">RoledMessage</span></code>.</p>
+</section>
 <section id="system">
-<h3>System<a class="headerlink" href="#system" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.system.System">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.system.</span></span><span class="sig-name descname"><span class="pre">System</span></span><a class="headerlink" href="#lionagi.protocols.messages.system.System" title="Link to this definition">¶</a></dt>
-<dd><p>A message containing <strong>system-level</strong> instructions, typically the first
-in a conversation. Always has the role <code class="xref py py-attr docutils literal notranslate"><span class="pre">MessageRole.SYSTEM</span></code>.</p>
-<ul>
-<li><p><strong>Purpose</strong>: Provide high-level policies, guidelines, or style instructions
-for the AI (e.g., “You are a helpful AI assistant”).</p></li>
-<li><p><strong>Key Fields</strong>:</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.system.System.system_message">
-<span class="sig-name descname"><span class="pre">system_message</span></span><a class="headerlink" href="#lionagi.protocols.messages.system.System.system_message" title="Link to this definition">¶</a></dt>
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">The</span> <span class="pre">main</span> <span class="pre">text</span> <span class="pre">or</span> <span class="pre">guidance.</span></span></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.system.System.system_datetime">
-<span class="sig-name descname"><span class="pre">system_datetime</span></span><a class="headerlink" href="#lionagi.protocols.messages.system.System.system_datetime" title="Link to this definition">¶</a></dt>
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">Optional</span> <span class="pre">timestamp</span> <span class="pre">or</span> <span class="pre">user-provided</span> <span class="pre">time</span> <span class="pre">string</span> <span class="pre">embedded</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">content.</span></span></dt>
-<dd></dd></dl>
-
-</li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.system</span><span class="w"> </span><span class="kn">import</span> <span class="n">System</span>
-
-<span class="n">sys_msg</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;You are a helpful AI assistant. Let&#39;s think step by step.&quot;</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">sys_msg</span><span class="o">.</span><span class="n">content</span><span class="p">[</span><span class="s2">&quot;system_message&quot;</span><span class="p">])</span>
-<span class="c1"># =&gt; &quot;You are a helpful AI assistant. Let&#39;s think step by step.&quot;</span>
-</pre></div>
-</div>
-</dd></dl>
-
+<h2>System<a class="headerlink" href="#system" title="Link to this heading">¶</a></h2>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code> sets <em>system-level</em> instructions. Typically the
+very first message in a conversation, it describes how the AI
+should behave overall.</p>
 </section>
 <section id="instruction">
-<h3>Instruction<a class="headerlink" href="#instruction" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.instruction.Instruction">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.instruction.</span></span><span class="sig-name descname"><span class="pre">Instruction</span></span><a class="headerlink" href="#lionagi.protocols.messages.instruction.Instruction" title="Link to this definition">¶</a></dt>
-<dd><p>Represents a <strong>user’s prompt</strong> or request, typically with the role
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">MessageRole.USER</span></code>. May contain:</p>
-<ul class="simple">
-<li><p><strong>Guidance</strong> or <strong>context</strong> (e.g., background knowledge).</p></li>
-<li><p><strong>Images</strong> or references to images.</p></li>
-<li><p><strong>Schemas</strong> describing how the AI should respond (e.g., <cite>request_model</cite>).</p></li>
-<li><p><strong>Plain content</strong> or structured fields.</p></li>
-</ul>
-<p><strong>Notable methods/fields</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create()</span></code>: Build an <code class="docutils literal notranslate"><span class="pre">Instruction</span></code> with fields like
-<code class="docutils literal notranslate"><span class="pre">instruction</span></code>, <code class="docutils literal notranslate"><span class="pre">context</span></code>, <code class="docutils literal notranslate"><span class="pre">images</span></code>, etc.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">rendered()</span></code>: Returns a final textual/structured representation.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.instruction</span><span class="w"> </span><span class="kn">import</span> <span class="n">Instruction</span>
-
-<span class="n">inst</span> <span class="o">=</span> <span class="n">Instruction</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;How do I parse JSON in Python?&quot;</span><span class="p">,</span>
-    <span class="n">context</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Some additional context...&quot;</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">inst</span><span class="o">.</span><span class="n">instruction</span><span class="p">)</span>
-<span class="c1"># =&gt; &quot;How do I parse JSON in Python?&quot;</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</section>
-<section id="actionrequest">
-<h3>ActionRequest<a class="headerlink" href="#actionrequest" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.action_request.ActionRequest">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.action_request.</span></span><span class="sig-name descname"><span class="pre">ActionRequest</span></span><a class="headerlink" href="#lionagi.protocols.messages.action_request.ActionRequest" title="Link to this definition">¶</a></dt>
-<dd><p>Specialized message for requesting a function or “tool” invocation.
-Has the role <code class="xref py py-attr docutils literal notranslate"><span class="pre">MessageRole.ACTION</span></code>.
-Typical usage:</p>
-<ol class="arabic simple">
-<li><p><strong>function</strong>: The name (or reference) of the function to be called.</p></li>
-<li><p><strong>arguments</strong>: A dictionary of parameters.</p></li>
-</ol>
-<p>Pairs with <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionResponse</span></code> to capture results. Often used within
-LionAGI’s <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code> or from user input desiring a function call.</p>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.action_request</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionRequest</span>
-
-<span class="n">request_msg</span> <span class="o">=</span> <span class="n">ActionRequest</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">function</span><span class="o">=</span><span class="s2">&quot;add&quot;</span><span class="p">,</span>
-    <span class="n">arguments</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">request_msg</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>    <span class="c1"># =&gt; &quot;add&quot;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">request_msg</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>   <span class="c1"># =&gt; {&quot;x&quot;: 10, &quot;y&quot;: 5}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</section>
-<section id="actionresponse">
-<h3>ActionResponse<a class="headerlink" href="#actionresponse" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.action_response.ActionResponse">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.action_response.</span></span><span class="sig-name descname"><span class="pre">ActionResponse</span></span><a class="headerlink" href="#lionagi.protocols.messages.action_response.ActionResponse" title="Link to this definition">¶</a></dt>
-<dd><p>The counterpart to <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code>. Also has the role
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">MessageRole.ACTION</span></code>, but stores:</p>
-<ul class="simple">
-<li><p><strong>function</strong> and <strong>arguments</strong>: Echoing the request.</p></li>
-<li><p><strong>output</strong>: The final result of the function/tool call.</p></li>
-</ul>
-<p>Typically created after an action is executed, linking back to the
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">action_request_id</span></code> to indicate which request triggered it.</p>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.action_response</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionResponse</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.action_request</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionRequest</span>
-
-<span class="n">req</span> <span class="o">=</span> <span class="n">ActionRequest</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">function</span><span class="o">=</span><span class="s2">&quot;add&quot;</span><span class="p">,</span>
-    <span class="n">arguments</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
-<span class="p">)</span>
-<span class="n">resp</span> <span class="o">=</span> <span class="n">ActionResponse</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">action_request</span><span class="o">=</span><span class="n">req</span><span class="p">,</span>
-    <span class="n">output</span><span class="o">=</span><span class="mi">5</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>  <span class="c1"># =&gt; 5</span>
-</pre></div>
-</div>
-</dd></dl>
-
+<h2>Instruction<a class="headerlink" href="#instruction" title="Link to this heading">¶</a></h2>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code> captures the <strong>user’s</strong> command or question.
+It may contain optional context or images, as well as a schema
+for structured responses.</p>
 </section>
 <section id="assistantresponse">
-<h3>AssistantResponse<a class="headerlink" href="#assistantresponse" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.assistant_response.AssistantResponse">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.assistant_response.</span></span><span class="sig-name descname"><span class="pre">AssistantResponse</span></span><a class="headerlink" href="#lionagi.protocols.messages.assistant_response.AssistantResponse" title="Link to this definition">¶</a></dt>
-<dd><p>Represents the <strong>AI assistant’s reply</strong> (role <code class="xref py py-attr docutils literal notranslate"><span class="pre">MessageRole.ASSISTANT</span></code>).
-Can store:</p>
-<ul class="simple">
-<li><p>A final user-facing text in <code class="xref py py-attr docutils literal notranslate"><span class="pre">assistant_response</span></code>.</p></li>
-<li><p>Raw model data in <code class="xref py py-attr docutils literal notranslate"><span class="pre">model_response</span></code> (e.g., an OpenAI ChatCompletion
-JSON).</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.assistant_response</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssistantResponse</span>
-
-<span class="n">aresp</span> <span class="o">=</span> <span class="n">AssistantResponse</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">assistant_response</span><span class="o">=</span><span class="s2">&quot;Here is your answer...&quot;</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">aresp</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># =&gt; &quot;Here is your answer...&quot;</span>
-</pre></div>
-</div>
-</dd></dl>
-
+<h2>AssistantResponse<a class="headerlink" href="#assistantresponse" title="Link to this heading">¶</a></h2>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">AssistantResponse</span></code> is the AI’s reply to a user or system
+message. This may store raw model data (JSON output) in
+<code class="docutils literal notranslate"><span class="pre">metadata[&quot;model_response&quot;]</span></code>.</p>
 </section>
+<section id="actionrequest">
+<h2>ActionRequest<a class="headerlink" href="#actionrequest" title="Link to this heading">¶</a></h2>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code> is a special message for requesting a
+function call or action. Contains a function name and arguments.</p>
+</section>
+<section id="actionresponse">
+<h2>ActionResponse<a class="headerlink" href="#actionresponse" title="Link to this heading">¶</a></h2>
+<p>Pairs with an <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code>, providing the <strong>output</strong>
+of that requested function. The original request ID is also tracked.</p>
 </section>
 <section id="messagemanager">
-<h2>3. MessageManager<a class="headerlink" href="#messagemanager" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.messages.manager.MessageManager">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.manager.</span></span><span class="sig-name descname"><span class="pre">MessageManager</span></span><a class="headerlink" href="#lionagi.protocols.messages.manager.MessageManager" title="Link to this definition">¶</a></dt>
-<dd><p>A <strong>container</strong> for storing multiple messages in a chronological or
-logical <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a>.
-Internally uses a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> to manage
-insertion order, concurrency, etc.</p>
-<p><strong>Capabilities</strong>:</p>
-<ul class="simple">
-<li><p><strong>Adding messages</strong>: via <code class="xref py py-meth docutils literal notranslate"><span class="pre">add_message()</span></code>, specifying
-system/instruction/action_request/etc.</p></li>
-<li><p>Maintaining a dedicated <strong>system</strong> message (the first message).</p></li>
-<li><p>Properties to retrieve <strong>last_instruction</strong>, <strong>assistant_responses</strong>, etc.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_chat_msgs()</span></code> yields a list of messages in a format
-suitable for a standard chat interface (<code class="docutils literal notranslate"><span class="pre">[{&quot;role&quot;:...,</span> <span class="pre">&quot;content&quot;:...}]</span></code>).</p></li>
-</ul>
-<p><strong>Code Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageManager</span>
+<h2>MessageManager<a class="headerlink" href="#messagemanager" title="Link to this heading">¶</a></h2>
+<p>A manager for collecting messages in order, offering utility methods
+to add system instructions, user instructions, or assistant responses,
+and to fetch them (e.g. “last instruction”). Also includes
+<strong>action</strong> request/response handling.</p>
+</section>
+<section id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.message_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageManager</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.system</span><span class="w"> </span><span class="kn">import</span> <span class="n">System</span>
-
-<span class="n">msg_manager</span> <span class="o">=</span> <span class="n">MessageManager</span><span class="p">()</span>
-<span class="n">sys_msg</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;System: be polite, etc.&quot;</span><span class="p">)</span>
-<span class="n">msg_manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">sys_msg</span><span class="p">)</span>
-
-<span class="c1"># Add user instruction</span>
-<span class="n">msg_manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">)</span>
-
-<span class="c1"># Add assistant response</span>
-<span class="n">msg_manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">assistant_response</span><span class="o">=</span><span class="s2">&quot;I&#39;m well, thanks for asking.&quot;</span><span class="p">)</span>
-
-<span class="c1"># Retrieve everything in chat format</span>
-<span class="n">chat_history</span> <span class="o">=</span> <span class="n">msg_manager</span><span class="o">.</span><span class="n">to_chat_msgs</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">chat_history</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="s2">&quot;role&quot;</span><span class="p">],</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">])</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</section>
-<section id="common-patterns">
-<h2>4. Common Patterns<a class="headerlink" href="#common-patterns" title="Link to this heading">¶</a></h2>
-<ol class="arabic">
-<li><p><strong>Creating/Updating a Message</strong>
-Each message class has a <code class="xref py py-meth docutils literal notranslate"><span class="pre">create()</span></code> method to produce a new instance
-from constructor arguments. Some also provide <code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code> to revise
-the message’s existing content while preserving its UUID.</p></li>
-<li><p><strong>Using with Concurrency</strong>
-Because these messages inherit from <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>, they can be placed
-in a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> or scheduled in a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code>.
-Action-related messages (<code class="docutils literal notranslate"><span class="pre">ActionRequest</span></code>, <code class="docutils literal notranslate"><span class="pre">ActionResponse</span></code>) can
-also link to <code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code>
-events for tool invocation.</p></li>
-<li><p><strong>Connecting Request/Response</strong>
-- An <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code> references a function plus arguments.
-- On completion, an <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionResponse</span></code> is created with the same function</p>
-<blockquote>
-<div><p>name/arguments, plus an <code class="xref py py-attr docutils literal notranslate"><span class="pre">output</span></code>.</p>
-</div></blockquote>
-<ul class="simple">
-<li><p>The original request can track if it’s responded to by checking
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">action_response_id</span></code>.</p></li>
-</ul>
-</li>
-<li><p><strong>Rendering</strong>
-<code class="xref py py-class docutils literal notranslate"><span class="pre">RoledMessage</span></code> optionally uses a Jinja2 <code class="xref py py-attr docutils literal notranslate"><span class="pre">template</span></code> for
-generating a textual representation of <code class="xref py py-attr docutils literal notranslate"><span class="pre">content</span></code>. If no template
-is set, a default JSON serialization is used.</p></li>
-<li><p><strong>System vs. Instruction</strong>
-- <strong>System</strong> messages typically come first in a conversation, establishing</p>
-<blockquote>
-<div><p>AI policy or style.</p>
-</div></blockquote>
-<ul class="simple">
-<li><p><strong>Instruction</strong> messages correspond to the user’s primary query or request.</p></li>
-<li><p><strong>AssistantResponse</strong> messages hold the AI’s reply.</p></li>
-</ul>
-</li>
-</ol>
-</section>
-<section id="putting-it-all-together">
-<h2>5. Putting It All Together<a class="headerlink" href="#putting-it-all-together" title="Link to this heading">¶</a></h2>
-<p>Below is a mini example showing how these pieces fit into a conversation:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.system</span><span class="w"> </span><span class="kn">import</span> <span class="n">System</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.instruction</span><span class="w"> </span><span class="kn">import</span> <span class="n">Instruction</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.assistant_response</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssistantResponse</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.messages.manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">MessageManager</span>
 
-<span class="c1"># 1) Create a MessageManager</span>
-<span class="n">manager</span> <span class="o">=</span> <span class="n">MessageManager</span><span class="p">()</span>
+<span class="c1"># 1) Create a manager</span>
+<span class="n">manager</span> <span class="o">=</span> <span class="n">MessageManager</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">System</span><span class="o">.</span><span class="n">create</span><span class="p">())</span>
 
-<span class="c1"># 2) Set a System message</span>
-<span class="n">sys_msg</span> <span class="o">=</span> <span class="n">System</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">system_message</span><span class="o">=</span><span class="s2">&quot;You are a math assistant. Please be accurate.&quot;</span><span class="p">)</span>
-<span class="n">manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">sys_msg</span><span class="p">)</span>
+<span class="c1"># 2) Add a user instruction</span>
+<span class="n">instruct</span> <span class="o">=</span> <span class="n">Instruction</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;How to deploy a python app?&quot;</span><span class="p">)</span>
+<span class="n">msg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="n">instruct</span><span class="p">)</span>
 
-<span class="c1"># 3) The user sends an Instruction</span>
-<span class="n">manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;Calculate 12 * 8, please.&quot;</span><span class="p">)</span>
+<span class="c1"># 3) AI responds</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">AssistantResponse</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="s2">&quot;You can use Docker or a PaaS like Heroku.&quot;</span><span class="p">)</span>
+<span class="n">msg</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">assistant_response</span><span class="o">=</span><span class="n">response</span><span class="p">)</span>
 
-<span class="c1"># 4) The assistant responds</span>
-<span class="n">manager</span><span class="o">.</span><span class="n">add_message</span><span class="p">(</span><span class="n">assistant_response</span><span class="o">=</span><span class="s2">&quot;The result is 96.&quot;</span><span class="p">)</span>
-
-<span class="c1"># 5) Display the chat structure</span>
-<span class="k">for</span> <span class="n">msg_dict</span> <span class="ow">in</span> <span class="n">manager</span><span class="o">.</span><span class="n">to_chat_msgs</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">msg_dict</span><span class="p">[</span><span class="s2">&quot;role&quot;</span><span class="p">],</span> <span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">msg_dict</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">])</span>
+<span class="c1"># Inspect</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">manager</span><span class="o">.</span><span class="n">last_response</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+<span class="c1"># -&gt; &quot;You can use Docker or a PaaS like Heroku.&quot;</span>
 </pre></div>
 </div>
-<p>With these message classes, LionAGI can handle:</p>
+</section>
+<section id="file-locations">
+<h2>File Locations<a class="headerlink" href="#file-locations" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><strong>System</strong> instructions that shape AI behavior.</p></li>
-<li><p><strong>User</strong> instructions with optional advanced formats (images, schemas, etc.).</p></li>
-<li><p><strong>Actions</strong> for function calls (via <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code> and
-<code class="xref py py-class docutils literal notranslate"><span class="pre">ActionResponse</span></code>).</p></li>
-<li><p><strong>Assistant</strong> replies with final or intermediate results.</p></li>
+<li><p><strong>base.py</strong>: Shared role/flag definitions.</p></li>
+<li><p><strong>message.py</strong>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">RoledMessage</span></code> base class + jinja environment.</p></li>
+<li><p><strong>system.py</strong>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code> specialized message.</p></li>
+<li><p><strong>instruction.py</strong>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code> specialized message.</p></li>
+<li><p><strong>assistant_response.py</strong>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">AssistantResponse</span></code> specialized message.</p></li>
+<li><p><strong>action_request.py</strong>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code> specialized message.</p></li>
+<li><p><strong>action_response.py</strong>: The <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionResponse</span></code> specialized message.</p></li>
+<li><p><strong>message_manager.py</strong>: A manager class for storing and operating on multiple messages.</p></li>
 </ul>
-<p>Ultimately, this messages subsystem ensures each portion of a conversation
-or action request is neatly stored, typed, and logged, facilitating
-both <em>multi-turn dialogs</em> and <em>tool-usage flows</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -613,7 +411,7 @@ both <em>multi-turn dialogs</em> and <em>tool-usage flows</em>.</p>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Mail</div>
+                <div class="title">Mail System</div>
                 
               </div>
             </a>
@@ -647,41 +445,19 @@ both <em>multi-turn dialogs</em> and <em>tool-usage flows</em>.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Messages &amp; Conversation</a><ul>
-<li><a class="reference internal" href="#core-architecture">1. Core Architecture</a></li>
-<li><a class="reference internal" href="#high-level-message-classes">2. High-Level Message Classes</a><ul>
-<li><a class="reference internal" href="#system">System</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.messages.system.System"><code class="docutils literal notranslate"><span class="pre">System</span></code></a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.messages.system.System.system_message"><code class="docutils literal notranslate"><span class="pre">System.system_message</span></code></a></li>
-<li><a class="reference internal" href="#lionagi.protocols.messages.system.System.system_datetime"><code class="docutils literal notranslate"><span class="pre">System.system_datetime</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#instruction">Instruction</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.messages.instruction.Instruction"><code class="docutils literal notranslate"><span class="pre">Instruction</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#actionrequest">ActionRequest</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.messages.action_request.ActionRequest"><code class="docutils literal notranslate"><span class="pre">ActionRequest</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#actionresponse">ActionResponse</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.messages.action_response.ActionResponse"><code class="docutils literal notranslate"><span class="pre">ActionResponse</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#assistantresponse">AssistantResponse</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.messages.assistant_response.AssistantResponse"><code class="docutils literal notranslate"><span class="pre">AssistantResponse</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#messagemanager">3. MessageManager</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.messages.manager.MessageManager"><code class="docutils literal notranslate"><span class="pre">MessageManager</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#common-patterns">4. Common Patterns</a></li>
-<li><a class="reference internal" href="#putting-it-all-together">5. Putting It All Together</a></li>
+<li><a class="reference internal" href="#">Messages Subsystem</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#base-types">Base Types</a></li>
+<li><a class="reference internal" href="#roledmessage">RoledMessage</a></li>
+<li><a class="reference internal" href="#system">System</a></li>
+<li><a class="reference internal" href="#instruction">Instruction</a></li>
+<li><a class="reference internal" href="#assistantresponse">AssistantResponse</a></li>
+<li><a class="reference internal" href="#actionrequest">ActionRequest</a></li>
+<li><a class="reference internal" href="#actionresponse">ActionResponse</a></li>
+<li><a class="reference internal" href="#messagemanager">MessageManager</a></li>
+<li><a class="reference internal" href="#example-usage">Example Usage</a></li>
+<li><a class="reference internal" href="#file-locations">File Locations</a></li>
 </ul>
 </li>
 </ul>
@@ -693,7 +469,7 @@ both <em>multi-turn dialogs</em> and <em>tool-usage flows</em>.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="../_static/documentation_options.js?v=5a5a329e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

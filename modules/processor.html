@@ -3,40 +3,41 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="Core Operation Modules" href="core_operations.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Progression" href="progression.html" /><link rel="prev" title="Pile" href="pile.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Execution Strategies &amp; Executors - LionAGI Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+        <title>Event Processor and Executor - LionAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -185,7 +186,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -212,37 +213,41 @@
 <li class="toctree-l2"><a class="reference internal" href="../tutorials/get_started_pt3.html">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/index.html">Modules API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../modules/action.html">Action</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/adapter.html">Adapter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/branch.html">Branch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html">Abstract Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/event.html">Event Architecture</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/instruct.html">Instruct</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/mail.html">Mail</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/message.html">Messages &amp; Conversation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/pile_progression.html">Pile &amp; Progression</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/service.html">API Service System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/strategies.html">Strategies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/utils.html">General Purpose Helpers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_package.html"><code class="docutils literal notranslate"><span class="pre">libs.package</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_schema.html"><code class="docutils literal notranslate"><span class="pre">libs.schema</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch: The Orchestrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">Messages Subsystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_package.html"><code class="docutils literal notranslate"><span class="pre">libs.package</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_schema.html"><code class="docutils literal notranslate"><span class="pre">libs.schema</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Operations</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -263,7 +268,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/operations/strategies.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/modules/processor.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -277,21 +282,37 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="execution-strategies-executors">
-<span id="lionagi-exec-strategies"></span><h1>Execution Strategies &amp; Executors<a class="headerlink" href="#execution-strategies-executors" title="Link to this heading">¶</a></h1>
-<p>LionAGI can run instructions using various strategies:</p>
+          <section id="module-lionagi.protocols.generic.processor">
+<span id="event-processor-and-executor"></span><span id="lionagi-protocols-generic-processor"></span><h1>Event Processor and Executor<a class="headerlink" href="#module-lionagi.protocols.generic.processor" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>This module provides:</p>
 <ul class="simple">
-<li><p>Sequential</p></li>
-<li><p>Concurrent</p></li>
-<li><p>Chunk-based combos</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code>: An <strong>asynchronous</strong> queue manager for <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> objects,
+supporting capacity-limited batching and optional permission checks.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code>: A coordinating class that <strong>stores events</strong> in a <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code>
+and <strong>forwards</strong> them to an internal Processor for execution.</p></li>
 </ul>
-<p>Below are references to each strategy class in <cite>lionagi.operations.strategies</cite>.</p>
+</section>
+<section id="processor">
+<h2>Processor<a class="headerlink" href="#processor" title="Link to this heading">¶</a></h2>
+</section>
+<section id="executor">
+<h2>Executor<a class="headerlink" href="#executor" title="Link to this heading">¶</a></h2>
+</section>
+<section id="file-location">
+<h2>File Location<a class="headerlink" href="#file-location" title="Link to this heading">¶</a></h2>
+<p><strong>Source File</strong>:
+<code class="docutils literal notranslate"><span class="pre">lionagi/protocols/generic/processor.py</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
+</section>
 </section>
 
         </article>
@@ -299,15 +320,23 @@
       <footer>
         
         <div class="related-pages">
-          
-          <a class="prev-page" href="core_operations.html">
+          <a class="next-page" href="progression.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Progression</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="pile.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Core Operation Modules</div>
+                <div class="title">Pile</div>
                 
               </div>
             </a>
@@ -329,13 +358,35 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Event Processor and Executor</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#processor">Processor</a></li>
+<li><a class="reference internal" href="#executor">Executor</a></li>
+<li><a class="reference internal" href="#file-location">File Location</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="../_static/documentation_options.js?v=5a5a329e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

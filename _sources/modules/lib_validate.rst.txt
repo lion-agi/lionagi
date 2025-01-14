@@ -171,7 +171,7 @@ Plus other lower-level distance measures (Hamming, Cosine, etc.).
 -----------------------------
 Usage Example: Fuzzy Key Matching
 -----------------------------
-Here’s a minimal snippet showing how to fix up user-provided JSON 
+Here's a minimal snippet showing how to fix up user-provided JSON 
 with slight typos in keys:
 
 .. code-block:: python

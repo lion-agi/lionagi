@@ -3,40 +3,41 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Branch" href="branch.html" /><link rel="prev" title="Action" href="action.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Branch-Level Operations" href="branch_operations.html" /><link rel="prev" title="Action System" href="action.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Adapter - LionAGI Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+        <title>Adapter System - LionAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -213,23 +214,26 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="action.html">Action</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Adapter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch: The Orchestrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="event.html">Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail</a></li>
-<li class="toctree-l2"><a class="reference internal" href="message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processor.html">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
@@ -238,11 +242,12 @@
 <li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -283,233 +288,67 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="adapter">
-<h1>Adapter<a class="headerlink" href="#adapter" title="Link to this heading">¶</a></h1>
-<p>This module provides a <strong>pluggable adaptation</strong> framework for converting
-LionAGI objects to or from various formats—such as JSON strings,
-CSV/Excel files, or Pandas DataFrames—without scattering I/O logic
-throughout your code. Each adapter implements a protocol that knows
-how to handle one or more file/data types.</p>
-<p>The system centers on:</p>
-<ul class="simple">
-<li><p><strong>Adapter</strong>: A protocol specifying two main methods
-(<code class="docutils literal notranslate"><span class="pre">from_obj</span></code> and <code class="docutils literal notranslate"><span class="pre">to_obj</span></code>) for inbound/outbound transformations.</p></li>
-<li><p><strong>AdapterRegistry</strong>: A class that registers adapters under a key
-(e.g., <code class="docutils literal notranslate"><span class="pre">&quot;.json&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pd_dataframe&quot;</span></code>, etc.) and uses them to adapt
-objects.</p></li>
-<li><p><strong>Concrete Adapters</strong>: Various classes like
-<code class="xref py py-class docutils literal notranslate"><span class="pre">JsonAdapter</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">JsonFileAdapter</span></code>,
-<code class="xref py py-class docutils literal notranslate"><span class="pre">PandasDataFrameAdapter</span></code>, etc., each handling a specific
-data format.</p></li>
-</ul>
-<section id="module-lionagi.protocols.adapter">
-<span id="adapter-protocol"></span><h2>1. Adapter Protocol<a class="headerlink" href="#module-lionagi.protocols.adapter" title="Link to this heading">¶</a></h2>
+          <section id="module-lionagi.protocols.adapters">
+<span id="adapter-system"></span><span id="lionagi-adapters"></span><h1>Adapter System<a class="headerlink" href="#module-lionagi.protocols.adapters" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>This system introduces the concept of an <strong>Adapter</strong> that knows how to
+translate an internal object (like a Pydantic-based Element or a
+<code class="docutils literal notranslate"><span class="pre">Collective</span></code>) to an external representation (JSON, CSV, Excel, Pandas
+DataFrame, etc.), and vice versa. Adapters are registered in a global
+<code class="xref py py-class docutils literal notranslate"><span class="pre">AdapterRegistry</span></code> under a specific <strong>key</strong> (like <code class="docutils literal notranslate"><span class="pre">&quot;.csv&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;pd_dataframe&quot;</span></code>), allowing other code to call <code class="docutils literal notranslate"><span class="pre">adapt_from</span></code> or
+<code class="docutils literal notranslate"><span class="pre">adapt_to</span></code> generically.</p>
 </section>
-<section id="adapterregistry">
-<h2>2. AdapterRegistry<a class="headerlink" href="#adapterregistry" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.AdapterRegistry">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">AdapterRegistry</span></span><a class="headerlink" href="#lionagi.protocols.adapter.AdapterRegistry" title="Link to this definition">¶</a></dt>
-<dd><p>A central registry that holds multiple <code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code> objects,
-each keyed by its <code class="xref py py-attr docutils literal notranslate"><span class="pre">Adapter.obj_key</span></code>.</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">register(adapter)()</span></code>: Register a new adapter class or instance.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">get(obj_key)</span> <span class="pre">-&gt;</span> <span class="pre">Adapter()</span></code>: Retrieve the adapter matching
-a key (like <code class="docutils literal notranslate"><span class="pre">&quot;.json&quot;</span></code>).</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">adapt_from(subj_cls,</span> <span class="pre">obj,</span> <span class="pre">obj_key,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">dict|list[dict]()</span></code>:
-Use the registry’s matching adapter to convert external data
-<strong>into</strong> a dictionary or list of dictionaries.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">adapt_to(subj,</span> <span class="pre">obj_key,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">Any()</span></code>:
-Use the matching adapter to convert a subject <strong>out</strong> to
-the external format.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">reg</span> <span class="o">=</span> <span class="n">AdapterRegistry</span><span class="p">()</span>
-<span class="n">reg</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">MyJsonAdapter</span><span class="p">)</span>  <span class="c1"># custom adapter with obj_key=&quot;myjson&quot;</span>
-
-<span class="c1"># inbound</span>
-<span class="n">data_dict</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">adapt_from</span><span class="p">(</span><span class="n">MyObject</span><span class="p">,</span> <span class="s1">&#39;{&quot;foo&quot;: &quot;bar&quot;}&#39;</span><span class="p">,</span> <span class="s2">&quot;myjson&quot;</span><span class="p">)</span>
-<span class="c1"># outbound</span>
-<span class="n">json_str</span> <span class="o">=</span> <span class="n">reg</span><span class="o">.</span><span class="n">adapt_to</span><span class="p">(</span><span class="n">my_obj_instance</span><span class="p">,</span> <span class="s2">&quot;myjson&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Link to this heading">¶</a></h2>
 </section>
-<section id="built-in-adapters">
-<h2>3. Built-in Adapters<a class="headerlink" href="#built-in-adapters" title="Link to this heading">¶</a></h2>
-<p>The module defines several <strong>concrete</strong> adapters for common formats.</p>
-<section id="jsonadapter">
-<h3>JsonAdapter<a class="headerlink" href="#jsonadapter" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.JsonAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">JsonAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapter.JsonAdapter" title="Link to this definition">¶</a></dt>
-<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">obj_key</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;json&quot;</span></code></p>
-<p><strong>Purpose</strong>:
-Convert a JSON string to/from a LionAGI object’s dictionary representation.</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_obj(subj_cls,</span> <span class="pre">obj:</span> <span class="pre">str,</span> <span class="pre">/)</span> <span class="pre">-&gt;</span> <span class="pre">dict()</span></code>:
-Expects a JSON string <code class="docutils literal notranslate"><span class="pre">obj</span></code>. Returns a dictionary after parsing.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_obj(subj:</span> <span class="pre">T)</span> <span class="pre">-&gt;</span> <span class="pre">str()</span></code>:
-Calls <code class="docutils literal notranslate"><span class="pre">subj.to_dict()</span></code> internally and dumps to a JSON string.</p></li>
-</ul>
-</dd></dl>
-
+<section id="adapter-and-registry">
+<h2>Adapter and Registry<a class="headerlink" href="#adapter-and-registry" title="Link to this heading">¶</a></h2>
 </section>
-<section id="jsonfileadapter">
-<h3>JsonFileAdapter<a class="headerlink" href="#jsonfileadapter" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.JsonFileAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">JsonFileAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapter.JsonFileAdapter" title="Link to this definition">¶</a></dt>
-<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">obj_key</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;.json&quot;</span></code></p>
-<p>Similar to <a class="reference internal" href="#lionagi.protocols.adapter.JsonAdapter" title="lionagi.protocols.adapter.JsonAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonAdapter</span></code></a>, but works <strong>directly with a file</strong> path
-rather than a string in memory.</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_obj(subj_cls,</span> <span class="pre">obj:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">Path,</span> <span class="pre">/)</span> <span class="pre">-&gt;</span> <span class="pre">dict()</span></code>:
-Reads a <code class="docutils literal notranslate"><span class="pre">.json</span></code> file from the given path.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_obj(subj:</span> <span class="pre">T,</span> <span class="pre">/,</span> <span class="pre">fp:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">Path)</span> <span class="pre">-&gt;</span> <span class="pre">None()</span></code>:
-Writes the subject’s dictionary to a file (<code class="docutils literal notranslate"><span class="pre">fp</span></code>) in JSON form.</p></li>
-</ul>
-</dd></dl>
-
+<section id="json-adapters">
+<h2>JSON Adapters<a class="headerlink" href="#json-adapters" title="Link to this heading">¶</a></h2>
 </section>
-<section id="pandasseriesadapter">
-<h3>PandasSeriesAdapter<a class="headerlink" href="#pandasseriesadapter" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.PandasSeriesAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">PandasSeriesAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapter.PandasSeriesAdapter" title="Link to this definition">¶</a></dt>
-<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">obj_key</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;pd_series&quot;</span></code>
-Also aliased as <code class="docutils literal notranslate"><span class="pre">(&quot;pandas_series&quot;,</span> <span class="pre">&quot;pd.series&quot;,</span> <span class="pre">&quot;pd_series&quot;)</span></code>.</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_obj(subj_cls,</span> <span class="pre">obj:</span> <span class="pre">pd.Series,</span> <span class="pre">/)</span> <span class="pre">-&gt;</span> <span class="pre">dict()</span></code>:
-Convert a Pandas Series to a dictionary.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_obj(subj:</span> <span class="pre">T,</span> <span class="pre">/,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">pd.Series()</span></code>:
-Create a Pandas Series from the subject’s dictionary.</p></li>
-</ul>
-</dd></dl>
-
+<section id="csv-and-excel-adapters">
+<h2>CSV and Excel Adapters<a class="headerlink" href="#csv-and-excel-adapters" title="Link to this heading">¶</a></h2>
 </section>
-<section id="pandasdataframeadapter">
-<h3>PandasDataFrameAdapter<a class="headerlink" href="#pandasdataframeadapter" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.PandasDataFrameAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">PandasDataFrameAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapter.PandasDataFrameAdapter" title="Link to this definition">¶</a></dt>
-<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">obj_key</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;pd_dataframe&quot;</span></code>
-Also aliased as <code class="docutils literal notranslate"><span class="pre">(&quot;pandas_dataframe&quot;,</span> <span class="pre">&quot;pd.DataFrame&quot;,</span> <span class="pre">&quot;pd_dataframe&quot;)</span></code>.</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_obj(subj_cls,</span> <span class="pre">obj:</span> <span class="pre">pd.DataFrame,</span> <span class="pre">/,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">list[dict]()</span></code>:
-Convert a DataFrame to a list of dictionaries (one per row).</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_obj(subj:</span> <span class="pre">list[T],</span> <span class="pre">/,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">pd.DataFrame()</span></code>:
-Convert a <strong>list</strong> of objects (each with <code class="docutils literal notranslate"><span class="pre">.to_dict()</span></code>) into a DataFrame.</p></li>
-</ul>
-</dd></dl>
-
-</section>
-<section id="csvfileadapter">
-<h3>CSVFileAdapter<a class="headerlink" href="#csvfileadapter" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.CSVFileAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">CSVFileAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapter.CSVFileAdapter" title="Link to this definition">¶</a></dt>
-<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">obj_key</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;.csv&quot;</span></code>
-Also aliased as <code class="docutils literal notranslate"><span class="pre">(&quot;csv_file&quot;,</span> <span class="pre">&quot;csv&quot;)</span></code>.</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_obj(subj_cls,</span> <span class="pre">obj:</span> <span class="pre">str|Path,</span> <span class="pre">/,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">list[dict]()</span></code>:
-Reads a CSV file into a list of row-dictionaries.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_obj(subj:</span> <span class="pre">list[T],</span> <span class="pre">/,</span> <span class="pre">fp:</span> <span class="pre">str|Path,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">None()</span></code>:
-Writes a list of objects (via <code class="docutils literal notranslate"><span class="pre">.to_dict()</span></code>) to a CSV file.</p></li>
-</ul>
-</dd></dl>
-
-</section>
-<section id="excelfileadapter">
-<h3>ExcelFileAdapter<a class="headerlink" href="#excelfileadapter" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.ExcelFileAdapter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">ExcelFileAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapter.ExcelFileAdapter" title="Link to this definition">¶</a></dt>
-<dd><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">obj_key</span></code> = <code class="docutils literal notranslate"><span class="pre">&quot;.xlsx&quot;</span></code>
-Also aliased as <code class="docutils literal notranslate"><span class="pre">(&quot;.xlsx&quot;,</span> <span class="pre">&quot;excel_file&quot;,</span> <span class="pre">&quot;excel&quot;,</span> <span class="pre">&quot;xlsx&quot;,</span> <span class="pre">&quot;xls&quot;,</span> <span class="pre">&quot;.xls&quot;)</span></code>.</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_obj(subj_cls,</span> <span class="pre">obj:</span> <span class="pre">str|Path,</span> <span class="pre">/,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">list[dict]()</span></code>:
-Reads an Excel file into a list of row-dictionaries.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_obj(subj:</span> <span class="pre">list[T],</span> <span class="pre">/,</span> <span class="pre">fp:</span> <span class="pre">str|Path,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">None()</span></code>:
-Writes a list of objects to an Excel file.</p></li>
-</ul>
-</dd></dl>
-
-</section>
-</section>
-<section id="specialized-adapter-registries">
-<h2>4. Specialized Adapter Registries<a class="headerlink" href="#specialized-adapter-registries" title="Link to this heading">¶</a></h2>
-<p>Some subsystems (e.g., “Nodes” vs. “Piles”) might want different default
-adapters. The module provides two examples:</p>
-<section id="nodeadapterregistry">
-<h3>NodeAdapterRegistry<a class="headerlink" href="#nodeadapterregistry" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.NodeAdapterRegistry">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">NodeAdapterRegistry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AdapterRegistry</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapter.NodeAdapterRegistry" title="Link to this definition">¶</a></dt>
-<dd><p>A registry pre-populated with:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.JsonAdapter" title="lionagi.protocols.adapter.JsonAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonAdapter</span></code></a></p></li>
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.JsonFileAdapter" title="lionagi.protocols.adapter.JsonFileAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonFileAdapter</span></code></a></p></li>
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.PandasSeriesAdapter" title="lionagi.protocols.adapter.PandasSeriesAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">PandasSeriesAdapter</span></code></a></p></li>
-</ul>
-</dd></dl>
-
-</section>
-<section id="pileadapterregistry">
-<h3>PileAdapterRegistry<a class="headerlink" href="#pileadapterregistry" title="Link to this heading">¶</a></h3>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.adapter.PileAdapterRegistry">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapter.</span></span><span class="sig-name descname"><span class="pre">PileAdapterRegistry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">AdapterRegistry</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapter.PileAdapterRegistry" title="Link to this definition">¶</a></dt>
-<dd><p>A registry pre-populated with:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.JsonAdapter" title="lionagi.protocols.adapter.JsonAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonAdapter</span></code></a></p></li>
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.JsonFileAdapter" title="lionagi.protocols.adapter.JsonFileAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">JsonFileAdapter</span></code></a></p></li>
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.PandasDataFrameAdapter" title="lionagi.protocols.adapter.PandasDataFrameAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">PandasDataFrameAdapter</span></code></a></p></li>
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.CSVFileAdapter" title="lionagi.protocols.adapter.CSVFileAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">CSVFileAdapter</span></code></a></p></li>
-<li><p><a class="reference internal" href="#lionagi.protocols.adapter.ExcelFileAdapter" title="lionagi.protocols.adapter.ExcelFileAdapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExcelFileAdapter</span></code></a></p></li>
-</ul>
-</dd></dl>
-
-</section>
+<section id="pandas-dataframe-and-series-adapters">
+<h2>Pandas DataFrame and Series Adapters<a class="headerlink" href="#pandas-dataframe-and-series-adapters" title="Link to this heading">¶</a></h2>
 </section>
 <section id="example-usage">
-<h2>5. Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
-<p><strong>Registering Adapters</strong>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.adapter</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdapterRegistry</span><span class="p">,</span> <span class="n">JsonAdapter</span>
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
+<p>Below is a simple snippet using the registry:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.adapters.adapter</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdapterRegistry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.adapters.json_adapter</span><span class="w"> </span><span class="kn">import</span> <span class="n">JsonAdapter</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">MyCustomAdapter</span><span class="p">(</span><span class="n">JsonAdapter</span><span class="p">):</span>
-    <span class="n">obj_key</span> <span class="o">=</span> <span class="s2">&quot;my_json&quot;</span>  <span class="c1"># special key</span>
+<span class="c1"># Register the adapter</span>
+<span class="n">AdapterRegistry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">JsonAdapter</span><span class="p">)</span>
 
-    <span class="c1"># override to_obj or from_obj if needed</span>
+<span class="c1"># Suppose we have some object with `to_dict()`</span>
+<span class="n">my_element</span> <span class="o">=</span> <span class="n">SomeElement</span><span class="p">()</span>
 
-<span class="c1"># Register custom adapter</span>
-<span class="n">AdapterRegistry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">MyCustomAdapter</span><span class="p">)</span>
+<span class="c1"># Convert to JSON string</span>
+<span class="n">json_str</span> <span class="o">=</span> <span class="n">AdapterRegistry</span><span class="o">.</span><span class="n">adapt_to</span><span class="p">(</span><span class="n">my_element</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">)</span>
+
+<span class="c1"># Convert JSON back into a dictionary</span>
+<span class="n">parsed</span> <span class="o">=</span> <span class="n">AdapterRegistry</span><span class="o">.</span><span class="n">adapt_from</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">my_element</span><span class="p">),</span> <span class="n">json_str</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">)</span>
+
+<span class="c1"># Typically, you&#39;d then call `SomeElement.from_dict(parsed)` if needed.</span>
 </pre></div>
 </div>
-<p><strong>Adapting From</strong>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Suppose you have an inbound JSON string</span>
-<span class="n">inbound</span> <span class="o">=</span> <span class="s1">&#39;{&quot;key&quot;: &quot;value&quot;}&#39;</span>
-<span class="c1"># Convert it to a dict</span>
-<span class="n">data_dict</span> <span class="o">=</span> <span class="n">AdapterRegistry</span><span class="o">.</span><span class="n">adapt_from</span><span class="p">(</span><span class="n">MyObject</span><span class="p">,</span> <span class="n">inbound</span><span class="p">,</span> <span class="s2">&quot;my_json&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p><strong>Adapting To</strong>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Suppose you have &#39;my_obj&#39; with a .to_dict() method</span>
-<span class="n">out_str</span> <span class="o">=</span> <span class="n">AdapterRegistry</span><span class="o">.</span><span class="n">adapt_to</span><span class="p">(</span><span class="n">my_obj</span><span class="p">,</span> <span class="s2">&quot;my_json&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">out_str</span><span class="p">)</span>  <span class="c1"># A JSON string</span>
-</pre></div>
-</div>
-<p><strong>File-Based</strong>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Write to a .csv file</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.adapter</span><span class="w"> </span><span class="kn">import</span> <span class="n">PileAdapterRegistry</span>
-
-<span class="n">PileAdapterRegistry</span><span class="o">.</span><span class="n">adapt_to</span><span class="p">(</span><span class="n">my_list_of_objs</span><span class="p">,</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span> <span class="n">fp</span><span class="o">=</span><span class="s2">&quot;out.csv&quot;</span><span class="p">)</span>
-
-<span class="c1"># Read from a .csv file</span>
-<span class="n">items</span> <span class="o">=</span> <span class="n">PileAdapterRegistry</span><span class="o">.</span><span class="n">adapt_from</span><span class="p">(</span><span class="n">MyObjClass</span><span class="p">,</span> <span class="s2">&quot;in.csv&quot;</span><span class="p">,</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
+</section>
+<section id="file-locations">
+<h2>File Locations<a class="headerlink" href="#file-locations" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><strong>adapter.py</strong>: The core protocol (Adapter) and <code class="xref py py-class docutils literal notranslate"><span class="pre">AdapterRegistry</span></code>.</p></li>
+<li><p><strong>json_adapter.py</strong>: In-memory JSON and JSON-file adapters.</p></li>
+<li><p><strong>pandas_/csv_adapter.py</strong>: CSV file adapter.</p></li>
+<li><p><strong>pandas_/excel_adapter.py</strong>: Excel file adapter (.xlsx).</p></li>
+<li><p><strong>pandas_/pd_dataframe_adapter.py</strong>: DataFrame adapter.</p></li>
+<li><p><strong>pandas_/pd_series_adapter.py</strong>: Series adapter.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -518,12 +357,12 @@ adapters. The module provides two examples:</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="branch.html">
+          <a class="next-page" href="branch_operations.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Branch</div>
+                <div class="title">Branch-Level Operations</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -534,7 +373,7 @@ adapters. The module provides two examples:</p>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Action</div>
+                <div class="title">Action System</div>
                 
               </div>
             </a>
@@ -568,51 +407,15 @@ adapters. The module provides two examples:</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Adapter</a><ul>
-<li><a class="reference internal" href="#module-lionagi.protocols.adapter">1. Adapter Protocol</a></li>
-<li><a class="reference internal" href="#adapterregistry">2. AdapterRegistry</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.AdapterRegistry"><code class="docutils literal notranslate"><span class="pre">AdapterRegistry</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#built-in-adapters">3. Built-in Adapters</a><ul>
-<li><a class="reference internal" href="#jsonadapter">JsonAdapter</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.JsonAdapter"><code class="docutils literal notranslate"><span class="pre">JsonAdapter</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#jsonfileadapter">JsonFileAdapter</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.JsonFileAdapter"><code class="docutils literal notranslate"><span class="pre">JsonFileAdapter</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#pandasseriesadapter">PandasSeriesAdapter</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.PandasSeriesAdapter"><code class="docutils literal notranslate"><span class="pre">PandasSeriesAdapter</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#pandasdataframeadapter">PandasDataFrameAdapter</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.PandasDataFrameAdapter"><code class="docutils literal notranslate"><span class="pre">PandasDataFrameAdapter</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#csvfileadapter">CSVFileAdapter</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.CSVFileAdapter"><code class="docutils literal notranslate"><span class="pre">CSVFileAdapter</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#excelfileadapter">ExcelFileAdapter</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.ExcelFileAdapter"><code class="docutils literal notranslate"><span class="pre">ExcelFileAdapter</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#specialized-adapter-registries">4. Specialized Adapter Registries</a><ul>
-<li><a class="reference internal" href="#nodeadapterregistry">NodeAdapterRegistry</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.NodeAdapterRegistry"><code class="docutils literal notranslate"><span class="pre">NodeAdapterRegistry</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#pileadapterregistry">PileAdapterRegistry</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.adapter.PileAdapterRegistry"><code class="docutils literal notranslate"><span class="pre">PileAdapterRegistry</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#example-usage">5. Example Usage</a></li>
+<li><a class="reference internal" href="#">Adapter System</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#adapter-and-registry">Adapter and Registry</a></li>
+<li><a class="reference internal" href="#json-adapters">JSON Adapters</a></li>
+<li><a class="reference internal" href="#csv-and-excel-adapters">CSV and Excel Adapters</a></li>
+<li><a class="reference internal" href="#pandas-dataframe-and-series-adapters">Pandas DataFrame and Series Adapters</a></li>
+<li><a class="reference internal" href="#example-usage">Example Usage</a></li>
+<li><a class="reference internal" href="#file-locations">File Locations</a></li>
 </ul>
 </li>
 </ul>
@@ -624,7 +427,7 @@ adapters. The module provides two examples:</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="../_static/documentation_options.js?v=5a5a329e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

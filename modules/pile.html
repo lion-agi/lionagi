@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Node, Edge, and Graph" href="graph.html" /><link rel="prev" title="Event, EventStatus, and Execution" href="event.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Event Processor and Executor" href="processor.html" /><link rel="prev" title="Operative &amp; Step" href="operative_step.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Form &amp; Report - LionAGI Documentation</title>
+        <title>Pile - LionAGI Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
@@ -221,7 +221,7 @@
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Abstract Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
 <li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Form &amp; Report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
@@ -229,7 +229,7 @@
 <li class="toctree-l2"><a class="reference internal" href="message.html">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Pile</a></li>
 <li class="toctree-l2"><a class="reference internal" href="processor.html">Event Processor and Executor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
@@ -268,7 +268,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/modules/form.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/modules/pile.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -288,169 +288,97 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="form-report">
-<h1>Form &amp; Report<a class="headerlink" href="#form-report" title="Link to this heading">¶</a></h1>
-<p>This module provides <strong>form-based data structures</strong> for tasks that involve
-collecting inputs, producing outputs, and managing intermediate fields. A form
-can be seen as a specialized, dynamic Pydantic model (extending LionAGI’s
-<code class="xref py py-class docutils literal notranslate"><span class="pre">OperableModel</span></code>) that captures:</p>
-<ul class="simple">
-<li><p><strong>Required</strong> fields (input vs. request)</p></li>
-<li><p><strong>Optional</strong> or dynamically added fields</p></li>
-<li><p><strong>Validation</strong> (check if inputs are complete)</p></li>
-<li><p><strong>Task assignment</strong> logic (mapping input fields to requested outputs)</p></li>
-</ul>
-<p>Three core classes are provided:</p>
-<ol class="arabic simple">
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseForm</span></code> - Foundation for form handling (output fields, checks).</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code> - Builds on <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseForm</span></code> for typical “input -&gt; output”
-tasks. Automates assignment parsing and input/request field distinction.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Report</span></code> - Aggregates multiple completed forms, storing tasks that
-have been processed and generating a final “report.”</p></li>
-</ol>
-<section id="module-lionagi.form.base">
-<span id="baseform"></span><h2>1. BaseForm<a class="headerlink" href="#module-lionagi.form.base" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.form.base.BaseForm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.base.</span></span><span class="sig-name descname"><span class="pre">BaseForm</span></span><a class="headerlink" href="#lionagi.form.base.BaseForm" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+          <section id="module-lionagi.protocols.generic.pile">
+<span id="pile"></span><span id="lionagi-protocols-generic-pile"></span><h1>Pile<a class="headerlink" href="#module-lionagi.protocols.generic.pile" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> class is a <strong>thread-safe</strong>, <strong>async-compatible</strong> collection
+of items. It merges the capabilities of an ordered container with concurrency
+locks and optional <strong>type constraints</strong>. Piles are well-suited for multi-threaded
+or async environments, where items must be inserted, retrieved, or removed
+safely. They also integrate with adapter-based conversions (like JSON, CSV,
+Excel, or DataFrames) for convenient data import/export.</p>
+</section>
+<section id="id1">
+<h2>Pile<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+</section>
+<section id="id2">
+<h2>pile<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.pile">
+<span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.pile.</span></span><span class="sig-name descname"><span class="pre">pile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pd.DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Pile</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.pile" title="Link to this definition">¶</a></dt>
+<dd><p>A <strong>factory</strong> function for creating a <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> with flexible input. It
+inspects parameters (e.g., a DataFrame or file path) to automatically pick
+the correct adapter if needed. Otherwise, it just instantiates a normal
+<code class="docutils literal notranslate"><span class="pre">Pile</span></code> with the given collections, type, and ordering.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>collections<span class="classifier">Any</span></dt><dd><p>Initial items for the pile. Could be a single item, a list/tuple,
+or a dictionary of items.</p>
+</dd>
+<dt>item_type<span class="classifier">type[T] | set[type[T]] | None</span></dt><dd><p>Allowed element types (must inherit from <code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code>).
+If None, no restriction besides inheriting <code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code>.</p>
+</dd>
+<dt>progression<span class="classifier">list[str] | None</span></dt><dd><p>A preset order of item IDs.</p>
+</dd>
+<dt>strict_type<span class="classifier">bool</span></dt><dd><p>If True, enforce exact type matches against <code class="docutils literal notranslate"><span class="pre">item_type</span></code>.</p>
+</dd>
+<dt>df<span class="classifier">pd.DataFrame | None</span></dt><dd><p>If provided, creates a pile from a pandas DataFrame using the
+“pd_dataframe” adapter (highest priority).</p>
+</dd>
+<dt>fp<span class="classifier">str | Path | None</span></dt><dd><p>A filepath for CSV/JSON/Excel from which to create a pile
+(priority 2).</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Pile</dt><dd><p>A new pile instance.</p>
+</dd>
+</dl>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.pile</span><span class="w"> </span><span class="kn">import</span> <span class="n">pile</span>
 
-<p>A minimal form that tracks:</p>
-<ul class="simple">
-<li><p><strong>Assignment</strong>: The objective or mapping from inputs to outputs.</p></li>
-<li><p><strong>Output fields</strong>: The subset of fields to present as results.</p></li>
-<li><p><strong>has_processed</strong>: Whether the form was fully validated/used.</p></li>
-<li><p><strong>none_as_valid_value</strong>: If True, treating <cite>None</cite> as a valid field.</p></li>
-</ul>
-<p><strong>Key Methods</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">check_is_completed(handle_how='raise'|'return_missing')()</span></code>:
-Ensures required fields are populated; either raise an error or
-return the missing fields list.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_completed()</span> <span class="pre">-&gt;</span> <span class="pre">bool()</span></code>:
-True if form is fully valid (no missing fields).</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_results(suppress=False,</span> <span class="pre">valid_only=False)</span> <span class="pre">-&gt;</span> <span class="pre">dict()</span></code>:
-Gather the output fields as a dictionary, optionally ignoring invalid fields.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.form.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseForm</span>
+<span class="c1"># Create from a CSV file</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">pile</span><span class="p">(</span><span class="n">fp</span><span class="o">=</span><span class="s2">&quot;data.csv&quot;</span><span class="p">)</span>
 
-<span class="n">form</span> <span class="o">=</span> <span class="n">BaseForm</span><span class="p">(</span>
-    <span class="n">assignment</span><span class="o">=</span><span class="s2">&quot;some_field -&gt; output_field&quot;</span><span class="p">,</span>
-    <span class="n">output_fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;output_field&quot;</span><span class="p">]</span>
-<span class="p">)</span>
-<span class="c1"># Suppose we add a new field</span>
-<span class="n">form</span><span class="o">.</span><span class="n">add_field</span><span class="p">(</span><span class="s2">&quot;some_field&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span>
-<span class="c1"># Now get results</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>  <span class="c1"># =&gt; {&#39;output_field&#39;: UNDEFINED}, since not assigned</span>
+<span class="c1"># Create from a DataFrame</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="o">...</span><span class="p">})</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">pile</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span> <span class="n">item_type</span><span class="o">=</span><span class="n">MyItem</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="form">
-<h2>2. Form<a class="headerlink" href="#form" title="Link to this heading">¶</a></h2>
-<dl class="py class" id="module-lionagi.form.form">
-<dt class="sig sig-object py" id="lionagi.form.form.Form">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.form.</span></span><span class="sig-name descname"><span class="pre">Form</span></span><a class="headerlink" href="#lionagi.form.form.Form" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+</dd></dl>
 
-<p>This class distinguishes three sets of fields:</p>
-<ol class="arabic simple">
-<li><p><strong>input_fields</strong> (provided by user or environment).</p></li>
-<li><p><strong>request_fields</strong> (which an “intelligent process” should fill).</p></li>
-<li><p><strong>output_fields</strong> (which are ultimately displayed or returned).</p></li>
-</ol>
-<p>Additionally:</p>
-<ul class="simple">
-<li><p><strong>strict_form</strong> (bool): If True, you cannot modify input/request fields or
-assignment after initialization.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_input_fields(...)()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_request_fields(...)()</span></code>
-let you programmatically populate these sets of fields from another form
-or via direct keyword arguments.</p></li>
-</ul>
-<p><strong>Assignment</strong>:</p>
-<p>By default, a string in the format <code class="docutils literal notranslate"><span class="pre">input1,</span> <span class="pre">input2</span> <span class="pre">-&gt;</span> <span class="pre">request1,</span> <span class="pre">request2</span></code>
-defines which fields are “inputs” vs. “requests.” The class automatically
-parses them if you pass an <code class="docutils literal notranslate"><span class="pre">assignment</span></code>.</p>
-<p><strong>Key Methods</strong>:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">check_is_workable()</span></code> / <code class="xref py py-meth docutils literal notranslate"><span class="pre">is_workable()</span></code>:
-Verify input fields are filled so the form can proceed.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_form(...)()</span></code>:
-Clone or derive a new <a class="reference internal" href="#lionagi.form.form.Form" title="lionagi.form.form.Form"><code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code></a> from an existing <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseForm</span></code>.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_form(...)()</span></code>:
-(In <code class="xref py py-class docutils literal notranslate"><span class="pre">Report</span></code>) to create a new <a class="reference internal" href="#lionagi.form.form.Form" title="lionagi.form.form.Form"><code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code></a> with specified
-assignment or fields.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.form.form</span><span class="w"> </span><span class="kn">import</span> <span class="n">Form</span>
-
-<span class="c1"># assignment = &quot;user_name, user_age -&gt; recommended_action&quot;</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="n">assignment</span><span class="o">=</span><span class="s2">&quot;user_name, user_age -&gt; recommended_action&quot;</span><span class="p">)</span>
-
-<span class="c1"># Now we add or fill the input fields</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_input_fields</span><span class="p">(</span><span class="n">user_name</span><span class="o">=</span><span class="s2">&quot;Alice&quot;</span><span class="p">,</span> <span class="n">user_age</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
-<span class="c1"># The request field is &#39;recommended_action&#39;</span>
-<span class="c1"># We can fill it or let the AI fill it</span>
-
-<span class="n">f</span><span class="o">.</span><span class="n">check_is_workable</span><span class="p">()</span>     <span class="c1"># ensures inputs exist</span>
-<span class="c1"># ...</span>
-<span class="c1"># Later we fill request</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_request_fields</span><span class="p">(</span><span class="n">recommended_action</span><span class="o">=</span><span class="s2">&quot;Provide discounts&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get_results</span><span class="p">())</span>    <span class="c1"># =&gt; {&quot;recommended_action&quot;: &quot;Provide discounts&quot;}</span>
-</pre></div>
-</div>
 </section>
-<section id="report">
-<h2>3. Report<a class="headerlink" href="#report" title="Link to this heading">¶</a></h2>
-<dl class="py class" id="module-lionagi.form.report">
-<dt class="sig sig-object py" id="lionagi.form.report.Report">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.report.</span></span><span class="sig-name descname"><span class="pre">Report</span></span><a class="headerlink" href="#lionagi.form.report.Report" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<p>Designed to collect <strong>multiple tasks</strong> (forms) into one object:</p>
+<section id="helper-functions">
+<h2>Helper Functions<a class="headerlink" href="#helper-functions" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.to_list_type">
+<span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.pile.</span></span><span class="sig-name descname"><span class="pre">to_list_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.to_list_type" title="Link to this definition">¶</a></dt>
+<dd><p>Converts the input into a <strong>list</strong> format for internal handling:</p>
 <ul class="simple">
-<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">completed_tasks</span></code>: A pile of <code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code> instances that are done.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_completed_form(form,</span> <span class="pre">update_results=False)()</span></code>:
-Store a completed form in the report. Optionally update the report’s
-fields with the form’s results.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_form(...)()</span></code>:
-Helper for building new tasks (forms) from the report’s perspective.</p></li>
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_form(...)()</span></code>:
-Alternative constructor that transforms an existing form into a report.</p></li>
+<li><p>If None, returns [].</p></li>
+<li><p>If already a list, tuple, set, or deque, returns a list copy.</p></li>
+<li><p>If a string or <code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code>, attempts to validate or wrap
+as an ID.</p></li>
+<li><p>Otherwise returns [value].</p></li>
 </ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.form.report</span><span class="w"> </span><span class="kn">import</span> <span class="n">Report</span><span class="p">,</span> <span class="n">Form</span>
+<p>Used internally by the <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> for consistent item parsing.</p>
+</dd></dl>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">Report</span><span class="p">()</span>
-<span class="c1"># Suppose we create a form</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">create_form</span><span class="p">(</span><span class="n">assignment</span><span class="o">=</span><span class="s2">&quot;input1 -&gt; output1&quot;</span><span class="p">)</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_input_fields</span><span class="p">(</span><span class="n">input1</span><span class="o">=</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
-
-<span class="c1"># Mark the form as completed</span>
-<span class="c1"># In reality you&#39;d fill the request field as well</span>
-<span class="n">f</span><span class="o">.</span><span class="n">fill_request_fields</span><span class="p">(</span><span class="n">output1</span><span class="o">=</span><span class="s2">&quot;World&quot;</span><span class="p">)</span>
-<span class="n">f</span><span class="o">.</span><span class="n">check_is_completed</span><span class="p">()</span>
-
-<span class="c1"># Save into report</span>
-<span class="n">r</span><span class="o">.</span><span class="n">save_completed_form</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">update_results</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">completed_tasks</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>       <span class="c1"># =&gt; 1</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">output1</span><span class="p">)</span>                      <span class="c1"># =&gt; &quot;World&quot; (copied from the form)</span>
-</pre></div>
-</div>
 </section>
-<section id="additional-utilities">
-<h2>Additional Utilities<a class="headerlink" href="#additional-utilities" title="Link to this heading">¶</a></h2>
-<p><strong>Parsing</strong>:</p>
-<p><code class="xref py py-func docutils literal notranslate"><span class="pre">get_input_output_fields(str_)</span> <span class="pre">-&gt;</span> <span class="pre">(list[str],</span> <span class="pre">list[str])()</span></code>
-Splits an assignment string of the form <cite>input1, input2 -&gt; request1, request2</cite>
-into two lists (input fields, request fields).</p>
-<p>Used internally by <code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code> to auto-generate <cite>input_fields</cite> and <cite>request_fields</cite>.</p>
-<p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
-from lionagi.form.utils import get_input_output_fields</p>
-<p>inp, req = get_input_output_fields(“name, age -&gt; greeting”)
-print(inp)  # [“name”, “age”]
-print(req)  # [“greeting”]</p>
+<section id="file-location">
+<h2>File Location<a class="headerlink" href="#file-location" title="Link to this heading">¶</a></h2>
+<p><strong>Source File</strong>:
+<code class="docutils literal notranslate"><span class="pre">lionagi/protocols/generic/pile.py</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -459,23 +387,23 @@ print(req)  # [“greeting”]</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="graph.html">
+          <a class="next-page" href="processor.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Node, Edge, and Graph</div>
+                <div class="title">Event Processor and Executor</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="event.html">
+          <a class="prev-page" href="operative_step.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Event, EventStatus, and Execution</div>
+                <div class="title">Operative &amp; Step</div>
                 
               </div>
             </a>
@@ -509,20 +437,18 @@ print(req)  # [“greeting”]</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Form &amp; Report</a><ul>
-<li><a class="reference internal" href="#module-lionagi.form.base">1. BaseForm</a><ul>
-<li><a class="reference internal" href="#lionagi.form.base.BaseForm"><code class="docutils literal notranslate"><span class="pre">BaseForm</span></code></a></li>
+<li><a class="reference internal" href="#">Pile</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#id1">Pile</a></li>
+<li><a class="reference internal" href="#id2">pile</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.pile"><code class="docutils literal notranslate"><span class="pre">pile()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#form">2. Form</a><ul>
-<li><a class="reference internal" href="#lionagi.form.form.Form"><code class="docutils literal notranslate"><span class="pre">Form</span></code></a></li>
+<li><a class="reference internal" href="#helper-functions">Helper Functions</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.to_list_type"><code class="docutils literal notranslate"><span class="pre">to_list_type()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#report">3. Report</a><ul>
-<li><a class="reference internal" href="#lionagi.form.report.Report"><code class="docutils literal notranslate"><span class="pre">Report</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#additional-utilities">Additional Utilities</a></li>
+<li><a class="reference internal" href="#file-location">File Location</a></li>
 </ul>
 </li>
 </ul>

@@ -5,36 +5,37 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#" /><link rel="search" title="Search" href="search.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 --><title>Index - LionAGI Documentation</title>
-<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -211,23 +212,26 @@
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="modules/index.html">Modules API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="modules/action.html">Action</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/adapter.html">Adapter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/action.html">Action System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/adapter.html">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/branch.html">Branch: The Orchestrator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/concepts.html">Abstract Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/event.html">Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/event.html">Event, EventStatus, and Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/instruct.html">Instruct</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/mail.html">Mail</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/mail.html">Mail System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/message.html">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/pile_progression.html">Pile &amp; Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/pile.html">Pile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/processor.html">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/service.html">API Service System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/utils.html">General Purpose Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
@@ -236,11 +240,12 @@
 <li class="toctree-l2"><a class="reference internal" href="modules/lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="operations/core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="operations/strategies.html">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -284,7 +289,69 @@
   <h2>_</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/action.html#lionagi.action.ActionManager.__init__">__init__() (lionagi.action.ActionManager method)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__add__">__add__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__bool__">__bool__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__contains__">__contains__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__delitem__">__delitem__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType.__eq__">__eq__() (lionagi.protocols.generic.element.IDType method)</a>
+
+        <ul>
+          <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__eq__">(lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        </ul></li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__ge__">__ge__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__getitem__">__getitem__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__gt__">__gt__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType.__hash__">__hash__() (lionagi.protocols.generic.element.IDType method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__iadd__">__iadd__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType.__init__">__init__() (lionagi.protocols.generic.element.IDType method)</a>
+
+        <ul>
+          <li><a href="modules/event.html#lionagi.protocols.generic.event.Execution.__init__">(lionagi.protocols.generic.event.Execution method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__isub__">__isub__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__iter__">__iter__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__le__">__le__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__len__">__len__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__list__">__list__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__lt__">__lt__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__radd__">__radd__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType.__repr__">__repr__() (lionagi.protocols.generic.element.IDType method)</a>
+
+        <ul>
+          <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__repr__">(lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        </ul></li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__reverse__">__reverse__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__setitem__">__setitem__() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType.__str__">__str__() (lionagi.protocols.generic.element.IDType method)</a>
+
+        <ul>
+          <li><a href="modules/event.html#lionagi.protocols.generic.event.Execution.__str__">(lionagi.protocols.generic.event.Execution method)</a>
+</li>
+        </ul></li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.__sub__">__sub__() (lionagi.protocols.generic.progression.Progression method)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -294,25 +361,17 @@
   <h2>A</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/message.html#lionagi.protocols.messages.action_request.ActionRequest">ActionRequest (class in lionagi.protocols.messages.action_request)</a>
-</li>
-        <li><a href="modules/message.html#lionagi.protocols.messages.action_response.ActionResponse">ActionResponse (class in lionagi.protocols.messages.action_response)</a>
-</li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.AdapterRegistry">AdapterRegistry (class in lionagi.protocols.adapter)</a>
-</li>
         <li><a href="modules/utils.html#lionagi.utils.alcall">alcall() (in module lionagi.utils)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.append">append() (lionagi.protocols.generic.progression.Progression method)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.progression.Progression.append">append() (lionagi.protocols.generic.progression.Progression method)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.ActionRequestModel.arguments">arguments (lionagi.action.ActionRequestModel attribute)</a>
+        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Condition.apply">apply() (lionagi.protocols._concepts.Condition method)</a>
 </li>
         <li><a href="modules/lib_schema.html#lionagi.libs.schema.as_readable.as_readable">as_readable() (in module lionagi.libs.schema.as_readable)</a>
 </li>
         <li><a href="modules/lib_schema.html#lionagi.libs.schema.as_readable.as_readable_json">as_readable_json() (in module lionagi.libs.schema.as_readable)</a>
-</li>
-        <li><a href="modules/message.html#lionagi.protocols.messages.assistant_response.AssistantResponse">AssistantResponse (class in lionagi.protocols.messages.assistant_response)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -324,15 +383,9 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/form.html#lionagi.form.base.BaseForm">BaseForm (class in lionagi.form.base)</a>
 </li>
-        <li><a href="modules/utils.html#lionagi.utils.bcall">bcall() (in module lionagi.utils)</a>
-</li>
-        <li><a href="modules/operations.html#lionagi.operations.brainstorm.brainstorm">brainstorm() (in module lionagi.operations.brainstorm)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/operations.html#lionagi.operations.brainstorm.BrainstormOperation">BrainstormOperation (class in lionagi.operations.brainstorm)</a>
-</li>
-        <li><a href="modules/branch.html#lionagi.session.branch.Branch">Branch (class in lionagi.session.branch)</a>
+        <li><a href="modules/utils.html#lionagi.utils.bcall">bcall() (in module lionagi.utils)</a>
 </li>
         <li><a href="modules/utils.html#lionagi.utils.breakdown_pydantic_annotation">breakdown_pydantic_annotation() (in module lionagi.utils)</a>
 </li>
@@ -354,23 +407,11 @@
 </li>
         <li><a href="modules/lib_file.html#lionagi.libs.file.chunk.chunk_content">chunk_content() (in module lionagi.libs.file.chunk)</a>
 </li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.params.ChunkStrategyParams">ChunkStrategyParams (class in lionagi.operations.strategies.params)</a>
-</li>
-        <li><a href="modules/branch.html#lionagi.session.branch.clone">clone() (in module lionagi.session.branch)</a>
-</li>
-        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Collective">Collective (class in lionagi.protocols._concepts)</a>
-</li>
-        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Communicatable">Communicatable (class in lionagi.protocols._concepts)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.clear">clear() (lionagi.protocols.generic.progression.Progression method)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/branch.html#lionagi.session.branch.communicate">communicate() (in module lionagi.session.branch)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.concurrent_chunk.ConcurrentChunkExecutor">ConcurrentChunkExecutor (class in lionagi.operations.strategies.concurrent_chunk)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.concurrent.ConcurrentExecutor">ConcurrentExecutor (class in lionagi.operations.strategies.concurrent)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.hybrid_concurrent_sequential_chunk.ConcurrentSequentialChunkExecutor">ConcurrentSequentialChunkExecutor (class in lionagi.operations.strategies.hybrid_concurrent_sequential_chunk)</a>
+        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Collective">Collective (class in lionagi.protocols._concepts)</a>
 </li>
         <li><a href="modules/concepts.html#lionagi.protocols._concepts.Condition">Condition (class in lionagi.protocols._concepts)</a>
 </li>
@@ -378,11 +419,11 @@
 </li>
         <li><a href="modules/lib_file.html#lionagi.libs.file.ops.copy_file">copy_file() (in module lionagi.libs.file.ops)</a>
 </li>
-        <li><a href="modules/action.html#lionagi.action.ActionRequestModel.create">create() (lionagi.action.ActionRequestModel method)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.count">count() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType.create">create() (lionagi.protocols.generic.element.IDType class method)</a>
 </li>
         <li><a href="modules/utils.html#lionagi.utils.create_path">create_path() (in module lionagi.utils)</a>
-</li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.CSVFileAdapter">CSVFileAdapter (class in lionagi.protocols.adapter)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -406,20 +447,24 @@
   <h2>E</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/concepts.html#lionagi.protocols.generic.element.Element">Element (class in lionagi.protocols.generic.element)</a>
+        <li><a href="modules/graph.html#lionagi.protocols.graph.edge.EdgeCondition">EdgeCondition (class in lionagi.protocols.graph.edge)</a>
 </li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.ExcelFileAdapter">ExcelFileAdapter (class in lionagi.protocols.adapter)</a>
+        <li><a href="modules/event.html#lionagi.protocols.generic.event.EventStatus">EventStatus (class in lionagi.protocols.generic.event)</a>
 </li>
-        <li><a href="modules/mail.html#lionagi.protocols.mail.exchange.Exchange">Exchange (class in lionagi.protocols.mail.exchange)</a>
-</li>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.pile.Pile.exclude">exclude() (lionagi.protocols.generic.pile.Pile method)</a>
+        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Collective.exclude">exclude() (lionagi.protocols._concepts.Collective method)</a>
 
         <ul>
-          <li><a href="modules/pile_progression.html#lionagi.protocols.generic.progression.Progression.exclude">(lionagi.protocols.generic.progression.Progression method)</a>
+          <li><a href="modules/concepts.html#lionagi.protocols._concepts.Ordering.exclude">(lionagi.protocols._concepts.Ordering method)</a>
+</li>
+          <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.exclude">(lionagi.protocols.generic.progression.Progression method)</a>
 </li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/event.html#lionagi.protocols.generic.event.Execution">Execution (class in lionagi.protocols.generic.event)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.extend">extend() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
         <li><a href="modules/lib_schema.html#lionagi.libs.schema.code_block.extract_code_block">extract_code_block() (in module lionagi.libs.schema.code_block)</a>
 </li>
         <li><a href="modules/lib_schema.html#lionagi.libs.schema.extract_docstring.extract_docstring">extract_docstring() (in module lionagi.libs.schema.extract_docstring)</a>
@@ -444,14 +489,6 @@
 </li>
         <li><a href="modules/form.html#lionagi.form.form.Form">Form (class in lionagi.form.form)</a>
 </li>
-        <li><a href="modules/action.html#lionagi.action.Tool.func_callable">func_callable (lionagi.action.Tool attribute)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.ActionRequestModel.function">function (lionagi.action.ActionRequestModel attribute)</a>
-
-        <ul>
-          <li><a href="modules/action.html#lionagi.action.Tool.function">(lionagi.action.Tool attribute)</a>
-</li>
-        </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/lib_schema.html#lionagi.libs.schema.function_to_schema.function_to_schema">function_to_schema() (in module lionagi.libs.schema.function_to_schema)</a>
@@ -474,13 +511,13 @@
   <h2>G</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.pile.Pile.get">get() (lionagi.protocols.generic.pile.Pile method)</a>
+        <li><a href="modules/lib_package.html#lionagi.libs.package.platform_info.get_cpu_architecture">get_cpu_architecture() (in module lionagi.libs.package.platform_info)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/lib_package.html#lionagi.libs.package.platform_info.get_cpu_architecture">get_cpu_architecture() (in module lionagi.libs.package.platform_info)</a>
-</li>
         <li><a href="modules/lib_file.html#lionagi.libs.file.ops.get_file_size">get_file_size() (in module lionagi.libs.file.ops)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.ID.get_id">get_id() (lionagi.protocols.generic.element.ID static method)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -493,10 +530,6 @@
         <li><a href="modules/utils.html#lionagi.utils.hash_dict">hash_dict() (in module lionagi.utils)</a>
 </li>
     </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.params.HybridStrategyParams">HybridStrategyParams (class in lionagi.operations.strategies.params)</a>
-</li>
-    </ul></td>
   </tr></table>
 </section>
 
@@ -504,9 +537,9 @@
   <h2>I</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/concepts.html#lionagi.protocols.generic.element.ID">ID (class in lionagi.protocols.generic.element)</a>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.ID">ID (class in lionagi.protocols.generic.element)</a>
 </li>
-        <li><a href="modules/concepts.html#lionagi.protocols.generic.element.IDType">IDType (class in lionagi.protocols.generic.element)</a>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType">IDType (class in lionagi.protocols.generic.element)</a>
 </li>
         <li><a href="modules/service.html#lionagi.service.imodel.iModel">iModel (class in lionagi.service.imodel)</a>
 </li>
@@ -514,27 +547,23 @@
 </li>
         <li><a href="modules/lib_package.html#lionagi.libs.package.import_check.import_module">import_module() (in module lionagi.libs.package.import_check)</a>
 </li>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.pile.Pile.include">include() (lionagi.protocols.generic.pile.Pile method)</a>
+        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Collective.include">include() (lionagi.protocols._concepts.Collective method)</a>
 
         <ul>
-          <li><a href="modules/pile_progression.html#lionagi.protocols.generic.progression.Progression.include">(lionagi.protocols.generic.progression.Progression method)</a>
+          <li><a href="modules/concepts.html#lionagi.protocols._concepts.Ordering.include">(lionagi.protocols._concepts.Ordering method)</a>
+</li>
+          <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.include">(lionagi.protocols.generic.progression.Progression method)</a>
 </li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.progression.Progression.insert">insert() (lionagi.protocols.generic.progression.Progression method)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.index">index() (lionagi.protocols.generic.progression.Progression method)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.insert">insert() (lionagi.protocols.generic.progression.Progression method)</a>
 </li>
         <li><a href="modules/lib_package.html#lionagi.libs.package.import_check.install_import">install_import() (in module lionagi.libs.package.import_check)</a>
 </li>
-        <li><a href="modules/message.html#lionagi.protocols.messages.instruction.Instruction">Instruction (class in lionagi.protocols.messages.instruction)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.ActionManager.invoke">invoke() (lionagi.action.ActionManager method)</a>
-
-        <ul>
-          <li><a href="modules/action.html#lionagi.action.FunctionCalling.invoke">(lionagi.action.FunctionCalling method)</a>
-</li>
-        </ul></li>
-        <li><a href="modules/branch.html#lionagi.session.branch.invoke_action">invoke_action() (in module lionagi.session.branch)</a>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.ID.is_id">is_id() (lionagi.protocols.generic.element.ID static method)</a>
 </li>
         <li><a href="modules/lib_package.html#lionagi.libs.package.import_check.is_import_installed">is_import_installed() (in module lionagi.libs.package.import_check)</a>
 </li>
@@ -550,15 +579,11 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.string_similarity.jaro_winkler_similarity">jaro_winkler_similarity() (in module lionagi.libs.validate.string_similarity)</a>
 </li>
-        <li><a href="modules/lib_schema.html#lionagi.libs.schema.json_schema_extractor.json_schema_to_cfg">json_schema_to_cfg() (in module lionagi.libs.schema.json_schema_extractor)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/lib_schema.html#lionagi.libs.schema.json_schema_extractor.json_schema_to_cfg">json_schema_to_cfg() (in module lionagi.libs.schema.json_schema_extractor)</a>
+</li>
         <li><a href="modules/lib_schema.html#lionagi.libs.schema.json_schema_extractor.json_schema_to_regex">json_schema_to_regex() (in module lionagi.libs.schema.json_schema_extractor)</a>
-</li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.JsonAdapter">JsonAdapter (class in lionagi.protocols.adapter)</a>
-</li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.JsonFileAdapter">JsonFileAdapter (class in lionagi.protocols.adapter)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -572,13 +597,6 @@
 </li>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.string_similarity.levenshtein_similarity">levenshtein_similarity() (in module lionagi.libs.validate.string_similarity)</a>
 </li>
-        <li>
-    lionagi.action
-
-        <ul>
-          <li><a href="modules/action.html#module-lionagi.action">module</a>
-</li>
-        </ul></li>
         <li>
     lionagi.form.base
 
@@ -783,105 +801,14 @@
 </li>
         </ul></li>
         <li>
-    lionagi.operations.brainstorm
+    lionagi.operatives.action
 
         <ul>
-          <li><a href="modules/operations.html#module-lionagi.operations.brainstorm">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.plan
-
-        <ul>
-          <li><a href="modules/operations.html#module-lionagi.operations.plan">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.prompt
-
-        <ul>
-          <li><a href="modules/operations.html#module-lionagi.operations.prompt">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.select
-
-        <ul>
-          <li><a href="modules/operations.html#module-lionagi.operations.select">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.base
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.base">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.concurrent
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.concurrent">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.concurrent_chunk
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.concurrent_chunk">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.hybrid_concurrent_sequential_chunk
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.hybrid_concurrent_sequential_chunk">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.hybrid_sequential_concurrent_chunk
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.hybrid_sequential_concurrent_chunk">module</a>
+          <li><a href="modules/action.html#module-lionagi.operatives.action">module</a>
 </li>
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li>
-    lionagi.operations.strategies.params
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.params">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.run_instruct
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.run_instruct">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.sequential
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.sequential">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.strategies.sequential_chunk
-
-        <ul>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.sequential_chunk">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.operations.utils
-
-        <ul>
-          <li><a href="modules/operations.html#module-lionagi.operations.utils">module</a>
-</li>
-        </ul></li>
         <li>
     lionagi.operatives.instruct.base
 
@@ -967,94 +894,73 @@
 </li>
         </ul></li>
         <li>
-    lionagi.protocols.adapter
+    lionagi.protocols.adapters
 
         <ul>
-          <li><a href="modules/adapter.html#module-lionagi.protocols.adapter">module</a>
+          <li><a href="modules/adapter.html#module-lionagi.protocols.adapters">module</a>
 </li>
         </ul></li>
         <li>
     lionagi.protocols.generic.element
 
         <ul>
-          <li><a href="modules/concepts.html#module-lionagi.protocols.generic.element">module</a>
+          <li><a href="modules/element_id.html#module-lionagi.protocols.generic.element">module</a>
+</li>
+        </ul></li>
+        <li>
+    lionagi.protocols.generic.event
+
+        <ul>
+          <li><a href="modules/event.html#module-lionagi.protocols.generic.event">module</a>
+</li>
+        </ul></li>
+        <li>
+    lionagi.protocols.generic.log
+
+        <ul>
+          <li><a href="modules/log.html#module-lionagi.protocols.generic.log">module</a>
 </li>
         </ul></li>
         <li>
     lionagi.protocols.generic.pile
 
         <ul>
-          <li><a href="modules/pile_progression.html#module-lionagi.protocols.generic.pile">module</a>
+          <li><a href="modules/pile.html#module-lionagi.protocols.generic.pile">module</a>
+</li>
+        </ul></li>
+        <li>
+    lionagi.protocols.generic.processor
+
+        <ul>
+          <li><a href="modules/processor.html#module-lionagi.protocols.generic.processor">module</a>
 </li>
         </ul></li>
         <li>
     lionagi.protocols.generic.progression
 
         <ul>
-          <li><a href="modules/pile_progression.html#module-lionagi.protocols.generic.progression">module</a>
+          <li><a href="modules/progression.html#module-lionagi.protocols.generic.progression">module</a>
 </li>
         </ul></li>
         <li>
-    lionagi.protocols.graph.edge
+    lionagi.protocols.graph
 
         <ul>
-          <li><a href="modules/graph.html#module-lionagi.protocols.graph.edge">module</a>
+          <li><a href="modules/graph.html#module-lionagi.protocols.graph">module</a>
 </li>
         </ul></li>
         <li>
-    lionagi.protocols.graph.graph
+    lionagi.protocols.mail
 
         <ul>
-          <li><a href="modules/graph.html#module-lionagi.protocols.graph.graph">module</a>
+          <li><a href="modules/mail.html#module-lionagi.protocols.mail">module</a>
 </li>
         </ul></li>
         <li>
-    lionagi.protocols.graph.node
+    lionagi.protocols.messages
 
         <ul>
-          <li><a href="modules/graph.html#module-lionagi.protocols.graph.node">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.protocols.mail.exchange
-
-        <ul>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.exchange">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.protocols.mail.mail
-
-        <ul>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.mail">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.protocols.mail.mail_manager
-
-        <ul>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.mail_manager">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.protocols.mail.mailbox
-
-        <ul>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.mailbox">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.protocols.mail.package
-
-        <ul>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.package">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.protocols.types
-
-        <ul>
-          <li><a href="modules/event.html#module-lionagi.protocols.types">module</a>
+          <li><a href="modules/message.html#module-lionagi.protocols.messages">module</a>
 </li>
         </ul></li>
         <li>
@@ -1117,6 +1023,8 @@
 </li>
         <li><a href="modules/lib_package.html#lionagi.libs.package.list_uninstall_update.list_installed_packages">list_installed_packages() (in module lionagi.libs.package.list_uninstall_update)</a>
 </li>
+        <li><a href="modules/log.html#lionagi.protocols.generic.log.LogManagerConfig">LogManagerConfig (class in lionagi.protocols.generic.log)</a>
+</li>
     </ul></td>
   </tr></table>
 </section>
@@ -1125,22 +1033,12 @@
   <h2>M</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/mail.html#lionagi.protocols.mail.mailbox.Mailbox">Mailbox (class in lionagi.protocols.mail.mailbox)</a>
-</li>
-        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Manager">Manager (class in lionagi.protocols._concepts)</a>
-</li>
         <li><a href="modules/utils.html#lionagi.utils.max_concurrent">max_concurrent() (in module lionagi.utils)</a>
-</li>
-        <li><a href="modules/message.html#lionagi.protocols.messages.manager.MessageManager">MessageManager (class in lionagi.protocols.messages.manager)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.Tool.minimum_acceptable_fields">minimum_acceptable_fields (lionagi.action.Tool attribute)</a>
 </li>
         <li>
     module
 
         <ul>
-          <li><a href="modules/action.html#module-lionagi.action">lionagi.action</a>
-</li>
           <li><a href="modules/form.html#module-lionagi.form.base">lionagi.form.base</a>
 </li>
           <li><a href="modules/form.html#module-lionagi.form.form">lionagi.form.form</a>
@@ -1199,33 +1097,7 @@
 </li>
           <li><a href="modules/lib_validate.html#module-lionagi.libs.validate.validate_boolean">lionagi.libs.validate.validate_boolean</a>
 </li>
-          <li><a href="modules/operations.html#module-lionagi.operations.brainstorm">lionagi.operations.brainstorm</a>
-</li>
-          <li><a href="modules/operations.html#module-lionagi.operations.plan">lionagi.operations.plan</a>
-</li>
-          <li><a href="modules/operations.html#module-lionagi.operations.prompt">lionagi.operations.prompt</a>
-</li>
-          <li><a href="modules/operations.html#module-lionagi.operations.select">lionagi.operations.select</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.base">lionagi.operations.strategies.base</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.concurrent">lionagi.operations.strategies.concurrent</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.concurrent_chunk">lionagi.operations.strategies.concurrent_chunk</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.hybrid_concurrent_sequential_chunk">lionagi.operations.strategies.hybrid_concurrent_sequential_chunk</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.hybrid_sequential_concurrent_chunk">lionagi.operations.strategies.hybrid_sequential_concurrent_chunk</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.params">lionagi.operations.strategies.params</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.run_instruct">lionagi.operations.strategies.run_instruct</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.sequential">lionagi.operations.strategies.sequential</a>
-</li>
-          <li><a href="modules/strategies.html#module-lionagi.operations.strategies.sequential_chunk">lionagi.operations.strategies.sequential_chunk</a>
-</li>
-          <li><a href="modules/operations.html#module-lionagi.operations.utils">lionagi.operations.utils</a>
+          <li><a href="modules/action.html#module-lionagi.operatives.action">lionagi.operatives.action</a>
 </li>
           <li><a href="modules/instruct.html#module-lionagi.operatives.instruct.base">lionagi.operatives.instruct.base</a>
 </li>
@@ -1251,31 +1123,25 @@
 </li>
           <li><a href="modules/concepts.html#module-lionagi.protocols._concepts">lionagi.protocols._concepts</a>
 </li>
-          <li><a href="modules/adapter.html#module-lionagi.protocols.adapter">lionagi.protocols.adapter</a>
+          <li><a href="modules/adapter.html#module-lionagi.protocols.adapters">lionagi.protocols.adapters</a>
 </li>
-          <li><a href="modules/concepts.html#module-lionagi.protocols.generic.element">lionagi.protocols.generic.element</a>
+          <li><a href="modules/element_id.html#module-lionagi.protocols.generic.element">lionagi.protocols.generic.element</a>
 </li>
-          <li><a href="modules/pile_progression.html#module-lionagi.protocols.generic.pile">lionagi.protocols.generic.pile</a>
+          <li><a href="modules/event.html#module-lionagi.protocols.generic.event">lionagi.protocols.generic.event</a>
 </li>
-          <li><a href="modules/pile_progression.html#module-lionagi.protocols.generic.progression">lionagi.protocols.generic.progression</a>
+          <li><a href="modules/log.html#module-lionagi.protocols.generic.log">lionagi.protocols.generic.log</a>
 </li>
-          <li><a href="modules/graph.html#module-lionagi.protocols.graph.edge">lionagi.protocols.graph.edge</a>
+          <li><a href="modules/pile.html#module-lionagi.protocols.generic.pile">lionagi.protocols.generic.pile</a>
 </li>
-          <li><a href="modules/graph.html#module-lionagi.protocols.graph.graph">lionagi.protocols.graph.graph</a>
+          <li><a href="modules/processor.html#module-lionagi.protocols.generic.processor">lionagi.protocols.generic.processor</a>
 </li>
-          <li><a href="modules/graph.html#module-lionagi.protocols.graph.node">lionagi.protocols.graph.node</a>
+          <li><a href="modules/progression.html#module-lionagi.protocols.generic.progression">lionagi.protocols.generic.progression</a>
 </li>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.exchange">lionagi.protocols.mail.exchange</a>
+          <li><a href="modules/graph.html#module-lionagi.protocols.graph">lionagi.protocols.graph</a>
 </li>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.mail">lionagi.protocols.mail.mail</a>
+          <li><a href="modules/mail.html#module-lionagi.protocols.mail">lionagi.protocols.mail</a>
 </li>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.mail_manager">lionagi.protocols.mail.mail_manager</a>
-</li>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.mailbox">lionagi.protocols.mail.mailbox</a>
-</li>
-          <li><a href="modules/mail.html#module-lionagi.protocols.mail.package">lionagi.protocols.mail.package</a>
-</li>
-          <li><a href="modules/event.html#module-lionagi.protocols.types">lionagi.protocols.types</a>
+          <li><a href="modules/message.html#module-lionagi.protocols.messages">lionagi.protocols.messages</a>
 </li>
           <li><a href="modules/service.html#module-0">lionagi.service.endpoints.base</a>, <a href="modules/service.html#module-lionagi.service.endpoints.base">[1]</a>
 </li>
@@ -1312,8 +1178,6 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/lib_nested.html#lionagi.libs.nested.nmerge.nmerge">nmerge() (in module lionagi.libs.nested.nmerge)</a>
 </li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.NodeAdapterRegistry">NodeAdapterRegistry (class in lionagi.protocols.adapter)</a>
-</li>
         <li><a href="modules/lib_nested.html#lionagi.libs.nested.npop.npop">npop() (in module lionagi.libs.nested.npop)</a>
 </li>
         <li><a href="modules/lib_nested.html#lionagi.libs.nested.nset.nset">nset() (in module lionagi.libs.nested.nset)</a>
@@ -1328,11 +1192,9 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/concepts.html#lionagi.protocols._concepts.Observable">Observable (class in lionagi.protocols._concepts)</a>
 </li>
-        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Observer">Observer (class in lionagi.protocols._concepts)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/branch.html#lionagi.session.branch.operate">operate() (in module lionagi.session.branch)</a>
+        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Observer">Observer (class in lionagi.protocols._concepts)</a>
 </li>
         <li><a href="modules/concepts.html#lionagi.protocols._concepts.Ordering">Ordering (class in lionagi.protocols._concepts)</a>
 </li>
@@ -1344,39 +1206,21 @@
   <h2>P</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/mail.html#lionagi.protocols.mail.package.PackageCategory">PackageCategory (class in lionagi.protocols.mail.package)</a>
-</li>
         <li><a href="modules/lib_package.html#lionagi.libs.package.schema.PackageParams">PackageParams (class in lionagi.libs.package.schema)</a>
 </li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.PandasDataFrameAdapter">PandasDataFrameAdapter (class in lionagi.protocols.adapter)</a>
+        <li><a href="modules/pile.html#lionagi.protocols.generic.pile.pile">pile() (in module lionagi.protocols.generic.pile)</a>
 </li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.PandasSeriesAdapter">PandasSeriesAdapter (class in lionagi.protocols.adapter)</a>
-</li>
-        <li><a href="modules/branch.html#lionagi.session.branch.parse">parse() (in module lionagi.session.branch)</a>
-</li>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.pile.Pile">Pile (class in lionagi.protocols.generic.pile)</a>
-</li>
-        <li><a href="modules/adapter.html#lionagi.protocols.adapter.PileAdapterRegistry">PileAdapterRegistry (class in lionagi.protocols.adapter)</a>
-</li>
-        <li><a href="modules/operations.html#lionagi.operations.plan.plan">plan() (in module lionagi.operations.plan)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.pop">pop() (lionagi.protocols.generic.progression.Progression method)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/operations.html#lionagi.operations.plan.PlanOperation">PlanOperation (class in lionagi.operations.plan)</a>
-</li>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.pile.Pile.pop">pop() (lionagi.protocols.generic.pile.Pile method)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.Tool.postprocessor">postprocessor (lionagi.action.Tool attribute)</a>
-</li>
-        <li><a href="modules/operations.html#lionagi.operations.utils.prepare_instruct">prepare_instruct() (in module lionagi.operations.utils)</a>
-</li>
-        <li><a href="modules/operations.html#lionagi.operations.utils.prepare_session">prepare_session() (in module lionagi.operations.utils)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.Tool.preprocessor">preprocessor (lionagi.action.Tool attribute)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.popleft">popleft() (lionagi.protocols.generic.progression.Progression method)</a>
 </li>
         <li><a href="modules/lib_schema.html#lionagi.libs.schema.json_schema_extractor.print_cfg">print_cfg() (in module lionagi.libs.schema.json_schema_extractor)</a>
 </li>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.progression.Progression">Progression (class in lionagi.protocols.generic.progression)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.prog">prog() (in module lionagi.protocols.generic.progression)</a>
+</li>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression">Progression (class in lionagi.protocols.generic.progression)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -1388,21 +1232,13 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/lib_file.html#lionagi.libs.file.ops.read_file">read_file() (in module lionagi.libs.file.ops)</a>
 </li>
-        <li><a href="modules/action.html#lionagi.action.ActionManager.register_tool">register_tool() (lionagi.action.ActionManager method)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.ActionManager.register_tools">register_tools() (lionagi.action.ActionManager method)</a>
-</li>
         <li><a href="modules/concepts.html#lionagi.protocols._concepts.Relational">Relational (class in lionagi.protocols._concepts)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.progression.Progression.remove">remove() (lionagi.protocols.generic.progression.Progression method)</a>
+        <li><a href="modules/progression.html#lionagi.protocols.generic.progression.Progression.remove">remove() (lionagi.protocols.generic.progression.Progression method)</a>
 </li>
         <li><a href="modules/form.html#lionagi.form.report.Report">Report (class in lionagi.form.report)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.Tool.required_fields">required_fields (lionagi.action.Tool attribute)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.run_instruct.run_instruct">run_instruct() (in module lionagi.operations.strategies.run_instruct)</a>
 </li>
         <li><a href="modules/utils.html#lionagi.utils.run_package_manager_command">run_package_manager_command() (in module lionagi.utils)</a>
 </li>
@@ -1418,33 +1254,11 @@
 </li>
         <li><a href="modules/lib_file.html#lionagi.libs.file.save.save_to_file">save_to_file() (in module lionagi.libs.file.save)</a>
 </li>
-        <li><a href="modules/operations.html#lionagi.operations.select.select">select() (in module lionagi.operations.select)</a>
-</li>
-        <li><a href="modules/operations.html#lionagi.operations.select.SelectionModel">SelectionModel (class in lionagi.operations.select)</a>
-</li>
-        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Sendable">Sendable (class in lionagi.protocols._concepts)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.sequential_chunk.SequentialChunkExecutor">SequentialChunkExecutor (class in lionagi.operations.strategies.sequential_chunk)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.hybrid_sequential_concurrent_chunk.SequentialConcurrentChunkExecutor">SequentialConcurrentChunkExecutor (class in lionagi.operations.strategies.hybrid_sequential_concurrent_chunk)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.sequential.SequentialExecutor">SequentialExecutor (class in lionagi.operations.strategies.sequential)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.base.StrategyExecutor">StrategyExecutor (class in lionagi.operations.strategies.base)</a>
-</li>
-        <li><a href="modules/strategies.html#lionagi.operations.strategies.params.StrategyParams">StrategyParams (class in lionagi.operations.strategies.params)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.Tool.strict_func_call">strict_func_call (lionagi.action.Tool attribute)</a>
+        <li><a href="modules/concepts.html#lionagi.protocols._concepts.Sendable">Sendable (class in lionagi.protocols._concepts)</a>
 </li>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.string_similarity.string_similarity">string_similarity() (in module lionagi.libs.validate.string_similarity)</a>
-</li>
-        <li><a href="modules/message.html#lionagi.protocols.messages.system.System">System (class in lionagi.protocols.messages.system)</a>
-</li>
-        <li><a href="modules/message.html#lionagi.protocols.messages.system.System.system_datetime">system_datetime (lionagi.protocols.messages.system.System attribute)</a>
-</li>
-        <li><a href="modules/message.html#lionagi.protocols.messages.system.System.system_message">system_message (lionagi.protocols.messages.system.System attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -1460,21 +1274,15 @@
 </li>
         <li><a href="modules/utils.html#lionagi.utils.time">time() (in module lionagi.utils)</a>
 </li>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.pile.Pile.to_csv_file">to_csv_file() (lionagi.protocols.generic.pile.Pile method)</a>
-</li>
-        <li><a href="modules/utils.html#lionagi.utils.to_json">to_json() (in module lionagi.utils)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/pile_progression.html#lionagi.protocols.generic.pile.Pile.to_json_file">to_json_file() (lionagi.protocols.generic.pile.Pile method)</a>
+        <li><a href="modules/utils.html#lionagi.utils.to_json">to_json() (in module lionagi.utils)</a>
 </li>
         <li><a href="modules/utils.html#lionagi.utils.to_list">to_list() (in module lionagi.utils)</a>
 </li>
+        <li><a href="modules/pile.html#lionagi.protocols.generic.pile.to_list_type">to_list_type() (in module lionagi.protocols.generic.pile)</a>
+</li>
         <li><a href="modules/service.html#lionagi.service.token_calculator.TokenCalculator">TokenCalculator (class in lionagi.service.token_calculator)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.Tool">Tool (class in lionagi.action)</a>
-</li>
-        <li><a href="modules/action.html#lionagi.action.Tool.tool_schema">tool_schema (lionagi.action.Tool attribute)</a>
 </li>
     </ul></td>
   </tr></table>
@@ -1502,6 +1310,8 @@
   <h2>V</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.IDType.validate">validate() (lionagi.protocols.generic.element.IDType class method)</a>
+</li>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.validate_boolean.validate_boolean">validate_boolean() (in module lionagi.libs.validate.validate_boolean)</a>
 </li>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.common_field_validators.validate_boolean_field">validate_boolean_field() (in module lionagi.libs.validate.common_field_validators)</a>
@@ -1519,6 +1329,8 @@
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.common_field_validators.validate_nullable_jsonvalue_field">validate_nullable_jsonvalue_field() (in module lionagi.libs.validate.common_field_validators)</a>
 </li>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.common_field_validators.validate_nullable_string_field">validate_nullable_string_field() (in module lionagi.libs.validate.common_field_validators)</a>
+</li>
+        <li><a href="modules/element_id.html#lionagi.protocols.generic.element.validate_order">validate_order() (in module lionagi.protocols.generic.element)</a>
 </li>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.common_field_validators.validate_same_dtype_flat_list">validate_same_dtype_flat_list() (in module lionagi.libs.validate.common_field_validators)</a>
 </li>
@@ -1570,7 +1382,7 @@
       
     </aside>
   </div>
-</div><script src="_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="_static/documentation_options.js?v=5a5a329e"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>

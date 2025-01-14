@@ -12,21 +12,24 @@ Below is an overview of all modules in the LionAGI library:
 
    action
    adapter
+   branch_operations
    branch
    concepts
+   element_id
    event
    form
    graph
    instruct
+   log
    mail
    message
    models
-   operations
    operative_step
-   pile_progression
+   pile
+   processor
+   progression
    service
    session
-   strategies
    utils
    lib_file
    lib_nested

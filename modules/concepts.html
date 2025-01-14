@@ -3,40 +3,41 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Event Architecture" href="event.html" /><link rel="prev" title="Branch" href="branch.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Element, IDType, and ID" href="element_id.html" /><link rel="prev" title="Branch: The Orchestrator" href="branch.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Abstract Concepts - LionAGI Documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d75fae25" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=b96a576b" />
     
     
 
 
 <style>
   body {
-    --color-code-background: #f8f8f8;
+    --color-code-background: #f0f0f0;
   --color-code-foreground: black;
-  --color-brand-primary: #007ACC;
-  --color-brand-content: #006699;
+  --color-brand-primary: #3070a0;
+  --color-brand-content: #3070a0;
+  --font-size--body: 16px;
   
   }
   @media not print {
     body[data-theme="dark"] {
-      --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+      --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
     }
     @media (prefers-color-scheme: dark) {
       body:not([data-theme="light"]) {
-        --color-code-background: #202020;
-  --color-code-foreground: #d0d0d0;
-  --color-brand-primary: #4DC1FF;
-  --color-brand-content: #99C2FF;
+        --color-code-background: #002b36;
+  --color-code-foreground: #839496;
+  --color-brand-primary: #5dafff;
+  --color-brand-content: #5dafff;
   
       }
     }
@@ -213,23 +214,26 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Modules API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="action.html">Action</a></li>
-<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="action.html">Action System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch_operations.html">Branch-Level Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch: The Orchestrator</a></li>
 <li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Abstract Concepts</a></li>
-<li class="toctree-l2"><a class="reference internal" href="event.html">Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="element_id.html">Element, IDType, and ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">Event, EventStatus, and Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
-<li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail</a></li>
-<li class="toctree-l2"><a class="reference internal" href="message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">Node, Edge, and Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log.html">Log, LogManager, and Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">Mail System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">Messages Subsystem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile.html">Pile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="processor.html">Event Processor and Executor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="progression.html">Progression</a></li>
 <li class="toctree-l2"><a class="reference internal" href="service.html">API Service System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
-<li class="toctree-l2"><a class="reference internal" href="strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
@@ -238,11 +242,12 @@
 <li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
 </ul>
-</li>
+<p class="caption" role="heading"><span class="caption-text">Indices &amp; Tables</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../search.html">Search Page</a></li>
 </ul>
 
 </div>
@@ -284,46 +289,47 @@
         </div>
         <article role="main" id="furo-main-content">
           <section id="module-lionagi.protocols._concepts">
-<span id="abstract-concepts"></span><span id="lionagi-core-abc"></span><h1>Abstract Concepts<a class="headerlink" href="#module-lionagi.protocols._concepts" title="Link to this heading">¶</a></h1>
-<p>These abstract base classes (ABCs) describe fundamental “roles” or “capabilities”
-that a LionAGI component can fulfill. They do <strong>not</strong> provide direct implementation
-details, but establishing them ensures that different parts of the system
-communicate consistently and can be extended more reliably.</p>
+<span id="abstract-concepts"></span><span id="lionagi-protocols-concepts"></span><h1>Abstract Concepts<a class="headerlink" href="#module-lionagi.protocols._concepts" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>These classes outline the base “roles” in LionAGI—such as observation, management,
+and graph connectivity—without providing direct implementations. They ensure a
+consistent interface across different parts of the system. Subclasses must implement
+the required methods or attributes to fulfill each role.</p>
+</section>
 <section id="observer">
 <h2>Observer<a class="headerlink" href="#observer" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Observer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Observer</span></span><a class="headerlink" href="#lionagi.protocols._concepts.Observer" title="Link to this definition">¶</a></dt>
-<dd><p>An <strong>abstract base</strong> (marker or interface) for all observer classes in LionAGI.
-Observers may be notified of events or changes in the system. Concrete classes
-that inherit <code class="docutils literal notranslate"><span class="pre">Observer</span></code> typically override or implement methods to react
-to these events (e.g., for logging or custom state updates).</p>
+<dd><p>Base abstract class for <strong>observer</strong> entities. An “observer” typically monitors or reacts
+to changes in the system. Since it is an abstract marker, any class inheriting from
+<code class="docutils literal notranslate"><span class="pre">Observer</span></code> may define custom methods for responding to events, logging updates,
+or other side effects.</p>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<p>This class does not specify any methods; it simply designates the conceptual role of
+an “observer” in LionAGI.</p>
+</section>
 </dd></dl>
 
 </section>
 <section id="manager">
 <h2>Manager<a class="headerlink" href="#manager" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols._concepts.Manager">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Manager</span></span><a class="headerlink" href="#lionagi.protocols._concepts.Manager" title="Link to this definition">¶</a></dt>
-<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols._concepts.Observer" title="lionagi.protocols._concepts.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
-<p>A “manager” is a registry or controller that administers certain objects in
-the system. For instance, <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code>
-manages callable tools, while a <code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code>
-might manage log entries. By inheriting from <code class="docutils literal notranslate"><span class="pre">Manager</span></code>, a class signifies
-that it orchestrates or keeps track of a set of resources within LionAGI.</p>
-</dd></dl>
-
 </section>
 <section id="relational">
 <h2>Relational<a class="headerlink" href="#relational" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Relational">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Relational</span></span><a class="headerlink" href="#lionagi.protocols._concepts.Relational" title="Link to this definition">¶</a></dt>
-<dd><p><strong>Inherits from</strong>: None (abstract base)</p>
-<p>Used for <strong>graph-connectable</strong> objects. Classes implementing <code class="docutils literal notranslate"><span class="pre">Relational</span></code>
-can be part of a graph data structure (e.g., nodes in a knowledge graph).
-Typically, such classes store references to edges or neighboring elements.</p>
+<dd><p>Represents a <strong>graph-connectable</strong> object. In LionAGI, classes implementing <code class="docutils literal notranslate"><span class="pre">Relational</span></code>
+can appear as nodes in a graph-like structure. They may store relationships (edges)
+to neighbors or track references to other <code class="docutils literal notranslate"><span class="pre">Relational</span></code> elements.</p>
+<section id="id1">
+<h3>Notes<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>This abstract base class does not prescribe how to store or access neighbors, but
+indicates that the implementing class can integrate into a graph data model.</p>
+</section>
 </dd></dl>
 
 </section>
@@ -332,10 +338,16 @@ Typically, such classes store references to edges or neighboring elements.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Sendable">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Sendable</span></span><a class="headerlink" href="#lionagi.protocols._concepts.Sendable" title="Link to this definition">¶</a></dt>
-<dd><p>An abstract base for message-oriented capabilities. A “sendable” entity
-must track a <strong>sender</strong> identity and potentially a <strong>recipient</strong>, enabling
-the system to pass or route messages. Often used in queue-based or event-driven
-scenarios for multi-agent communication.</p>
+<dd><p>An abstract class indicating that an entity can send messages. This requires
+that the concrete subclass define sender/recipient information (e.g., in an event
+or queue-based system). Typical usage includes multi-agent architectures where
+messages must be routed between participants.</p>
+<section id="id2">
+<h3>Notes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>“Sendable” implies the presence of a <strong>sender</strong> and <strong>recipient</strong> attribute (or
+equivalent). This class does not define actual methods for sending messages, as
+it merely establishes the conceptual requirement.</p>
+</section>
 </dd></dl>
 
 </section>
@@ -344,42 +356,46 @@ scenarios for multi-agent communication.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Observable">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Observable</span></span><a class="headerlink" href="#lionagi.protocols._concepts.Observable" title="Link to this definition">¶</a></dt>
-<dd><p><strong>Purpose</strong>: Denotes an object that has an <code class="docutils literal notranslate"><span class="pre">id</span></code> field of a known type (usually
-a UUID). The object is thus “observable,” allowing references or logs to
-identify it unambiguously. Many core LionAGI classes implement <code class="docutils literal notranslate"><span class="pre">Observable</span></code>
-so they can be stored or indexed by ID.</p>
+<dd><p>Denotes that an entity must possess an <strong>id</strong> field, often a UUID or similar unique identifier.
+Many core LionAGI classes inherit from <code class="docutils literal notranslate"><span class="pre">Observable</span></code> to ensure they can be referenced,
+logged, and tracked by a universal ID. This simplifies indexing or lookups across the system.</p>
+<section id="id3">
+<h3>Notes<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Subclasses must provide a concrete implementation or storage for <code class="docutils literal notranslate"><span class="pre">id</span></code>.</p></li>
+<li><p>Typically used with concurrency-safe collections or logging frameworks.</p></li>
+</ul>
+</section>
 </dd></dl>
 
 </section>
 <section id="communicatable">
 <h2>Communicatable<a class="headerlink" href="#communicatable" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols._concepts.Communicatable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Communicatable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Observable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Communicatable" title="Link to this definition">¶</a></dt>
-<dd><p>Combines an <code class="xref py py-attr docutils literal notranslate"><span class="pre">id</span></code> (from <a class="reference internal" href="#lionagi.protocols._concepts.Observable" title="lionagi.protocols._concepts.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a>) with <strong>mailbox</strong>-style
-communication. A “communicatable” class can have:</p>
-<ul class="simple">
-<li><p>A mailbox or channel for inbound messages.</p></li>
-<li><p>A <code class="xref py py-meth docutils literal notranslate"><span class="pre">send()</span></code> method to emit messages to other recipients.</p></li>
-</ul>
-<p>This underlies multi-agent or multi-branch messaging in LionAGI.</p>
-</dd></dl>
-
 </section>
 <section id="condition">
 <h2>Condition<a class="headerlink" href="#condition" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Condition">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Condition</span></span><a class="headerlink" href="#lionagi.protocols._concepts.Condition" title="Link to this definition">¶</a></dt>
-<dd><p>An abstract base specifying a single <strong>async</strong> method:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="o">...</span>
-</pre></div>
-</div>
-<p>Typically used for permission or constraint checks. For example,
-<code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeCondition</span></code> determines if an edge
-can be traversed. This method can do I/O or other async operations to decide
-True/False.</p>
+<dd><p>Defines an <strong>async</strong> interface for condition checks. Subclasses must implement
+an <code class="docutils literal notranslate"><span class="pre">apply</span></code> method returning a boolean indicating whether a given condition
+is satisfied.</p>
+<section id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Condition.apply">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols._concepts.Condition.apply" title="Link to this definition">¶</a></dt>
+<dd><p>Run an asynchronous check to determine if the condition holds. Returns
+<code class="docutils literal notranslate"><span class="pre">True</span></code> if the condition is met, else <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd></dl>
+
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
+<p>A scheduling system might implement a condition that checks whether
+a resource is available. This check could involve async I/O (e.g., an
+external call), making the <code class="docutils literal notranslate"><span class="pre">apply</span></code> method asynchronous.</p>
+</section>
 </dd></dl>
 
 </section>
@@ -388,13 +404,34 @@ True/False.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Collective">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Collective</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Generic[E]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Collective" title="Link to this definition">¶</a></dt>
-<dd><p>A base for <strong>collections</strong> of items. Must define:</p>
+<dd><p>Abstract base for <strong>collections</strong> of elements. A class implementing <code class="docutils literal notranslate"><span class="pre">Collective</span></code>
+must provide at least two methods:</p>
 <ul class="simple">
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">include(item)()</span></code></p></li>
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">exclude(item)()</span></code></p></li>
 </ul>
-<p>Subclasses, like <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a>, store
-items with concurrency support or type constraints.</p>
+<p>These methods add or remove elements from the collection, respectively. The details
+(e.g., concurrency, strict typing, ordering) are left to the subclass.</p>
+<section id="id4">
+<h3>Methods<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Collective.include">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Collective.include" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the given item into the collection.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Collective.exclude">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Collective.exclude" title="Link to this definition">¶</a></dt>
+<dd><p>Remove the given item from the collection, if present.</p>
+</dd></dl>
+
+</section>
+<section id="id5">
+<h3>Notes<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<p>Implementations such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> provide
+concurrency-safe storage and type enforcement on top of this base.</p>
+</section>
 </dd></dl>
 
 </section>
@@ -403,95 +440,41 @@ items with concurrency support or type constraints.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Ordering">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Ordering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Generic[E]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Ordering" title="Link to this definition">¶</a></dt>
-<dd><p>Similar to <a class="reference internal" href="#lionagi.protocols._concepts.Collective" title="lionagi.protocols._concepts.Collective"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collective</span></code></a>, but emphasizes a <strong>strict sequence</strong> of items.
-Must define how items are inserted or removed while preserving an order. E.g.,
-<a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a> that keeps an ordered
-list of IDs.</p>
+<dd><p>Similar to <a class="reference internal" href="#lionagi.protocols._concepts.Collective" title="lionagi.protocols._concepts.Collective"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collective</span></code></a>, but emphasizes a <strong>strict sequence</strong> of elements.
+This means order matters, and subclasses must define how items are inserted or
+removed while preserving that sequence.</p>
+<section id="id6">
+<h3>Methods<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Ordering.include">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Ordering.include" title="Link to this definition">¶</a></dt>
+<dd><p>Insert the given item while respecting an ordering structure. The exact
+strategy (e.g., append, sorted insert, or custom rule) is determined by
+the subclass.</p>
 </dd></dl>
 
-<section id="id-system-and-element">
-<h3>ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code><a class="headerlink" href="#id-system-and-element" title="Link to this heading">¶</a></h3>
-<p id="module-lionagi.protocols.generic.element"><span id="lionagi-id-system"></span>LionAGI uses a <strong>UUIDv4-based</strong> scheme to ensure each object is uniquely
-identifiable. These classes unify that approach, providing hashing/equality
-logic and a base class called <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> that includes:</p>
-<ul class="simple">
-<li><p>A unique ID field,</p></li>
-<li><p>A creation timestamp,</p></li>
-<li><p>A metadata dictionary for user-defined data.</p></li>
-</ul>
-</section>
-</section>
-<section id="idtype">
-<h2>IDType<a class="headerlink" href="#idtype" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.generic.element.IDType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.element.</span></span><span class="sig-name descname"><span class="pre">IDType</span></span><a class="headerlink" href="#lionagi.protocols.generic.element.IDType" title="Link to this definition">¶</a></dt>
-<dd><p>A <strong>lightweight</strong> wrapper around a version-4 UUID. It enforces:</p>
-<ul class="simple">
-<li><p>Validation of input strings to confirm valid v4 UUIDs.</p></li>
-<li><p>Creation of random new UUIDs with <code class="xref py py-meth docutils literal notranslate"><span class="pre">create()</span></code>.</p></li>
-<li><p>Simple equality/hashing so that ID objects can be dict keys or set members.</p></li>
-</ul>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Ordering.exclude">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exclude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Ordering.exclude" title="Link to this definition">¶</a></dt>
+<dd><p>Remove the given item, ensuring the overall sequence remains valid.</p>
 </dd></dl>
 
 </section>
-<section id="id">
-<h2>ID<a class="headerlink" href="#id" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.generic.element.ID">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.element.</span></span><span class="sig-name descname"><span class="pre">ID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Generic[E]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.element.ID" title="Link to this definition">¶</a></dt>
-<dd><p>A utility class that helps <strong>convert</strong> various inputs (string, <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>, etc.)
-into a validated <a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a>.
-- <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_id(item)</span> <span class="pre">-&gt;</span> <span class="pre">IDType()</span></code>: Create or verify a valid ID.
-- <code class="xref py py-meth docutils literal notranslate"><span class="pre">is_id(item)</span> <span class="pre">-&gt;</span> <span class="pre">bool()</span></code>: Quickly check if item is recognized as an ID.</p>
+<section id="id7">
+<h3>Notes<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<p>A prime example is <a class="reference internal" href="progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a>,
+which keeps a strictly ordered list of IDs or elements.</p>
+</section>
 </dd></dl>
 
 </section>
-<section id="element">
-<h2>Element<a class="headerlink" href="#element" title="Link to this heading">¶</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="lionagi.protocols.generic.element.Element">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.element.</span></span><span class="sig-name descname"><span class="pre">Element</span></span><a class="headerlink" href="#lionagi.protocols.generic.element.Element" title="Link to this definition">¶</a></dt>
-<dd><p><strong>Inherits from</strong>: pydantic.BaseModel</p>
-<p>A <strong>base class</strong> for any LionAGI object needing:</p>
-<ul class="simple">
-<li><p>A unique <code class="xref py py-attr docutils literal notranslate"><span class="pre">id</span></code> (UUID v4).</p></li>
-<li><p>A <code class="xref py py-attr docutils literal notranslate"><span class="pre">created_at</span></code> timestamp (float, Unix epoch).</p></li>
-<li><p>A <code class="xref py py-attr docutils literal notranslate"><span class="pre">metadata</span></code> dictionary for custom fields.</p></li>
-</ul>
-<p>Also provides:</p>
-<ul class="simple">
-<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dict()</span></code> for easy serialization,</p></li>
-<li><p>Overridden <code class="docutils literal notranslate"><span class="pre">__eq__</span></code> and <code class="docutils literal notranslate"><span class="pre">__hash__</span></code> comparing objects by their <code class="xref py py-attr docutils literal notranslate"><span class="pre">id</span></code>.</p></li>
-</ul>
-<p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.element</span><span class="w"> </span><span class="kn">import</span> <span class="n">Element</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">MyElement</span><span class="p">(</span><span class="n">Element</span><span class="p">):</span>
-    <span class="k">pass</span>
-
-<span class="n">e</span> <span class="o">=</span> <span class="n">MyElement</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>        <span class="c1"># =&gt; IDType</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>  <span class="c1"># =&gt; {}</span>
-<span class="c1"># Now e can be placed into a dictionary keyed by e.id</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<section id="summary">
-<h3>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h3>
-<p>These <strong>abstract concepts</strong> and <strong>ID-based data models</strong> form the core of LionAGI:</p>
-<ul class="simple">
-<li><p>“<strong>Roles</strong>” like <code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Manager</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code>,
-etc., guide how classes are shaped and how they interact (managing tools,
-sending messages, etc.).</p></li>
-<li><p><strong>Conditions</strong> for controlling certain transitions or checks.</p></li>
-<li><p>The <strong>ID</strong> architecture ensures a universal reference scheme across
-objects in logs, graphs, or concurrency managers.</p></li>
-<li><p><a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> standardizes an ID, timestamp, and metadata for every
-signficant LionAGI component.</p></li>
-</ul>
-</section>
+<hr class="docutils" />
+<section id="file-location">
+<h2>File Location<a class="headerlink" href="#file-location" title="Link to this heading">¶</a></h2>
+<p><strong>Source File</strong>:
+<code class="docutils literal notranslate"><span class="pre">lionagi/protocols/_concepts.py</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">Copyright</span> <span class="pre">(c)</span> <span class="pre">2023</span> <span class="pre">-</span> <span class="pre">2024,</span> <span class="pre">HaiyangLi</span> <span class="pre">&lt;quantocean.li</span> <span class="pre">at</span> <span class="pre">gmail</span> <span class="pre">dot</span> <span class="pre">com&gt;</span></code>
+<code class="docutils literal notranslate"><span class="pre">SPDX-License-Identifier:</span> <span class="pre">Apache-2.0</span></code></p>
 </section>
 </section>
 
@@ -500,12 +483,12 @@ signficant LionAGI component.</p></li>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="event.html">
+          <a class="next-page" href="element_id.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Event Architecture</div>
+                <div class="title">Element, IDType, and ID</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -516,7 +499,7 @@ signficant LionAGI component.</p></li>
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Branch</div>
+                <div class="title">Branch: The Orchestrator</div>
                 
               </div>
             </a>
@@ -551,14 +534,12 @@ signficant LionAGI component.</p></li>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Abstract Concepts</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#observer">Observer</a><ul>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Observer"><code class="docutils literal notranslate"><span class="pre">Observer</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#manager">Manager</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols._concepts.Manager"><code class="docutils literal notranslate"><span class="pre">Manager</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#manager">Manager</a></li>
 <li><a class="reference internal" href="#relational">Relational</a><ul>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Relational"><code class="docutils literal notranslate"><span class="pre">Relational</span></code></a></li>
 </ul>
@@ -571,36 +552,31 @@ signficant LionAGI component.</p></li>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Observable"><code class="docutils literal notranslate"><span class="pre">Observable</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#communicatable">Communicatable</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols._concepts.Communicatable"><code class="docutils literal notranslate"><span class="pre">Communicatable</span></code></a></li>
+<li><a class="reference internal" href="#communicatable">Communicatable</a></li>
+<li><a class="reference internal" href="#condition">Condition</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Condition.apply"><code class="docutils literal notranslate"><span class="pre">Condition.apply()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#condition">Condition</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols._concepts.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#collective">Collective</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols._concepts.Collective"><code class="docutils literal notranslate"><span class="pre">Collective</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Collective"><code class="docutils literal notranslate"><span class="pre">Collective</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Collective.include"><code class="docutils literal notranslate"><span class="pre">Collective.include()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Collective.exclude"><code class="docutils literal notranslate"><span class="pre">Collective.exclude()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ordering">Ordering</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols._concepts.Ordering"><code class="docutils literal notranslate"><span class="pre">Ordering</span></code></a></li>
-<li><a class="reference internal" href="#id-system-and-element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Ordering"><code class="docutils literal notranslate"><span class="pre">Ordering</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Ordering.include"><code class="docutils literal notranslate"><span class="pre">Ordering.include()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Ordering.exclude"><code class="docutils literal notranslate"><span class="pre">Ordering.exclude()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#idtype">IDType</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.generic.element.IDType"><code class="docutils literal notranslate"><span class="pre">IDType</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id">ID</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.generic.element.ID"><code class="docutils literal notranslate"><span class="pre">ID</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#element">Element</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.generic.element.Element"><code class="docutils literal notranslate"><span class="pre">Element</span></code></a></li>
-<li><a class="reference internal" href="#summary">Summary</a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#file-location">File Location</a></li>
 </ul>
 </li>
 </ul>
@@ -612,7 +588,7 @@ signficant LionAGI component.</p></li>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+</div><script src="../_static/documentation_options.js?v=5a5a329e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
