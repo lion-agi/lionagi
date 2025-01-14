@@ -994,8 +994,8 @@ class Pile(Element, Collective[E], Generic[E]):
         path_or_buf,
         *,
         use_pd: bool = False,
+        many: bool = False,
         mode="w",
-        verbose=False,
         **kwargs,
     ):
         """Export collection to JSON file.
@@ -1007,15 +1007,9 @@ class Pile(Element, Collective[E], Generic[E]):
             verbose: Print confirmation message.
             **kwargs: Additional arguments for json.dump() or DataFrame.to_json().
         """
-
         if use_pd:
             return self.to_df().to_json(mode=mode, **kwargs)
-        dict_ = self.to_dict()
-        with open(path_or_buf, mode) as f:
-            json.dump(dict_, f, **kwargs)
-
-        if verbose:
-            print(f"Saved Pile to {path_or_buf}")
+        return self.adapt_to(".json", fp=path_or_buf, mode=mode, many=many)
 
 
 def pile(
@@ -1076,3 +1070,6 @@ def to_list_type(value: Any, /) -> list[Any]:
     if isinstance(value, list | tuple | set | deque | Generator):
         return list(value)
     return [value]
+
+
+# File: lionagi/protocols/generic/pile.py
