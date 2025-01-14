@@ -130,7 +130,7 @@ class JsonFileAdapter(Adapter):
         dict | list[dict]
             The loaded data from file.
         """
-        with open(obj, "r", encoding="utf-8") as f:
+        with open(obj, encoding="utf-8") as f:
             result = json.load(f, **kwargs)
         if many:
             return result if isinstance(result, list) else [result]

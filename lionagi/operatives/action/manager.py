@@ -47,7 +47,7 @@ class ActionManager(Manager):
             tools.extend(to_list(args, dropna=True, flatten=True))
         if kwargs:
             tools.extend(to_list(kwargs.values(), dropna=True, flatten=True))
-            
+
         self.register_tools(tools, update=True)
 
     def __contains__(self, tool: FuncToolRef) -> bool:
@@ -95,10 +95,14 @@ class ActionManager(Manager):
         if callable(tool):
             tool = Tool(func_callable=tool)
         if not isinstance(tool, Tool):
-            raise TypeError("Must provide a `Tool` object or a callable function.")
+            raise TypeError(
+                "Must provide a `Tool` object or a callable function."
+            )
         self.registry[tool.function] = tool
 
-    def register_tools(self, tools: list[FuncTool] | FuncTool, update: bool = False) -> None:
+    def register_tools(
+        self, tools: list[FuncTool] | FuncTool, update: bool = False
+    ) -> None:
         """
         Register multiple tools at once.
 
@@ -116,7 +120,9 @@ class ActionManager(Manager):
         for t in tools_list:
             self.register_tool(t, update=update)
 
-    def match_tool(self, action_request: ActionRequest | ActionRequestModel | dict) -> FunctionCalling:
+    def match_tool(
+        self, action_request: ActionRequest | ActionRequestModel | dict
+    ) -> FunctionCalling:
         """
         Convert an ActionRequest (or dict with "function"/"arguments")
         into a `FunctionCalling` instance by finding the matching tool.
@@ -132,7 +138,7 @@ class ActionManager(Manager):
             action_request, ActionRequest | ActionRequestModel | dict
         ):
             raise TypeError(f"Unsupported type {type(action_request)}")
-        
+
         func, args = None, None
         if isinstance(action_request, dict):
             func = action_request["function"]
@@ -140,11 +146,11 @@ class ActionManager(Manager):
         else:
             func = action_request.function
             args = action_request.arguments
-            
+
         tool = self.registry.get(func, None)
         if not isinstance(tool, Tool):
             raise ValueError(f"Function {func} is not registered.")
-        
+
         return FunctionCalling(func_tool=tool, arguments=args)
 
     async def invoke(

@@ -153,6 +153,7 @@ Used for specifying one or more tool references, or a boolean
 indicating 'all' or 'none'.
 """
 
+
 def func_to_tool(func: Callable[..., Any], **kwargs) -> Tool:
     """
     Convenience function that wraps a raw function in a `Tool`.
@@ -165,5 +166,6 @@ def func_to_tool(func: Callable[..., Any], **kwargs) -> Tool:
         Tool: A new Tool instance wrapping `func`.
     """
     return Tool(func_callable=func, **kwargs)
+
 
 # File: lionagi/operatives/action/tool.py

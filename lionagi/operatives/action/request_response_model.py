@@ -39,7 +39,6 @@ class ActionRequestModel(HashableModel):
     Includes the name of the function and the arguments to be passed.
     """
 
-
     function: str | None = Field(
         None,
         title="Function",
