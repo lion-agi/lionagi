@@ -18,7 +18,7 @@ async def _act(
     branch: "Branch",
     action_request: BaseModel | dict,
     suppress_errors: bool = False,
-) -> "ActionResponseModel" | None:
+) -> "ActionResponseModel":
 
     _request = {}
 
