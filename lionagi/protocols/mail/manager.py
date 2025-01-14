@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Defines the `MailManager` class, which coordinates mail operations
+across multiple sources in a more abstract or high-level manner.
+"""
+
 import asyncio
 from collections import deque
 from typing import Any
@@ -17,19 +22,29 @@ from .mail import Mail, Package, PackageCategory
 
 class MailManager(Manager):
     """
-    Manages mail operations for multiple sources in the Lion framework.
+    A manager for mail operations across various observable sources
+    within LionAGI. Unlike `Exchange`, this class can manage the state
+    of multiple sources in a more general or higher-level context,
+    storing mail queues in a dictionary rather than individual buffers.
 
-    This class handles the collection, distribution, and management of mail
-    between different sources within the system.
+    Attributes
+    ----------
+    sources : Pile[Observable]
+        A concurrency-safe collection of known sources.
+    mails : dict[str, dict[str, deque]]
+        A nested mapping of recipient -> sender -> queue of mail.
+    execute_stop : bool
+        Controls the asynchronous execution loop; set to True to exit.
     """
 
     def __init__(self, sources: ID.Item | ID.ItemSeq = None) -> None:
         """
         Initialize a MailManager instance.
 
-        Args:
-            sources (List[Any], optional): Initial list of mail sources to
-                manage.
+        Parameters
+        ----------
+        sources : ID.Item | ID.ItemSeq, optional
+            Initial source(s) to manage. Each source must be an Observable.
         """
         self.sources: Pile[Observable] = Pile()
         self.mails: dict[str, dict[str, deque]] = {}
@@ -40,14 +55,17 @@ class MailManager(Manager):
 
     def add_sources(self, sources: ID.Item | ID.ItemSeq, /) -> None:
         """
-        Add new sources to the MailManager.
+        Register new sources in the MailManager.
 
-        Args:
-            sources (Any): The sources to add. Can be a single source or
-                a list of sources.
+        Parameters
+        ----------
+        sources : ID.Item | ID.ItemSeq
+            A single source or multiple sources to be added.
 
-        Raises:
-            LionValueError: If adding the source(s) fails.
+        Raises
+        ------
+        ValueError
+            If adding the sources fails for any reason.
         """
         try:
             sources = to_list_type(sources)
@@ -66,17 +84,25 @@ class MailManager(Manager):
         request_source: Any = None,
     ) -> Mail:
         """
-        Create a new Mail object.
+        Factory method to generate a Mail object.
 
-        Args:
-            sender (str): The ID of the sender.
-            recipient (str): The ID of the recipient.
-            category (str): The category of the mail.
-            package (Any): The content of the package.
-            request_source (Any, optional): The source of the request.
+        Parameters
+        ----------
+        sender : ID.Ref
+            Reference (ID or object) for the sender.
+        recipient : ID.Ref
+            Reference (ID or object) for the recipient.
+        category : PackageCategory | str
+            The category of this package.
+        package : Any
+            The payload or content in the mail.
+        request_source : Any, optional
+            Additional context about the request source.
 
-        Returns:
-            Mail: A new Mail object.
+        Returns
+        -------
+        Mail
+            A new mail object with specified sender, recipient, and package.
         """
         pack = Package(
             category=category, package=package, request_source=request_source
@@ -85,13 +111,17 @@ class MailManager(Manager):
 
     def delete_source(self, source_id: IDType) -> None:
         """
-        Delete a source from the MailManager.
+        Remove a source from the manager, discarding any associated mail.
 
-        Args:
-            source_id (str): The ID of the source to delete.
+        Parameters
+        ----------
+        source_id : IDType
+            The ID of the source to be removed.
 
-        Raises:
-            LionValueError: If the source does not exist.
+        Raises
+        ------
+        ItemNotFoundError
+            If the given source ID is not present.
         """
         if source_id not in self.sources:
             raise ItemNotFoundError(f"Source {source_id} does not exist.")
@@ -99,7 +129,19 @@ class MailManager(Manager):
         self.mails.pop(source_id)
 
     def collect(self, sender: IDType) -> None:
-        """Collect mail from a specific sender."""
+        """
+        Collect outbound mail from a single source.
+
+        Parameters
+        ----------
+        sender : IDType
+            The ID of the sender whose outbound mail is retrieved.
+
+        Raises
+        ------
+        ItemNotFoundError
+            If the sender is not recognized.
+        """
         if sender not in self.sources:
             raise ItemNotFoundError(f"Sender source {sender} does not exist.")
         mailbox: Exchange = (
@@ -120,7 +162,19 @@ class MailManager(Manager):
             self.mails[mail.recipient][mail.sender].append(mail)
 
     def send(self, recipient: IDType) -> None:
-        """Send mail to a specific recipient."""
+        """
+        Send any pending mail to a specified recipient.
+
+        Parameters
+        ----------
+        recipient : IDType
+            The ID of the recipient to which mail should be delivered.
+
+        Raises
+        ------
+        ItemNotFoundError
+            If the recipient ID is not recognized.
+        """
         if recipient not in self.sources:
             raise ItemNotFoundError(
                 f"Recipient source {recipient} does not exist."
@@ -139,25 +193,27 @@ class MailManager(Manager):
                 mailbox.include(mail, direction="in")
 
     def collect_all(self) -> None:
-        """Collect mail from all sources."""
+        """
+        Collect outbound mail from all known sources.
+        """
         for source in self.sources:
             self.collect(sender=source.id)
 
     def send_all(self) -> None:
-        """Send mail to all recipients."""
+        """
+        Send mail to all known recipients who have pending items.
+        """
         for source in self.sources:
             self.send(recipient=source.id)
 
     async def execute(self, refresh_time: int = 1) -> None:
         """
-        Execute mail collection and sending process asynchronously.
+        Continuously collect and send mail in an asynchronous loop.
 
-        This method runs in a loop, collecting and sending mail at
-            regular intervals.
-
-        Args:
-            refresh_time (int, optional): The time to wait between
-                each cycle in seconds. Defaults to 1.
+        Parameters
+        ----------
+        refresh_time : int, optional
+            Delay (in seconds) between each collect/send cycle.
         """
         while not self.execute_stop:
             self.collect_all()
@@ -165,4 +221,4 @@ class MailManager(Manager):
             await asyncio.sleep(refresh_time)
 
 
-# File: lion_core/communication/mail_manager.py
+# File: lion_core/communication/manager.py
