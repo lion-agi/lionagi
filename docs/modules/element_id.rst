@@ -72,9 +72,8 @@ Element
 -------
 .. class:: Element
    :module: lionagi.protocols.generic.element
-   :show-inheritance:
 
-   **Inherits from**: `pydantic.BaseModel`, :class:`lionagi.protocols._concepts.Observable`
+   **Inherits from**: :class:`pydantic.BaseModel`, :class:`lionagi.protocols._concepts.Observable`
 
    A **Pydantic-based** class that provides a **unique ID**, a **creation timestamp**, 
    and a flexible metadata dictionary. This forms a foundation for many other 

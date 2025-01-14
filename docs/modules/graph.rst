@@ -52,10 +52,8 @@ Edge
 ----
 .. class:: Edge(Element)
    :module: lionagi.protocols.graph.edge
-   :show-inheritance:
 
-   **Inherits from**:
-   :class:`~lionagi.protocols.generic.element.Element`
+   **Inherits from**: :class:`~lionagi.protocols.generic.element.Element`
 
    Represents a **directed connection** from a head node to a tail node in a
    LionAGI graph. An optional :attr:`condition` determines if traversal is 
@@ -117,11 +115,8 @@ Node
 ----
 .. class:: Node(Element, Relational)
    :module: lionagi.protocols.graph.node
-   :show-inheritance:
 
-   **Inherits from**:
-   :class:`~lionagi.protocols.generic.element.Element`,
-   :class:`~lionagi.protocols._concepts.Relational`
+   **Inherits from**: :class:`~lionagi.protocols.generic.element.Element`, :class:`~lionagi.protocols._concepts.Relational`
 
    A **graph node** that can store arbitrary content, an optional numeric 
    embedding, and metadata in :attr:`metadata`. Nodes integrate with the 
@@ -168,11 +163,8 @@ Graph
 -----
 .. class:: Graph(Element, Relational)
    :module: lionagi.protocols.graph.graph
-   :show-inheritance:
 
-   **Inherits from**:
-   :class:`~lionagi.protocols.generic.element.Element`,
-   :class:`~lionagi.protocols._concepts.Relational`
+   **Inherits from**: :class:`~lionagi.protocols.generic.element.Element`, :class:`~lionagi.protocols._concepts.Relational`
 
    Represents an entire **directed graph** of :class:`Node` and :class:`Edge` objects. 
    Internally, it uses two :class:`~lionagi.protocols.generic.pile.Pile` instances 

@@ -18,9 +18,10 @@ exchanges.
    :synopsis: Defines the Operative class for typed request/response logic.
 
 .. class:: Operative
-   :extends: SchemaModel
 
-**Purpose**:
+   **Inherits from**: :class:`SchemaModel`
+
+   **Purpose**:
 - Serves as a flexible container describing how a system should 
   handle request data (input) and produce response data (output).
 - References two sets of :class:`ModelParams`: one for the request 
@@ -86,18 +87,19 @@ reliably.
    :synopsis: Contains utility classes for single-step operations.
 
 .. class:: StepModel
-   :extends: BaseModel
 
-An **example** Pydantic model that demonstrates how a single “operational
-step” might look:
+   **Inherits from**: :class:`BaseModel`
 
-- :attr:`title`: Title or label for the step.
-- :attr:`description`: Additional details or instructions.
-- :attr:`reason`: A :class:`Reason` object capturing optional reasoning.
-- :attr:`action_requests` / :attr:`action_responses`: Potential tool 
-  requests or replies associated with the step.
-- :attr:`action_required`: Boolean indicating if the step must 
-  involve a tool call.
+   An **example** Pydantic model that demonstrates how a single "operational
+   step" might look:
+
+   - :attr:`title`: Title or label for the step.
+   - :attr:`description`: Additional details or instructions.
+   - :attr:`reason`: A :class:`Reason` object capturing optional reasoning.
+   - :attr:`action_requests` / :attr:`action_responses`: Potential tool 
+     requests or replies associated with the step.
+   - :attr:`action_required`: Boolean indicating if the step must 
+     involve a tool call.
 
 **Example**::
 
