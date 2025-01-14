@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Defines the `Instruction` class, representing user commands or instructions
+sent to the system. Supports optional context, images, and schema requests.
+"""
+
 from typing import Any, Literal, override
 
 from pydantic import BaseModel, JsonValue, field_serializer
@@ -14,13 +19,14 @@ from .message import RoledMessage, SenderRecipient
 
 def prepare_request_response_format(request_fields: dict) -> str:
     """
-    Prepare a standardized format for request responses.
+    Creates a mandated JSON code block for the response
+    based on requested fields.
 
     Args:
-        request_fields: Dictionary of fields to include in response
+        request_fields: Dictionary of fields for the response format.
 
     Returns:
-        str: Formatted response template
+        str: A string instructing the user to return valid JSON.
     """
     return (
         "**MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLOCKS."
@@ -28,35 +34,36 @@ def prepare_request_response_format(request_fields: dict) -> str:
     ).strip()
 
 
-def format_image_item(idx: str, x: str, /) -> dict[str, Any]:
+def format_image_item(idx: str, detail: str) -> dict[str, Any]:
     """
-    Create an image_url dictionary for content formatting.
+    Wrap image data in a standard dictionary format.
 
     Args:
-        idx: Base64 encoded image data
-        x: Image detail level
+        idx: A base64 image ID or URL reference.
+        detail: The image detail level.
 
     Returns:
-        dict: Formatted image item
+        dict: A dictionary describing the image.
     """
     return {
         "type": "image_url",
         "image_url": {
             "url": f"data:image/jpeg;base64,{idx}",
-            "detail": x,
+            "detail": detail,
         },
     }
 
 
 def format_text_item(item: Any) -> str:
     """
-    Format a text item or list of items into a string.
+    Turn a single item (or dict) into a string. If multiple items,
+    combine them line by line.
 
     Args:
-        item: Text item(s) to format
+        item: Any item, possibly a list/dict with text data.
 
     Returns:
-        str: Formatted text
+        str: Concatenated text lines.
     """
     msg = ""
     item = [item] if not isinstance(item, list) else item
@@ -73,13 +80,14 @@ def format_text_item(item: Any) -> str:
 
 def format_text_content(content: dict) -> str:
     """
-    Format dictionary content into a structured text format.
+    Convert a dictionary with keys like 'guidance', 'instruction', 'context', etc.
+    into a readable text block.
 
     Args:
-        content: Dictionary containing content sections
+        content (dict): The content dictionary.
 
     Returns:
-        str: Formatted text content
+        str: A textual summary.
     """
     if "plain_content" in content and isinstance(
         content["plain_content"], str
@@ -140,17 +148,17 @@ def format_image_content(
     text_content: str,
     images: list,
     image_detail: Literal["low", "high", "auto"],
-) -> dict[str, Any]:
+) -> list[dict[str, Any]]:
     """
-    Format text content with images for message content.
+    Merge textual content with a list of image dictionaries for consumption.
 
     Args:
-        text_content: The text content to format
-        images: List of images to include
-        image_detail: Level of detail for images
+        text_content (str): The textual portion
+        images (list): A list of base64 or references
+        image_detail (Literal["low","high","auto"]): How detailed the images are
 
     Returns:
-        dict: Formatted content with text and images
+        list[dict[str,Any]]: A combined structure of text + image dicts.
     """
     content = [{"type": "text", "text": text_content}]
     content.extend(format_image_item(i, image_detail) for i in images)
@@ -169,24 +177,34 @@ def prepare_instruction_content(
     tool_schemas: dict | None = None,
 ) -> dict:
     """
-    Prepare the content for an instruction message.
+    Combine various pieces (instruction, guidance, context, etc.) into
+    a single dictionary describing the user's instruction.
 
     Args:
-        guidance: Optional guidance text
-        instruction: Main instruction content
-        context: Additional context information
-        request_fields: Fields to request in response
-        plain_content: Plain text content
-        request_model: Pydantic model for structured requests
-        images: Images to include
-        image_detail: Level of detail for images
-        tool_schemas: Tool schemas to include
+        guidance (str | None):
+            Optional guiding text.
+        instruction (str | None):
+            Main instruction or command to be executed.
+        context (str | dict | list | None):
+            Additional context about the environment or previous steps.
+        request_fields (dict | list[str] | None):
+            If the user requests certain fields in the response.
+        plain_content (str | None):
+            A raw plain text fallback.
+        request_model (BaseModel | None):
+            If there's a pydantic model for the request schema.
+        images (str | list | None):
+            Optional images, base64-coded or references.
+        image_detail (str | None):
+            The detail level for images ("low", "high", "auto").
+        tool_schemas (dict | None):
+            Extra data describing available tools.
 
     Returns:
-        Note: Prepared instruction content
+        dict: The combined instruction content.
 
     Raises:
-        ValueError: If both request_fields and request_model are provided
+        ValueError: If request_fields and request_model are both given.
     """
     if request_fields and request_model:
         raise ValueError(
@@ -227,10 +245,15 @@ def prepare_instruction_content(
     if plain_content:
         out_["plain_content"] = plain_content
 
+    # remove keys with None/UNDEFINED
     return {k: v for k, v in out_.items() if v not in [None, UNDEFINED]}
 
 
 class Instruction(RoledMessage):
+    """
+    A user-facing message that conveys commands or tasks. It supports
+    optional images, tool references, and schema-based requests.
+    """
 
     @classmethod
     def create(
@@ -247,9 +270,44 @@ class Instruction(RoledMessage):
         image_detail: Literal["low", "high", "auto"] = None,
         request_model: BaseModel | type[BaseModel] = None,
         response_format: BaseModel | type[BaseModel] = None,
-        tool_schemas: dict = None,
-    ):
+        tool_schemas: list[dict] = None,
+    ) -> "Instruction":
+        """
+        Construct a new Instruction.
 
+        Args:
+            instruction (JsonValue, optional):
+                The main user instruction.
+            context (JsonValue, optional):
+                Additional context or environment info.
+            guidance (JsonValue, optional):
+                Guidance or disclaimers for the instruction.
+            images (list, optional):
+                A set of images relevant to the instruction.
+            request_fields (JsonValue, optional):
+                The fields the user wants in the assistant's response.
+            plain_content (JsonValue, optional):
+                A raw plain text fallback.
+            image_detail ("low"|"high"|"auto", optional):
+                The detail level for included images.
+            request_model (BaseModel|type[BaseModel], optional):
+                A Pydantic schema for the request.
+            response_format (BaseModel|type[BaseModel], optional):
+                Alias for request_model.
+            tool_schemas (list[dict] | dict, optional):
+                Extra tool reference data.
+            sender (SenderRecipient, optional):
+                The sender role or ID.
+            recipient (SenderRecipient, optional):
+                The recipient role or ID.
+
+        Returns:
+            Instruction: A newly created instruction object.
+
+        Raises:
+            ValueError: If more than one of `request_fields`, `request_model`,
+                or `response_format` is passed at once.
+        """
         if (
             sum(
                 bool(i)
@@ -281,162 +339,123 @@ class Instruction(RoledMessage):
 
     @property
     def guidance(self) -> str | None:
-        """Get the guidance content of the instruction."""
         return self.content.get("guidance", None)
 
     @guidance.setter
     def guidance(self, guidance: str) -> None:
-        """Set the guidance content of the instruction."""
         if guidance is None:
             self.content.pop("guidance", None)
-            return
-
-        if not isinstance(guidance, str):
-            guidance = str(guidance)
-        self.content["guidance"] = guidance
+        else:
+            self.content["guidance"] = str(guidance)
 
     @property
     def instruction(self) -> JsonValue | None:
-        """Get the main instruction content."""
         if "plain_content" in self.content:
             return self.content["plain_content"]
-        else:
-            return self.content.get("instruction", None)
+        return self.content.get("instruction", None)
 
     @instruction.setter
-    def instruction(self, instruction: JsonValue) -> None:
-        """Set the main instruction content."""
-        if instruction is None:
+    def instruction(self, val: JsonValue) -> None:
+        if val is None:
             self.content.pop("instruction", None)
-            return
-
-        self.content["instruction"] = instruction
+        else:
+            self.content["instruction"] = val
 
     @property
     def context(self) -> JsonValue | None:
-        """Get the context of the instruction."""
         return self.content.get("context", None)
 
     @context.setter
-    def context(self, context: JsonValue) -> None:
-        """Set the context of the instruction."""
-        if context is None:
+    def context(self, ctx: JsonValue) -> None:
+        if ctx is None:
             self.content["context"] = []
-            return
-
-        if not isinstance(context, list):
-            context = [context]
-        self.content["context"] = context
+        else:
+            self.content["context"] = (
+                list(ctx) if isinstance(ctx, list) else [ctx]
+            )
 
     @property
     def tool_schemas(self) -> JsonValue | None:
-        """Get the schemas of the tools in the instruction."""
         return self.content.get("tool_schemas", None)
 
     @tool_schemas.setter
-    def tool_schemas(self, tool_schemas: dict) -> None:
-        """Set the schemas of the tools in the instruction."""
-        if not tool_schemas:
+    def tool_schemas(self, val: list[dict] | dict) -> None:
+        if not val:
             self.content.pop("tool_schemas", None)
             return
-
-        self.content["tool_schemas"] = tool_schemas
+        self.content["tool_schemas"] = val
 
     @property
     def plain_content(self) -> str | None:
-        """Get the plain text content of the instruction."""
         return self.content.get("plain_content", None)
 
     @plain_content.setter
-    def plain_content(self, plain_content: str) -> None:
-        """Set the plain text content of the instruction."""
-        self.content["plain_content"] = plain_content
+    def plain_content(self, pc: str) -> None:
+        self.content["plain_content"] = pc
 
     @property
     def image_detail(self) -> Literal["low", "high", "auto"] | None:
-        """Get the image detail level of the instruction."""
         return self.content.get("image_detail", None)
 
     @image_detail.setter
-    def image_detail(
-        self, image_detail: Literal["low", "high", "auto"]
-    ) -> None:
-        """Set the image detail level of the instruction."""
-        self.content["image_detail"] = image_detail
+    def image_detail(self, detail: Literal["low", "high", "auto"]) -> None:
+        self.content["image_detail"] = detail
 
     @property
     def images(self) -> list:
-        """Get the images associated with the instruction."""
         return self.content.get("images", [])
 
     @images.setter
-    def images(self, images: list) -> None:
-        """Set the images associated with the instruction."""
-        if not isinstance(images, list):
-            images = [images]
-        self.content["images"] = images
+    def images(self, imgs: list) -> None:
+        self.content["images"] = imgs if isinstance(imgs, list) else [imgs]
 
     @property
     def request_fields(self) -> dict | None:
-        """Get the requested fields in the instruction."""
         return self.content.get("request_fields", None)
 
     @request_fields.setter
-    def request_fields(self, request_fields: dict) -> None:
-        """Set the requested fields in the instruction."""
-        self.content["request_fields"] = request_fields
+    def request_fields(self, fields: dict) -> None:
+        self.content["request_fields"] = fields
         self.content["request_response_format"] = (
-            prepare_request_response_format(request_fields)
+            prepare_request_response_format(fields)
         )
 
     @property
     def response_format(self) -> type[BaseModel] | None:
-        """Get the request model of the instruction."""
         return self.content.get("request_model", None)
 
     @response_format.setter
-    def response_format(self, request_model: type[BaseModel]) -> None:
-        """
-        Set the request model of the instruction.
-
-        This also updates request fields and context based on the model.
-        """
-        if isinstance(request_model, BaseModel):
-            self.content["request_model"] = type(request_model)
+    def response_format(self, model: type[BaseModel]) -> None:
+        if isinstance(model, BaseModel):
+            self.content["request_model"] = type(model)
         else:
-            self.content["request_model"] = request_model
+            self.content["request_model"] = model
 
         self.request_fields = {}
-        self.extend_context(
-            respond_schema_info=request_model.model_json_schema()
-        )
-        self.request_fields = breakdown_pydantic_annotation(request_model)
+        self.extend_context(respond_schema_info=model.model_json_schema())
+        self.request_fields = breakdown_pydantic_annotation(model)
 
     @property
     def respond_schema_info(self) -> dict | None:
-        """Get the response schema information."""
         return self.content.get("respond_schema_info", None)
 
     @respond_schema_info.setter
-    def respond_schema_info(self, respond_schema_info: dict) -> None:
-        """Set the response schema information."""
-        if respond_schema_info is None:
+    def respond_schema_info(self, info: dict) -> None:
+        if info is None:
             self.content.pop("respond_schema_info", None)
         else:
-            self.content["respond_schema_info"] = respond_schema_info
+            self.content["respond_schema_info"] = info
 
     @property
     def request_response_format(self) -> str | None:
-        """Get the request response format."""
         return self.content.get("request_response_format", None)
 
     @request_response_format.setter
-    def request_response_format(self, request_response_format: str) -> None:
-        """Set the request response format."""
-        if not request_response_format:
+    def request_response_format(self, val: str) -> None:
+        if not val:
             self.content.pop("request_response_format", None)
         else:
-            self.content["request_response_format"] = request_response_format
+            self.content["request_response_format"] = val
 
     def extend_images(
         self,
@@ -444,38 +463,34 @@ class Instruction(RoledMessage):
         image_detail: Literal["low", "high", "auto"] = None,
     ) -> None:
         """
-        Add new images to the instruction.
+        Append images to the existing list.
 
         Args:
-            images: New images to add
-            image_detail: Optional new image detail level
+            images: The new images to add, a single or multiple.
+            image_detail: If provided, updates the image detail field.
         """
-        images = images if isinstance(images, list) else [images]
-        _ima: list = self.content.get("images", [])
-        _ima.extend(images)
-        self.images = _ima
-
+        arr: list = self.images
+        arr.extend(images if isinstance(images, list) else [images])
+        self.images = arr
         if image_detail:
             self.image_detail = image_detail
 
     def extend_context(self, *args, **kwargs) -> None:
         """
-        Add new context to the instruction.
+        Append additional context to the existing context array.
 
         Args:
-            *args: Positional arguments to add to context
-            **kwargs: Keyword arguments to add to context
+            *args: Positional args are appended as list items.
+            **kwargs: Key-value pairs are appended as separate dict items.
         """
-        context: list = self.content.get("context", [])
-
+        ctx: list = self.context or []
         if args:
-            context.extend(args)
+            ctx.extend(args)
         if kwargs:
-            kwargs = copy(kwargs)
-            for k, v in kwargs.items():
-                context.append({k: v})
-
-        self.context = context
+            kw = copy(kwargs)
+            for k, v in kw.items():
+                ctx.append({k: v})
+        self.context = ctx
 
     def update(
         self,
@@ -494,22 +509,23 @@ class Instruction(RoledMessage):
         recipient: SenderRecipient = None,
     ):
         """
-        Update multiple aspects of the instruction.
+        Batch-update this Instruction.
 
         Args:
-            *args: Positional arguments for context update
-            guidance: New guidance content
-            instruction: New instruction content
-            request_fields: New request fields
-            plain_content: New plain text content
-            request_model: New request model
-            images: New images to add
-            image_detail: New image detail level
-            tool_schemas: New tool schemas
-            **kwargs: Additional keyword arguments for context update
+            guidance (JsonValue): New guidance text.
+            instruction (JsonValue): Main user instruction.
+            request_fields (JsonValue): Updated request fields.
+            plain_content (JsonValue): Plain text fallback.
+            request_model (BaseModel|type[BaseModel]): Pydantic schema model.
+            response_format (BaseModel|type[BaseModel]): Alias for request_model.
+            images (list|str): Additional images to add.
+            image_detail ("low"|"high"|"auto"): Image detail level.
+            tool_schemas (dict): New tool schemas.
+            sender (SenderRecipient): New sender.
+            recipient (SenderRecipient): New recipient.
 
         Raises:
-            ValueError: If both request_model and request_fields are provided
+            ValueError: If request_model and request_fields are both set.
         """
         if response_format and request_model:
             raise ValueError(
@@ -559,8 +575,14 @@ class Instruction(RoledMessage):
 
     @override
     @property
-    def rendered(self) -> dict[str, Any]:
-        """Format the content of the instruction."""
+    def rendered(self) -> Any:
+        """
+        Convert content into a text or combined text+image structure.
+
+        Returns:
+            If no images are included, returns a single text block.
+            Otherwise returns an array of text + image dicts.
+        """
         content = copy(self.content)
         text_content = format_text_content(content)
         if "images" not in content:
@@ -575,8 +597,16 @@ class Instruction(RoledMessage):
 
     @field_serializer("content")
     def _serialize_content(self, values) -> dict:
-        """Serialize the content of the instruction."""
+        """
+        Remove certain ephemeral fields before saving.
+
+        Returns:
+            dict: The sanitized content dictionary.
+        """
         values.pop("request_model", None)
         values.pop("request_fields", None)
 
         return values
+
+
+# File: lionagi/protocols/messages/instruction.py

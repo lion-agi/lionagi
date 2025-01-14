@@ -108,7 +108,7 @@ including:
 All **extra fields** are stored in :attr:`extra_fields` (mapping from 
 name to :class:`pydantic.FieldInfo`) and :attr:`extra_field_models` 
 (mapping from name to :class:`FieldModel`). The underlying dictionary 
-structure remains valid with Pydantic’s type checks and serialization logic.
+structure remains valid with Pydantic's type checks and serialization logic.
 
 **Example**::
 
@@ -213,7 +213,7 @@ Putting It All Together
    complicated updates.
 5. Output or persist model objects as needed; they can be hashed, 
    used as dictionary keys, or automatically **serialized** with 
-   LionAGI’s adapter system.
+   LionAGI's adapter system.
 
 This design allows building truly “operable” data structures in a 
 **dynamic** environment—where the model schema might evolve during runtime, 

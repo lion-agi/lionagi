@@ -2,6 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Defines the `Adapter` protocol (a formal interface), along with the
+`AdapterRegistry` that maps string/file extensions or object keys to
+specific adapter implementations.
+"""
+
 import logging
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
@@ -18,6 +24,25 @@ __all__ = (
 
 @runtime_checkable
 class Adapter(Protocol):
+    """
+    Describes a two-way converter that knows how to transform an object
+    from an external representation to an internal format, and vice versa.
+
+    Attributes
+    ----------
+    obj_key : str
+        A unique key or extension that identifies what format this
+        adapter supports (e.g. ".csv", "json", "pd_dataframe").
+
+    Methods
+    -------
+    from_obj(subj_cls: type[T], obj: Any, /, many: bool, **kwargs) -> dict|list[dict]
+        Converts a raw external object (file contents, JSON string, etc.)
+        into a dictionary or list of dictionaries.
+    to_obj(subj: T, /, many: bool, **kwargs) -> Any
+        Converts an internal object (e.g., a Pydantic-based model)
+        into the target format (file, JSON, DataFrame, etc.).
+    """
 
     obj_key: str
 

@@ -42,7 +42,7 @@ Describes the essential attributes of an API endpoint:
 **Key Methods**:
 
 - :meth:`create_payload(...)` -> dict:
-  Accepts request parameters and merges them with the endpoint’s 
+  Accepts request parameters and merges them with the endpoint's 
   config (like `required_kwargs`) to create a final payload + headers.
 - :meth:`invoke(payload, headers, is_cached=False, **kwargs)`:
   Handles the actual or cached request.
@@ -112,7 +112,7 @@ Implements:
 
 A base class for chat-style endpoints that expects role-based messages
 (“system”, “user”, “assistant”, etc.). Subclasses override `_invoke()` 
-and `_stream()` for each provider’s specifics.
+and `_stream()` for each provider's specifics.
 
 **Examples** (subclasses):
   
@@ -160,7 +160,7 @@ limiting requests or tokens as needed.
 
 .. class:: iModel
 
-Represents a single “model interface” to a provider’s chat or completion endpoint.
+Represents a single “model interface” to a provider's chat or completion endpoint.
 Holds:
 
 - :attr:`endpoint` (:class:`EndPoint`):

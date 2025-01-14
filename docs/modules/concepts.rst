@@ -1,15 +1,17 @@
-.. _lionagi-core-abc:
+.. _lionagi_protocols_concepts:
 
-====================================
+=======================================================
 Abstract Concepts
-====================================
+=======================================================
 .. module:: lionagi.protocols._concepts
-   :synopsis: Abstract base classes for LionAGI core concepts.
+   :synopsis: Defines fundamental abstract base classes that shape LionAGI's roles and capabilities.
 
-These abstract base classes (ABCs) describe fundamental “roles” or “capabilities”
-that a LionAGI component can fulfill. They do **not** provide direct implementation
-details, but establishing them ensures that different parts of the system 
-communicate consistently and can be extended more reliably.
+Overview
+--------
+These classes outline the base “roles” in LionAGI—such as observation, management, 
+and graph connectivity—without providing direct implementations. They ensure a 
+consistent interface across different parts of the system. Subclasses must implement 
+the required methods or attributes to fulfill each role.
 
 
 Observer
@@ -17,24 +19,34 @@ Observer
 .. class:: Observer
    :module: lionagi.protocols._concepts
 
-   An **abstract base** (marker or interface) for all observer classes in LionAGI.
-   Observers may be notified of events or changes in the system. Concrete classes
-   that inherit ``Observer`` typically override or implement methods to react
-   to these events (e.g., for logging or custom state updates).
+   Base abstract class for **observer** entities. An “observer” typically monitors or reacts 
+   to changes in the system. Since it is an abstract marker, any class inheriting from 
+   ``Observer`` may define custom methods for responding to events, logging updates, 
+   or other side effects.
+
+   Notes
+   -----
+   This class does not specify any methods; it simply designates the conceptual role of 
+   an “observer” in LionAGI.
 
 
 Manager
 -------
 .. class:: Manager
    :module: lionagi.protocols._concepts
+   :show-inheritance:
 
-   **Inherits from**: :class:`Observer`
+   Inherits from :class:`Observer`
 
-   A “manager” is a registry or controller that administers certain objects in
-   the system. For instance, :class:`~lionagi.action.manager.ActionManager`
-   manages callable tools, while a :class:`~lionagi.protocols.generic.log.LogManager`
-   might manage log entries. By inheriting from ``Manager``, a class signifies
-   that it orchestrates or keeps track of a set of resources within LionAGI.
+   A “manager” is a specialized observer that administers or orchestrates certain objects 
+   in the system. Managers typically handle creation, updates, or deletions of resources. 
+   They may also provide concurrency-safe or stateful operations to coordinate these objects.
+
+   Notes
+   -----
+   The exact management logic is determined by subclasses. For example, a `LogManager` 
+   might store and manage log entries, while other managers might oversee different 
+   resource types.
 
 
 Relational
@@ -42,11 +54,14 @@ Relational
 .. class:: Relational
    :module: lionagi.protocols._concepts
 
-   **Inherits from**: None (abstract base)
+   Represents a **graph-connectable** object. In LionAGI, classes implementing ``Relational`` 
+   can appear as nodes in a graph-like structure. They may store relationships (edges) 
+   to neighbors or track references to other ``Relational`` elements.
 
-   Used for **graph-connectable** objects. Classes implementing ``Relational``
-   can be part of a graph data structure (e.g., nodes in a knowledge graph).
-   Typically, such classes store references to edges or neighboring elements.
+   Notes
+   -----
+   This abstract base class does not prescribe how to store or access neighbors, but 
+   indicates that the implementing class can integrate into a graph data model.
 
 
 Sendable
@@ -54,10 +69,16 @@ Sendable
 .. class:: Sendable
    :module: lionagi.protocols._concepts
 
-   An abstract base for message-oriented capabilities. A “sendable” entity
-   must track a **sender** identity and potentially a **recipient**, enabling
-   the system to pass or route messages. Often used in queue-based or event-driven
-   scenarios for multi-agent communication.
+   An abstract class indicating that an entity can send messages. This requires 
+   that the concrete subclass define sender/recipient information (e.g., in an event 
+   or queue-based system). Typical usage includes multi-agent architectures where 
+   messages must be routed between participants.
+
+   Notes
+   -----
+   “Sendable” implies the presence of a **sender** and **recipient** attribute (or 
+   equivalent). This class does not define actual methods for sending messages, as 
+   it merely establishes the conceptual requirement.
 
 
 Observable
@@ -65,24 +86,43 @@ Observable
 .. class:: Observable
    :module: lionagi.protocols._concepts
 
-   **Purpose**: Denotes an object that has an ``id`` field of a known type (usually
-   a UUID). The object is thus “observable,” allowing references or logs to
-   identify it unambiguously. Many core LionAGI classes implement ``Observable``
-   so they can be stored or indexed by ID.
+   Denotes that an entity must possess an **id** field, often a UUID or similar unique identifier. 
+   Many core LionAGI classes inherit from ``Observable`` to ensure they can be referenced, 
+   logged, and tracked by a universal ID. This simplifies indexing or lookups across the system.
+
+   Notes
+   -----
+   - Subclasses must provide a concrete implementation or storage for ``id``.
+   - Typically used with concurrency-safe collections or logging frameworks.
 
 
 Communicatable
 --------------
 .. class:: Communicatable(Observable)
    :module: lionagi.protocols._concepts
+   :show-inheritance:
 
-   Combines an :attr:`id` (from :class:`Observable`) with **mailbox**-style
-   communication. A “communicatable” class can have:
+   Inherits from :class:`Observable`
 
-   - A mailbox or channel for inbound messages.
-   - A :meth:`send()` method to emit messages to other recipients.
+   A more specialized form of **observable** object that also supports 
+   mailbox-based messaging. This means the subclass must define:
 
-   This underlies multi-agent or multi-branch messaging in LionAGI.
+   - A mailbox or channel to receive messages.
+   - A :meth:`send` method for dispatching messages.
+
+   Methods
+   -------
+   .. method:: send(*args, **kwargs)
+      :abstractmethod:
+
+      Abstract method to send a message. Subclasses should implement the necessary 
+      logic to route or deliver the message (e.g., placing it on a queue or 
+      invoking a handler).
+
+   Notes
+   -----
+   By inheriting from :class:`Observable`, a communicatable entity also guarantees 
+   it has a unique ID. This is crucial for addressing messages.
 
 
 Condition
@@ -90,17 +130,24 @@ Condition
 .. class:: Condition
    :module: lionagi.protocols._concepts
 
-   An abstract base specifying a single **async** method:
+   Defines an **async** interface for condition checks. Subclasses must implement 
+   an ``apply`` method returning a boolean indicating whether a given condition 
+   is satisfied.
 
-   .. code-block:: python
+   Methods
+   -------
+   .. method:: apply(*args, **kwargs) -> bool
+      :async:
+      :abstractmethod:
 
-      async def apply(self, *args, **kwargs) -> bool:
-          ...
+      Run an asynchronous check to determine if the condition holds. Returns 
+      ``True`` if the condition is met, else ``False``.
 
-   Typically used for permission or constraint checks. For example,
-   :class:`~lionagi.protocols.graph.edge.EdgeCondition` determines if an edge
-   can be traversed. This method can do I/O or other async operations to decide
-   True/False.
+   Example
+   -------
+   A scheduling system might implement a condition that checks whether 
+   a resource is available. This check could involve async I/O (e.g., an 
+   external call), making the ``apply`` method asynchronous.
 
 
 Collective
@@ -108,13 +155,31 @@ Collective
 .. class:: Collective(Generic[E])
    :module: lionagi.protocols._concepts
 
-   A base for **collections** of items. Must define:
+   Abstract base for **collections** of elements. A class implementing ``Collective`` 
+   must provide at least two methods:
 
    - :meth:`include(item)`
    - :meth:`exclude(item)`
 
-   Subclasses, like :class:`~lionagi.protocols.generic.pile.Pile`, store
-   items with concurrency support or type constraints.
+   These methods add or remove elements from the collection, respectively. The details 
+   (e.g., concurrency, strict typing, ordering) are left to the subclass. 
+
+   Methods
+   -------
+   .. method:: include(item, /)
+      :abstractmethod:
+
+      Insert the given item into the collection.
+
+   .. method:: exclude(item, /)
+      :abstractmethod:
+
+      Remove the given item from the collection, if present.
+
+   Notes
+   -----
+   Implementations such as :class:`~lionagi.protocols.generic.pile.Pile` provide 
+   concurrency-safe storage and type enforcement on top of this base.
 
 
 Ordering
@@ -122,93 +187,35 @@ Ordering
 .. class:: Ordering(Generic[E])
    :module: lionagi.protocols._concepts
 
-   Similar to :class:`Collective`, but emphasizes a **strict sequence** of items.
-   Must define how items are inserted or removed while preserving an order. E.g.,
-   :class:`~lionagi.protocols.generic.progression.Progression` that keeps an ordered
-   list of IDs.
+   Similar to :class:`Collective`, but emphasizes a **strict sequence** of elements. 
+   This means order matters, and subclasses must define how items are inserted or 
+   removed while preserving that sequence.
 
+   Methods
+   -------
+   .. method:: include(item, /)
+      :abstractmethod:
 
-------------------------------
-ID System and ``Element``
-------------------------------
-.. _lionagi-id-system:
+      Insert the given item while respecting an ordering structure. The exact 
+      strategy (e.g., append, sorted insert, or custom rule) is determined by 
+      the subclass.
 
-.. module:: lionagi.protocols.generic.element
-   :synopsis: Core ID-based classes and the Element base class.
+   .. method:: exclude(item, /)
+      :abstractmethod:
 
-LionAGI uses a **UUIDv4-based** scheme to ensure each object is uniquely 
-identifiable. These classes unify that approach, providing hashing/equality
-logic and a base class called :class:`Element` that includes:
+      Remove the given item, ensuring the overall sequence remains valid.
 
-- A unique ID field,
-- A creation timestamp,
-- A metadata dictionary for user-defined data.
+   Notes
+   -----
+   A prime example is :class:`~lionagi.protocols.generic.progression.Progression`, 
+   which keeps a strictly ordered list of IDs or elements.
 
+----
 
-IDType
-------
-.. class:: IDType
-   :module: lionagi.protocols.generic.element
+File Location
+-------------
+**Source File**: 
+``lionagi/protocols/_concepts.py``
 
-   A **lightweight** wrapper around a version-4 UUID. It enforces:
-
-   - Validation of input strings to confirm valid v4 UUIDs.
-   - Creation of random new UUIDs with :meth:`create()`.
-   - Simple equality/hashing so that ID objects can be dict keys or set members.
-
-
-ID
---
-.. class:: ID(Generic[E])
-   :module: lionagi.protocols.generic.element
-
-   A utility class that helps **convert** various inputs (string, :class:`Element`, etc.)
-   into a validated :class:`IDType`.  
-   - :meth:`get_id(item) -> IDType`: Create or verify a valid ID.
-   - :meth:`is_id(item) -> bool`: Quickly check if item is recognized as an ID.
-
-
-Element
--------
-.. class:: Element
-   :module: lionagi.protocols.generic.element
-
-   **Inherits from**: pydantic.BaseModel
-
-   A **base class** for any LionAGI object needing:
-
-   - A unique :attr:`id` (UUID v4).
-   - A :attr:`created_at` timestamp (float, Unix epoch).
-   - A :attr:`metadata` dictionary for custom fields.
-
-   Also provides:
-
-   - :meth:`to_dict()` for easy serialization,
-   - Overridden ``__eq__`` and ``__hash__`` comparing objects by their :attr:`id`.
-
-   **Example**::
-
-      from lionagi.protocols.generic.element import Element
-
-      class MyElement(Element):
-          pass
-
-      e = MyElement()
-      print(e.id)        # => IDType
-      print(e.metadata)  # => {}
-      # Now e can be placed into a dictionary keyed by e.id
-
-
----------
-Summary
----------
-These **abstract concepts** and **ID-based data models** form the core of LionAGI:
-
-- “**Roles**” like :class:`Observer`, :class:`Manager`, :class:`Relational`,
-  etc., guide how classes are shaped and how they interact (managing tools, 
-  sending messages, etc.).
-- **Conditions** for controlling certain transitions or checks.
-- The **ID** architecture ensures a universal reference scheme across 
-  objects in logs, graphs, or concurrency managers.
-- :class:`Element` standardizes an ID, timestamp, and metadata for every 
-  signficant LionAGI component.
+``Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>``  
+``SPDX-License-Identifier: Apache-2.0``

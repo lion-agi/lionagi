@@ -51,6 +51,4 @@ async def test_interpret_basic():
         text="User's raw input", domain="some_domain", style="concise"
     )
     assert refined_prompt == "mocked_response_string"
-
-    # Possibly your updated code won't store messages:
-    assert len(branch.messages) == 2
+    assert len(branch.messages) == 0

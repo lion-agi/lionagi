@@ -204,13 +204,14 @@ class Graph(Element, Relational):
     def to_networkx(self, **kwargs) -> Any:
         """Convert the graph to a NetworkX graph object."""
         try:
-            import networkx as nx  # type: ignore
-        except ImportError:
-            raise ImportError(
-                "NetworkX is not installed. Please install it with `pip install networkx`."
-            )
+            from networkx import DiGraph  # type: ignore
 
-        g = nx.DiGraph(**kwargs)
+        except ImportError:
+            from lionagi.libs.package.imports import check_import
+
+            DiGraph = check_import("networkx", import_name="DiGraph")
+
+        g = DiGraph(**kwargs)
         for node in self.internal_nodes:
             node_info = node.to_dict()
             node_info.pop("id")
@@ -238,9 +239,13 @@ class Graph(Element, Relational):
             import matplotlib.pyplot as plt  # type: ignore
             import networkx as nx  # type: ignore
         except ImportError:
-            raise ImportError(
-                "Failed to import Matplotlib. Please install the package with `pip install matplotlib`"
-            )
+            from lionagi.libs.package.imports import check_import
+
+            check_import("matplotlib")
+            check_import("networkx")
+
+            import matplotlib.pyplot as plt  # type: ignore
+            import networkx as nx  # type: ignore
 
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)
@@ -288,3 +293,6 @@ class Graph(Element, Relational):
 
     def __contains__(self, item: object) -> bool:
         return item in self.internal_nodes or item in self.internal_edges
+
+
+# File: lionagi/protocols/graph/graph.py

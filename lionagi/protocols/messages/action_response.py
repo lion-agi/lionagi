@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Defines `ActionResponse`, an `RoledMessage` that answers an `ActionRequest`
+with output from a function call or action.
+"""
+
 from typing import Any
 
 from typing_extensions import override
@@ -18,6 +23,16 @@ def prepare_action_response_content(
     action_request: ActionRequest,
     output: Any,
 ) -> dict:
+    """
+    Convert an ActionRequest + function output into response-friendly dictionary.
+
+    Args:
+        action_request (ActionRequest): The original action request.
+        output (Any): The result of the function call.
+
+    Returns:
+        dict: A dictionary containing `action_request_id` and `action_response`.
+    """
     return {
         "action_request_id": str(action_request.id),
         "action_response": {
@@ -29,6 +44,10 @@ def prepare_action_response_content(
 
 
 class ActionResponse(RoledMessage):
+    """
+    A message fulfilling an `ActionRequest`. It stores the function name,
+    the arguments used, and the output produced by the function.
+    """
 
     template: Template | str | None = jinja_env.get_template(
         "action_response.jinja2"
@@ -36,52 +55,32 @@ class ActionResponse(RoledMessage):
 
     @property
     def function(self) -> str:
-        """
-        Get the function name from the action response.
-
-        Returns:
-            str: The name of the function that was executed
-        """
+        """Name of the function that was executed."""
         return self.content.get("action_response", {}).get("function", None)
 
     @property
     def arguments(self) -> dict[str, Any]:
-        """
-        Get the function arguments from the action response.
-
-        Returns:
-            dict[str, Any]: The arguments that were used
-        """
+        """Arguments used for the executed function."""
         return self.content.get("action_response", {}).get("arguments", {})
 
     @property
     def output(self) -> Any:
-        """
-        Get the function output from the action response.
-
-        Returns:
-            Any: The result returned by the function
-        """
+        """The result or returned data from the function call."""
         return self.content.get("action_response", {}).get("output", None)
 
     @property
     def response(self) -> dict[str, Any]:
         """
-        Get the complete action response as a dictionary.
+        A helper to get the entire 'action_response' dictionary.
 
         Returns:
-            dict[str, Any]: The response including function details and output
+            dict[str, Any]: The entire response, including function, arguments, and output.
         """
         return copy(self.content.get("action_response", {}))
 
     @property
     def action_request_id(self) -> IDType:
-        """
-        Get the ID of the corresponding action request.
-
-        Returns:
-            ID[ActionRequest].ID | None: The ID of the original request
-        """
+        """The ID of the original action request."""
         return IDType.validate(self.content.get("action_request_id"))
 
     @override
@@ -94,7 +93,22 @@ class ActionResponse(RoledMessage):
         sender: SenderRecipient | None = None,
         recipient: SenderRecipient | None = None,
     ) -> "ActionResponse":
+        """
+        Build an ActionResponse from a matching `ActionRequest` and output.
 
+        Args:
+            action_request (ActionRequest): The original request being fulfilled.
+            output (Any, optional): The function output or result.
+            response_model (Any, optional):
+                If present and has `.output`, this is used instead of `output`.
+            sender (SenderRecipient, optional):
+                The role or ID of the sender (defaults to the request's recipient).
+            recipient (SenderRecipient, optional):
+                The role or ID of the recipient (defaults to the request's sender).
+
+        Returns:
+            ActionResponse: A new instance referencing the `ActionRequest`.
+        """
         if response_model:
             output = response_model.output
 
@@ -119,6 +133,18 @@ class ActionResponse(RoledMessage):
         template: Template | str | None = None,
         **kwargs,
     ):
+        """
+        Update this response with a new request reference or new output.
+
+        Args:
+            action_request (ActionRequest): The updated request.
+            output (Any): The new function output data.
+            response_model: If present, uses response_model.output.
+            sender (SenderRecipient): New sender ID or role.
+            recipient (SenderRecipient): New recipient ID or role.
+            template (Template | str | None): Optional new template.
+            **kwargs: Additional fields to store in content.
+        """
         if response_model:
             output = response_model.output
 
@@ -130,3 +156,6 @@ class ActionResponse(RoledMessage):
         super().update(
             sender=sender, recipient=recipient, template=template, **kwargs
         )
+
+
+# File: lionagi/protocols/messages/action_response.py

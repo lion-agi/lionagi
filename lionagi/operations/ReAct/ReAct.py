@@ -21,7 +21,7 @@ async def ReAct(
     interpret: bool = False,
     tools: Any = None,
     tool_schemas: Any = None,
-    response_format: type[BaseModel] = None,
+    response_format: type[BaseModel] | BaseModel = None,
     extension_allowed: bool = False,
     max_extensions: int | None = None,
     response_kwargs: dict | None = None,
@@ -60,7 +60,7 @@ async def ReAct(
     kwargs_for_operate["actions"] = True
     kwargs_for_operate["reason"] = True
 
-    # We'll pass the refined instruct_dict plus the user’s other kwargs
+    # We'll pass the refined instruct_dict plus the user's other kwargs
     from .utils import ReActAnalysis
 
     # Step 1: Generate initial ReAct analysis

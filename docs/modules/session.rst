@@ -34,7 +34,7 @@ they interact.
 
 - :attr:`default_branch` (:class:`Branch`):
   One branch designated as the “default” conversation context. 
-  If none is specifically set, it’s the first created.
+  If none is specifically set, it's the first created.
 
 - :attr:`mail_transfer` (:class:`Exchange`):
   Manages sending/receiving mail for these branches (not always 
@@ -73,7 +73,7 @@ When you create a **Session**, it automatically initializes:
 - :meth:`new_branch(...)`:
   Creates a new :class:`Branch`, optionally specifying system message, 
   user ID, initial tools, etc. The new branch is included in the 
-  session’s :attr:`branches`, and if there was no default branch, 
+  session's :attr:`branches`, and if there was no default branch, 
   it sets this new one as default.
 
 - :meth:`remove_branch(branch, delete=False)`:

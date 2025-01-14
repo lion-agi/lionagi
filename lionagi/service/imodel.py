@@ -295,3 +295,27 @@ class iModel:
             **data,
             **processor_config,
         )
+
+    async def compress_text(
+        self,
+        text: str,
+        system_msg: str = None,
+        target_ratio: float = 0.2,
+        n_samples: int = 5,
+        max_tokens_per_sample=80,
+        verbose=True,
+    ) -> str:
+        """
+        Convenience function that instantiates LLMCompressor and compresses text.
+        """
+        from lionagi.libs.token_transform.perplexity import LLMCompressor
+
+        compressor = LLMCompressor(
+            chat_model=self,
+            system_msg=system_msg,
+            target_ratio=target_ratio,
+            n_samples=n_samples,
+            max_tokens_per_sample=max_tokens_per_sample,
+            verbose=verbose,
+        )
+        return await compressor.compress(text)

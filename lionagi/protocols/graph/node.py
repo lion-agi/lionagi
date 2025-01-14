@@ -122,4 +122,4 @@ class Node(Element, Relational):
         return cls._get_adapter_registry().list_adapters()
 
 
-# File: protocols/graph/node.py
+# File: lionagi/protocols/graph/node.py

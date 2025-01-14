@@ -1,241 +1,120 @@
-====================================
-Adapter
-====================================
-This module provides a **pluggable adaptation** framework for converting 
-LionAGI objects to or from various formats—such as JSON strings, 
-CSV/Excel files, or Pandas DataFrames—without scattering I/O logic 
-throughout your code. Each adapter implements a protocol that knows 
-how to handle one or more file/data types.
+.. _lionagi-adapters:
 
-The system centers on:
+=========================================
+Adapter System
+=========================================
+.. module:: lionagi.protocols.adapters
+   :synopsis: Provides a unified interface for converting data to/from external formats.
 
-- **Adapter**: A protocol specifying two main methods 
-  (``from_obj`` and ``to_obj``) for inbound/outbound transformations.
-- **AdapterRegistry**: A class that registers adapters under a key 
-  (e.g., ``".json"``, ``"pd_dataframe"``, etc.) and uses them to adapt 
-  objects.
-- **Concrete Adapters**: Various classes like 
-  :class:`JsonAdapter`, :class:`JsonFileAdapter`, 
-  :class:`PandasDataFrameAdapter`, etc., each handling a specific 
-  data format.
+Overview
+--------
+This system introduces the concept of an **Adapter** that knows how to
+translate an internal object (like a Pydantic-based Element or a 
+``Collective``) to an external representation (JSON, CSV, Excel, Pandas
+DataFrame, etc.), and vice versa. Adapters are registered in a global
+:class:`AdapterRegistry` under a specific **key** (like ``".csv"`` or
+``"pd_dataframe"``), allowing other code to call ``adapt_from`` or
+``adapt_to`` generically.
 
-
--------------------
-1. Adapter Protocol
--------------------
-.. module:: lionagi.protocols.adapter
-   :synopsis: The adapter protocol and core registry classes.
-
-.. class:: Adapter
-   :noindex:
-   :protocol:
-
-   A runtime-checkable protocol specifying two main methods:
-
-   - :meth:`from_obj(cls, subj_cls: type[T], obj: Any, **kwargs) -> dict | list[dict]`  
-     Convert an external format (e.g., JSON string or CSV file) 
-     **into** a dictionary or list of dictionaries describing the subject.
-
-   - :meth:`to_obj(cls, subj: T, **kwargs) -> Any`  
-     Convert an internal LionAGI object **out** to a specified format 
-     (e.g., a JSON string, a CSV file, etc.).
-
-   **Class Attributes**:
-
-   .. attribute:: obj_key
-      :type: str
-
-      A string that identifies the adapter in the registry. 
-      For example, ``".json"``, ``"pd_dataframe"``, or ``".xlsx"``.
+Contents
+--------
+.. contents::
+   :local:
+   :depth: 2
 
 
-------------------
-2. AdapterRegistry
-------------------
-.. class:: AdapterRegistry
+Adapter and Registry
+--------------------
+.. automodule:: lionagi.protocols.adapters.adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   A central registry that holds multiple :class:`Adapter` objects, 
-   each keyed by its :attr:`Adapter.obj_key`.  
-   
-   - :meth:`register(adapter)`: Register a new adapter class or instance.
-   - :meth:`get(obj_key) -> Adapter`: Retrieve the adapter matching 
-     a key (like ``".json"``).
-   - :meth:`adapt_from(subj_cls, obj, obj_key, **kwargs) -> dict|list[dict]`:  
-     Use the registry's matching adapter to convert external data 
-     **into** a dictionary or list of dictionaries.
-   - :meth:`adapt_to(subj, obj_key, **kwargs) -> Any`:  
-     Use the matching adapter to convert a subject **out** to 
-     the external format.
-
-   **Example**::
-
-      reg = AdapterRegistry()
-      reg.register(MyJsonAdapter)  # custom adapter with obj_key="myjson"
-
-      # inbound
-      data_dict = reg.adapt_from(MyObject, '{"foo": "bar"}', "myjson")
-      # outbound
-      json_str = reg.adapt_to(my_obj_instance, "myjson")
+   :class:`Adapter` is a Python protocol specifying two methods:
+   ``from_obj()`` and ``to_obj()``. The :class:`AdapterRegistry` is a
+   container that associates each adapter with a key or extension.
 
 
-------------------
-3. Built-in Adapters
-------------------
-The module defines several **concrete** adapters for common formats.
+JSON Adapters
+-------------
+.. automodule:: lionagi.protocols.adapters.json_adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-JsonAdapter
-~~~~~~~~~~~
-.. class:: JsonAdapter
-
-   :attr:`obj_key` = ``"json"``
-
-   **Purpose**:  
-   Convert a JSON string to/from a LionAGI object's dictionary representation.
-
-   - :meth:`from_obj(subj_cls, obj: str, /) -> dict`:  
-     Expects a JSON string ``obj``. Returns a dictionary after parsing.
-   - :meth:`to_obj(subj: T) -> str`:  
-     Calls ``subj.to_dict()`` internally and dumps to a JSON string.
+   - **JsonAdapter**: For reading/writing **in-memory** JSON strings.  
+   - **JsonFileAdapter**: For reading/writing JSON files from disk.
 
 
-JsonFileAdapter
-~~~~~~~~~~~~~~~
-.. class:: JsonFileAdapter
+CSV and Excel Adapters
+----------------------
+.. automodule:: lionagi.protocols.adapters.pandas_.csv_adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   :attr:`obj_key` = ``".json"``
+   Provides **CSVFileAdapter** using pandas.
 
-   Similar to :class:`JsonAdapter`, but works **directly with a file** path 
-   rather than a string in memory.
+.. automodule:: lionagi.protocols.adapters.pandas_.excel_adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   - :meth:`from_obj(subj_cls, obj: str | Path, /) -> dict`:  
-     Reads a ``.json`` file from the given path.
-   - :meth:`to_obj(subj: T, /, fp: str | Path) -> None`:  
-     Writes the subject's dictionary to a file (``fp``) in JSON form.
-
-
-PandasSeriesAdapter
-~~~~~~~~~~~~~~~~~~~
-.. class:: PandasSeriesAdapter
-
-   :attr:`obj_key` = ``"pd_series"``  
-   Also aliased as ``("pandas_series", "pd.series", "pd_series")``.
-
-   - :meth:`from_obj(subj_cls, obj: pd.Series, /) -> dict`:  
-     Convert a Pandas Series to a dictionary.
-   - :meth:`to_obj(subj: T, /, **kwargs) -> pd.Series`:  
-     Create a Pandas Series from the subject's dictionary.
+   Provides **ExcelFileAdapter** for `.xlsx` files with pandas.
 
 
-PandasDataFrameAdapter
-~~~~~~~~~~~~~~~~~~~~~~
-.. class:: PandasDataFrameAdapter
+Pandas DataFrame and Series Adapters
+------------------------------------
+.. automodule:: lionagi.protocols.adapters.pandas_.pd_dataframe_adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-   :attr:`obj_key` = ``"pd_dataframe"``  
-   Also aliased as ``("pandas_dataframe", "pd.DataFrame", "pd_dataframe")``.
+   **PandasDataFrameAdapter** handles converting a list of elements
+   to a single ``pd.DataFrame``, or a DataFrame back into a list of
+   dictionaries.
 
-   - :meth:`from_obj(subj_cls, obj: pd.DataFrame, /, **kwargs) -> list[dict]`:  
-     Convert a DataFrame to a list of dictionaries (one per row).
-   - :meth:`to_obj(subj: list[T], /, **kwargs) -> pd.DataFrame`:  
-     Convert a **list** of objects (each with ``.to_dict()``) into a DataFrame.
+.. automodule:: lionagi.protocols.adapters.pandas_.pd_series_adapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-
-CSVFileAdapter
-~~~~~~~~~~~~~~
-.. class:: CSVFileAdapter
-
-   :attr:`obj_key` = ``".csv"``  
-   Also aliased as ``("csv_file", "csv")``.
-
-   - :meth:`from_obj(subj_cls, obj: str|Path, /, **kwargs) -> list[dict]`:  
-     Reads a CSV file into a list of row-dictionaries.
-   - :meth:`to_obj(subj: list[T], /, fp: str|Path, **kwargs) -> None`:  
-     Writes a list of objects (via ``.to_dict()``) to a CSV file.
+   **PandasSeriesAdapter** transforms a single item to/from a
+   single-row ``pd.Series``.
 
 
-ExcelFileAdapter
-~~~~~~~~~~~~~~~~
-.. class:: ExcelFileAdapter
-
-   :attr:`obj_key` = ``".xlsx"``  
-   Also aliased as ``(".xlsx", "excel_file", "excel", "xlsx", "xls", ".xls")``.
-
-   - :meth:`from_obj(subj_cls, obj: str|Path, /, **kwargs) -> list[dict]`:  
-     Reads an Excel file into a list of row-dictionaries.
-   - :meth:`to_obj(subj: list[T], /, fp: str|Path, **kwargs) -> None`:  
-     Writes a list of objects to an Excel file.
-
-
------------------------------------------------
-4. Specialized Adapter Registries
------------------------------------------------
-Some subsystems (e.g., “Nodes” vs. “Piles”) might want different default 
-adapters. The module provides two examples:
-
-NodeAdapterRegistry
-~~~~~~~~~~~~~~~~~~~
-.. class:: NodeAdapterRegistry(AdapterRegistry)
-
-   A registry pre-populated with:
-
-   - :class:`JsonAdapter`
-   - :class:`JsonFileAdapter`
-   - :class:`PandasSeriesAdapter`
-
-PileAdapterRegistry
-~~~~~~~~~~~~~~~~~~~
-.. class:: PileAdapterRegistry(AdapterRegistry)
-
-   A registry pre-populated with:
-
-   - :class:`JsonAdapter`
-   - :class:`JsonFileAdapter`
-   - :class:`PandasDataFrameAdapter`
-   - :class:`CSVFileAdapter`
-   - :class:`ExcelFileAdapter`
-
-
-------------------
-5. Example Usage
-------------------
-**Registering Adapters**:
+Example Usage
+-------------
+Below is a simple snippet using the registry:
 
 .. code-block:: python
 
-   from lionagi.protocols.adapter import AdapterRegistry, JsonAdapter
+   from lionagi.protocols.adapters.adapter import AdapterRegistry
+   from lionagi.protocols.adapters.json_adapter import JsonAdapter
 
-   class MyCustomAdapter(JsonAdapter):
-       obj_key = "my_json"  # special key
+   # Register the adapter
+   AdapterRegistry.register(JsonAdapter)
 
-       # override to_obj or from_obj if needed
+   # Suppose we have some object with `to_dict()`
+   my_element = SomeElement()
 
-   # Register custom adapter
-   AdapterRegistry.register(MyCustomAdapter)
+   # Convert to JSON string
+   json_str = AdapterRegistry.adapt_to(my_element, "json")
 
-**Adapting From**:
+   # Convert JSON back into a dictionary
+   parsed = AdapterRegistry.adapt_from(type(my_element), json_str, "json")
 
-.. code-block:: python
+   # Typically, you'd then call `SomeElement.from_dict(parsed)` if needed.
 
-   # Suppose you have an inbound JSON string
-   inbound = '{"key": "value"}'
-   # Convert it to a dict
-   data_dict = AdapterRegistry.adapt_from(MyObject, inbound, "my_json")
 
-**Adapting To**:
+File Locations
+--------------
+- **adapter.py**: The core protocol (Adapter) and :class:`AdapterRegistry`.  
+- **json_adapter.py**: In-memory JSON and JSON-file adapters.  
+- **pandas_/csv_adapter.py**: CSV file adapter.  
+- **pandas_/excel_adapter.py**: Excel file adapter (.xlsx).  
+- **pandas_/pd_dataframe_adapter.py**: DataFrame adapter.  
+- **pandas_/pd_series_adapter.py**: Series adapter.
 
-.. code-block:: python
-
-   # Suppose you have 'my_obj' with a .to_dict() method
-   out_str = AdapterRegistry.adapt_to(my_obj, "my_json")
-   print(out_str)  # A JSON string
-
-**File-Based**:
-
-.. code-block:: python
-
-   # Write to a .csv file
-   from lionagi.protocols.adapter import PileAdapterRegistry
-
-   PileAdapterRegistry.adapt_to(my_list_of_objs, ".csv", fp="out.csv")
-
-   # Read from a .csv file
-   items = PileAdapterRegistry.adapt_from(MyObjClass, "in.csv", ".csv")
+``Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>``
+``SPDX-License-Identifier: Apache-2.0``

@@ -701,6 +701,7 @@ async def alcall(
         flatten (bool): Flatten the final result if True.
         dropna (bool): Remove None values from the final result if True.
         unique_output (bool): Deduplicate the output if True.
+        flatten_tuple_set (bool): Tuples and sets will be flattened if True.
         **kwargs: Additional arguments passed to func.
 
     Returns:

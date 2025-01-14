@@ -2,6 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Defines the `ActionRequest` class, a specific `RoledMessage` for requesting
+a function or action call within LionAGI. It is typically accompanied by
+arguments and can later be answered by an `ActionResponse`.
+"""
+
 from collections.abc import Callable
 from typing import Any
 
@@ -16,7 +22,23 @@ def prepare_action_request(
     function: str | Callable,
     arguments: dict,
 ) -> dict[str, Any]:
+    """
+    Build a structured dict describing the request details.
 
+    Args:
+        function (str | Callable):
+            The name (or callable) representing the function to invoke.
+        arguments (dict):
+            The arguments necessary for the function call.
+
+    Returns:
+        dict[str, Any]: A standardized dictionary containing
+        'action_request' -> {'function':..., 'arguments':...}
+
+    Raises:
+        ValueError: If `function` is neither a string nor callable, or
+            if `arguments` cannot be turned into a dictionary.
+    """
     if isinstance(function, Callable):
         function = function.__name__
     if hasattr(function, "function"):
@@ -36,6 +58,11 @@ def prepare_action_request(
 
 
 class ActionRequest(RoledMessage):
+    """
+    A message that requests an action or function to be executed.
+    It inherits from `RoledMessage` and includes function name,
+    arguments, and optional linking to a subsequent `ActionResponse`.
+    """
 
     template: Template | str | None = jinja_env.get_template(
         "action_request.jinja2"
@@ -44,50 +71,44 @@ class ActionRequest(RoledMessage):
     @property
     def action_response_id(self) -> IDType | None:
         """
-        Get the ID of the corresponding action response.
+        Get or set the ID of the corresponding action response.
 
         Returns:
-            IDType | None: The ID of the action response, or None if not responded
+            IDType | None: The ID of the action response, or None if none assigned.
         """
         return self.content.get("action_response_id", None)
 
     @action_response_id.setter
     def action_response_id(self, action_response_id: IDType) -> None:
-        """
-        Set the ID of the corresponding action response.
-
-        Args:
-            action_response_id: The ID of the action response
-        """
         self.content["action_response_id"] = action_response_id
 
     @property
     def request(self) -> dict[str, Any]:
         """
-        Get the action request content as a dictionary.
+        Get the entire 'action_request' dictionary if present.
 
         Returns:
-            dict[str, Any]: The request content excluding output
+            dict[str, Any]: The request content or empty dict if missing.
         """
         return copy(self.content.get("action_request", {}))
 
     @property
     def arguments(self) -> dict[str, Any]:
         """
-        Get the arguments for the action request.
+        Access just the 'arguments' from the action request.
 
         Returns:
-            dict[str, Any]: The arguments dictionary
+            dict[str, Any]: The arguments to be used by the function call.
         """
         return self.request.get("arguments", {})
 
     @property
     def function(self) -> str:
         """
-        Get the function name for the action request.
+        Name of the function to be invoked.
 
         Returns:
-            str: The name of the function to be invoked
+            str: The function name or empty string if none provided.
         """
         return self.request.get("function", "")
 
@@ -102,16 +123,24 @@ class ActionRequest(RoledMessage):
         **kwargs,
     ) -> "ActionRequest":
         """
-        Create a new ActionRequest instance.
+        Build a new ActionRequest.
 
         Args:
-            function: The function to be invoked
-            arguments: The arguments to be passed to the function
-            sender: The sender of the request
-            recipient: The recipient of the request
+            function (str | Callable | None):
+                The function or callable name.
+            arguments (dict | None):
+                Arguments for that function call.
+            sender (SenderRecipient | None):
+                The sender identifier or role.
+            recipient (SenderRecipient | None):
+                The recipient identifier or role.
+            template (Template | str | None):
+                Optional custom template.
+            **kwargs:
+                Extra key-value pairs to merge into the content.
 
         Returns:
-            ActionRequest: The new instance
+            ActionRequest: A newly constructed instance.
         """
         content = prepare_action_request(function, arguments)
         content.update(kwargs)
@@ -135,15 +164,36 @@ class ActionRequest(RoledMessage):
         template: Template | str | None = None,
         **kwargs,
     ):
+        """
+        Update this request with new function, arguments, or link to an
+        action response.
+
+        Args:
+            function (str): New function name, if changing.
+            arguments (dict): New arguments dictionary, if changing.
+            sender (SenderRecipient): New sender.
+            recipient (SenderRecipient): New recipient.
+            action_response (ActionResponse):
+                If provided, this request is flagged as responded.
+            template (Template | str | None):
+                Optional new template.
+            **kwargs:
+                Additional fields to store in content.
+
+        Raises:
+            ValueError: If the request is already responded to.
+        """
         if self.is_responded():
             raise ValueError("Cannot update a responded action request.")
 
+        # Link action response if given
         if (
             isinstance(action_response, RoledMessage)
             and action_response.class_name() == "ActionResponse"
         ):
             self.action_response_id = action_response.id
 
+        # If new function or arguments, create new 'action_request' content
         if any([function, arguments]):
             action_request = prepare_action_request(
                 function or self.function, arguments or self.arguments
@@ -155,11 +205,12 @@ class ActionRequest(RoledMessage):
 
     def is_responded(self) -> bool:
         """
-        Check if the action request has been responded to.
+        Check if there's a linked action response.
 
         Returns:
-            bool: True if the request has a response, False otherwise
+            bool: True if an action response ID is present.
         """
-        if self.action_response_id is not None:
-            return True
-        return False
+        return self.action_response_id is not None
+
+
+# File: lionagi/protocols/messages/action_request.py

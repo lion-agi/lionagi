@@ -35,42 +35,6 @@ async def parse(
     suppress_conversion_errors: bool = False,
     response_format=None,
 ):
-    """Attempts to parse text into a structured Pydantic model.
-
-    Uses optional fuzzy matching to handle partial or unclear fields.
-
-    Args:
-        text (str): The raw text to parse.
-        handle_validation (Literal["raise","return_value","return_none"]):
-            What to do if parsing fails. Defaults to "return_value".
-        max_retries (int):
-            How many times to retry parsing if it fails.
-        request_type (type[BaseModel], optional):
-            The Pydantic model to parse into.
-        operative (Operative, optional):
-            If provided, uses its model and max_retries setting.
-        similarity_algo (str):
-            The similarity algorithm for fuzzy field matching.
-        similarity_threshold (float):
-            A threshold for fuzzy matching (0.0 - 1.0).
-        fuzzy_match (bool):
-            If True, tries to match unrecognized keys to known ones.
-        handle_unmatched (Literal["ignore","raise","remove","fill","force"]):
-            How to handle unmatched fields.
-        fill_value (Any):
-            A default value used when fill is needed.
-        fill_mapping (dict[str, Any] | None):
-            A mapping from field -> fill value override.
-        strict (bool):
-            If True, raises errors on ambiguous fields or data types.
-        suppress_conversion_errors (bool):
-            If True, logs or ignores errors during data conversion.
-
-    Returns:
-        BaseModel | Any | None:
-            The parsed model instance, or a dict/string/None depending
-            on the handling mode.
-    """
     _should_try = True
     num_try = 0
     response_model = text
