@@ -19,12 +19,6 @@ For convenience, they can be categorized as:
 - **ReAct**: :func:`ReAct` for multi-step reasoning
 - **Parsing**: :func:`parse` to convert text to a structured model
 
-Contents
---------
-.. contents::
-   :local:
-   :depth: 2
-
 
 ``_act``
 --------
