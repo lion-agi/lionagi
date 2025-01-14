@@ -40,7 +40,7 @@ async def _act(
             "error": str(e),
             "function": _request.get("function"),
             "arguments": _request.get("arguments"),
-            "branch": branch.id,
+            "branch": str(branch.id),
         }
         branch._log_manager.log(Log(content=content))
         if suppress_errors:
