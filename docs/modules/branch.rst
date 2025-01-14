@@ -31,29 +31,96 @@ Contents
 
 Branch
 ------
-.. autoclass:: lionagi.session.branch.Branch
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-   The key attributes include:
-   
-   - **Messages** (via :attr:`msgs`)  
-   - **Logs** (via :attr:`logs`)  
-   - **Tools** (via :attr:`acts`)  
-   - **Models** (via :attr:`mdls`)  
-   - **Mailbox** (for external messaging)
+.. class:: Branch
 
-   **Common usage**:
-   1. Instantiate a Branch, optionally providing a system message and some initial tools.
-   2. Use :meth:`chat` or :meth:`communicate` for user queries.
-   3. If you want structured responses or function calls, use :meth:`operate`.
-   4. If you want to parse or validate final text, use :meth:`parse`.
-   5. Tools can be registered anytime via :attr:`acts` or with the arguments 
-      to the constructor.
+    Manages a conversation 'branch' with messages, tools, and iModels.
 
-   Also includes mailbox-based methods like :meth:`send` and :meth:`receive` 
-   for cross-branch or cross-system communication in a multi-agent scenario.
+    The Branch class serves as a high-level interface or orchestrator that:
+    
+    - Handles message management (MessageManager)
+    - Registers and invokes tools/actions (ActionManager)
+    - Manages model instances (iModelManager)
+    - Logs activity (LogManager)
+    - Communicates via mailboxes (Mailbox)
+
+    Key responsibilities:
+    
+    - Storing and organizing messages, including system instructions, user instructions, and model responses
+    - Handling asynchronous or synchronous execution of LLM calls and tool invocations
+    - Providing a consistent interface for "operate," "chat," "communicate," "parse," etc.
+
+    Parameters
+    ----------
+    user : SenderRecipient, optional
+        The user or sender context for this branch
+    name : str, optional
+        A human-readable name for this branch
+    messages : Pile[RoledMessage], optional
+        Initial messages for seeding the MessageManager
+    system : System | JsonValue, optional
+        Optional system-level configuration or message for the LLM
+    system_sender : SenderRecipient, optional
+        Sender to attribute to the system message if it is added
+    chat_model : iModel | dict, optional
+        The primary "chat" iModel for conversation
+    parse_model : iModel | dict, optional
+        The "parse" iModel for structured data parsing
+    imodel : iModel, optional
+        Deprecated. Alias for chat_model
+    tools : FuncTool | list[FuncTool], optional
+        Tools or a list of tools for the ActionManager
+    log_config : LogManagerConfig | dict, optional
+        Configuration dict or object for the LogManager
+    system_datetime : bool | str, optional
+        Whether to include timestamps in system messages
+    system_template : Template | str, optional
+        Optional Jinja2 template for system messages
+    system_template_context : dict, optional
+        Context for rendering the system template
+    logs : Pile[Log], optional
+        Existing logs to seed the LogManager
+    **kwargs
+        Additional parameters passed to Element parent init
+
+    Attributes
+    ----------
+    user : SenderRecipient | None
+        The user or "owner" of this branch (often tied to a session)
+    name : str | None
+        A human-readable name for this branch
+    mailbox : Mailbox
+        A mailbox for sending and receiving Package objects to/from other branches
+    system : System | None
+        The system message/configuration, if any
+    msgs : MessageManager
+        Returns the associated MessageManager
+    acts : ActionManager
+        Returns the associated ActionManager for tool management
+    mdls : iModelManager
+        Returns the associated iModelManager
+    messages : Pile[RoledMessage]
+        Convenience property to retrieve all messages from MessageManager
+    logs : Pile[Log]
+        Convenience property to retrieve all logs from the LogManager
+    chat_model : iModel
+        The primary "chat" model (iModel) used for conversational LLM calls
+    parse_model : iModel
+        The "parse" model (iModel) used for structured data parsing
+    tools : dict[str, Tool]
+        All registered tools (actions) in the ActionManager
+
+    Notes
+    -----
+    Common usage:
+    1. Instantiate a Branch, optionally providing a system message and some initial tools
+    2. Use chat() or communicate() for user queries
+    3. If you want structured responses or function calls, use operate()
+    4. If you want to parse or validate final text, use parse()
+    5. Tools can be registered anytime via acts or with the arguments to the constructor
+
+    Also includes mailbox-based methods like send() and receive() for cross-branch 
+    or cross-system communication in a multi-agent scenario.
 
 
 Key Differences from a Basic Session
