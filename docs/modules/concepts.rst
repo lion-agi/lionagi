@@ -1,7 +1,7 @@
 .. _lionagi_protocols_concepts:
 
 =======================================================
-Core Abstract Concepts: ``lionagi.protocols._concepts``
+Abstract Concepts
 =======================================================
 .. module:: lionagi.protocols._concepts
    :synopsis: Defines fundamental abstract base classes that shape LionAGI's roles and capabilities.

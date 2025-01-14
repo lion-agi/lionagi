@@ -1,7 +1,7 @@
 .. _lionagi-adapters:
 
 =========================================
-LionAGI Adapter System
+Adapter System
 =========================================
 .. module:: lionagi.protocols.adapters
    :synopsis: Provides a unified interface for converting data to/from external formats.

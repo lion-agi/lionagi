@@ -1,7 +1,7 @@
 .. _lionagi-branch-class:
 
 ================================================
-Branch: The Conversation & Execution Orchestrator
+Branch: The Orchestrator
 ================================================
 .. module:: lionagi.session.branch
    :synopsis: Provides the Branch class to manage conversation, actions, logs, etc.

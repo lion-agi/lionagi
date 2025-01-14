@@ -1,7 +1,7 @@
 .. _lionagi_protocols_graph:
 
 =====================================================
-Graph Components: Node, Edge, and Graph
+Node, Edge, and Graph
 =====================================================
 .. module:: lionagi.protocols.graph
    :synopsis: Provides relational abstractions for nodes, edges, and graphs.

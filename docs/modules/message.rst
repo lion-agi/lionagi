@@ -1,7 +1,7 @@
 .. _lionagi-messages:
 
 ====================================================
-LionAGI Messages Subsystem
+Messages Subsystem
 ====================================================
 .. module:: lionagi.protocols.messages
    :synopsis: Classes for instructions, AI responses, action requests/responses, and system-level messages.
@@ -76,7 +76,7 @@ for structured responses.
 
 
 AssistantResponse
-----------------
+-----------------
 .. automodule:: lionagi.protocols.messages.assistant_response
    :members:
    :undoc-members:
@@ -111,7 +111,7 @@ of that requested function. The original request ID is also tracked.
 
 MessageManager
 --------------
-.. automodule:: lionagi.protocols.messages.message_manager
+.. automodule:: lionagi.protocols.messages.manager
    :members:
    :undoc-members:
    :show-inheritance:

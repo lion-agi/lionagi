@@ -1,7 +1,7 @@
 .. _lionagi_protocols_generic_pile:
 
 =============================================================
-Pile: A Thread-Safe, Async-Compatible Ordered Collection
+Pile
 =============================================================
 .. module:: lionagi.protocols.generic.pile
    :synopsis: Provides an extensible collection class with concurrency support, 

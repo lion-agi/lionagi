@@ -1,59 +1,89 @@
-/* Container for the custom link */
+/* custom.css for your design overrides */
+
+html {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Constrain wide paragraphs for better readability on large screens */
+@media (min-width: 1200px) {
+  .md-typeset {
+    max-width: 65ch;
+}
+
+/* Improve code block font & background a bit */
+.highlight pre {
+  font-family: "JetBrains Mono", "Source Code Pro", monospace;
+  font-size: 0.9rem;
+  background: #f8f8f8;
+  border-radius: 4px;
+}
+
+/* Example custom coloring for notes/admonitions */
+.admonition {
+  border-left: 4px solid var(--color-brand-primary);
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+}
+
+/* Our custom GitHub header link container */
 .my-custom-header {
-    /* If you prefer to separate from theme content: */
-    margin: 0.75rem 1rem 0 1rem;
-    display: flex;
-    justify-content: flex-end; /* Right align */
-    align-items: center;
-    /* Optional border or bottom line: */
-    border-bottom: 1px solid var(--color-border-muted, #ccc);
-    padding-bottom: 0.5rem;
-  }
-  
-  .my-custom-header .header-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    text-decoration: none;
-    color: var(--color-text-primary, #222); /* fallback if CSS vars not set */
-    background: var(--color-background-accent, #f5f5f5);
-    padding: 0.4rem 0.75rem;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: background-color 0.2s ease, color 0.2s ease;
-  }
-  
-  .my-custom-header .header-link:hover {
-    background: var(--color-background-accent-hover, #e6e6e6);
-    color: var(--color-text-primary-hover, #111);
-  }
-  
-  /* The GitHub icon: ensures it scales well with text size */
-  .my-custom-header .gh-icon {
-    width: 1.2em;
-    height: 1.2em;
-    flex-shrink: 0;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-  }
-  
-  .my-custom-header .header-link:hover .gh-icon {
-    opacity: 1.0;
-  }
-  
-  /* Example support for dark mode if your theme doesn't handle it automatically. */
-  @media (prefers-color-scheme: dark) {
-    .my-custom-header .header-link {
-      background: var(--color-background-accent-dark, #333);
-      color: var(--color-text-primary-dark, #eee);
-    }
-    .my-custom-header .header-link:hover {
-      background: var(--color-background-accent-hover-dark, #444);
-    }
-    .my-custom-header .gh-icon {
-      opacity: 0.8;
-    }
-    .my-custom-header .header-link:hover .gh-icon {
-      opacity: 1.0;
-    }
-  }
+  margin: 0.75rem 1rem 0 1rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border-muted, #ccc);
+  padding-bottom: 0.5rem;
+}
+
+.my-custom-header .header-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: var(--color-text-primary, #222);
+  background: var(--color-background-accent, #f5f5f5);
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.my-custom-header .header-link:hover {
+  background: var(--color-background-accent-hover, #e0e0e0);
+  color: var(--color-text-primary-hover, #111);
+}
+
+/* GitHub icon sizing and transitions */
+.my-custom-header .gh-icon {
+  width: 1.2em;
+  height: 1.2em;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.my-custom-header .header-link:hover .gh-icon {
+  opacity: 1.0;
+}
+
+/* Footer styling */
+.my-custom-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary, #777);
+  border-top: 1px solid var(--color-border-muted, #ccc);
+  text-align: center;
+}
+
+.my-custom-footer a {
+  text-decoration: none;
+  color: var(--color-brand-primary, #3070a0);
+  font-weight: 500;
+}
+
+.my-custom-footer a:hover {
+  color: var(--color-brand-content, #3070a0);
+}
+}

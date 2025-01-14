@@ -1,7 +1,7 @@
 .. _lionagi-mail-system:
 
 ======================================
-LionAGI Mail System
+Mail System
 ======================================
 .. module:: lionagi.protocols.mail
    :synopsis: Provides messaging abstractions including Mail, Mailbox, Exchange, and MailManager.
@@ -39,6 +39,7 @@ Exchange
 Mail
 ----
 .. autoclass:: lionagi.protocols.mail.mail.Mail
+   :no-index:
    :members:
    :undoc-members:
    :show-inheritance:
@@ -61,7 +62,7 @@ Mailbox
 
 MailManager
 -----------
-.. autoclass:: lionagi.protocols.mail.mail_manager.MailManager
+.. autoclass:: lionagi.protocols.mail.manager.MailManager
    :members:
    :undoc-members:
    :show-inheritance:
@@ -81,6 +82,7 @@ Package and PackageCategory
    “signal”) associated with the :class:`Package`.
 
 .. autoclass:: lionagi.protocols.mail.package.Package
+   :no-index:
    :members:
    :undoc-members:
    :show-inheritance:

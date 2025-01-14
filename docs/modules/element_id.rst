@@ -1,7 +1,7 @@
 .. _lionagi_protocols_generic_element:
 
 =======================================================
-Element, IDType, ID, and Ordering Utilities
+Element, IDType, and ID
 =======================================================
 .. module:: lionagi.protocols.generic.element
    :synopsis: Provides core ID handling and an Element base class for LionAGI.

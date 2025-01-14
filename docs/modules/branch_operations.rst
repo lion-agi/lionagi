@@ -1,7 +1,7 @@
 .. _lionagi-branch-operations:
 
 =================================================
-LionAGI Branch-Level Operations
+Branch-Level Operations
 =================================================
 These operations define how a :class:`~lionagi.session.branch.Branch` 
 actually **does** things—ranging from direct LLM calls (`chat`, `communicate`) 

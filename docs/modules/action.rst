@@ -1,7 +1,7 @@
 .. _lionagi-action-system:
 
 ================================================
-LionAGI Action System
+Action System
 ================================================
 .. module:: lionagi.operatives.action
    :synopsis: Tools, requests, and managers for function-based actions.
@@ -38,7 +38,7 @@ FunctionCalling
 
 ActionManager
 -------------
-.. automodule:: lionagi.operatives.action.managers
+.. automodule:: lionagi.operatives.action.manager
    :members:
    :undoc-members:
    :show-inheritance:
@@ -88,7 +88,7 @@ A short example of how to use these classes:
 
 .. code-block:: python
 
-   from lionagi.operatives.action.managers import ActionManager
+   from lionagi.operatives.action.manager import ActionManager
    from lionagi.operatives.action.request_response_model import ActionRequestModel
 
    # 1. Create an action manager and register a function
@@ -112,7 +112,7 @@ File Locations
 - **function_calling.py**: 
   The :class:`FunctionCalling` event for executing tools.
 
-- **managers.py** (ActionManager): 
+- **manager.py** (ActionManager): 
   The main manager for registering and invoking Tools.
 
 - **request_response_model.py**: 

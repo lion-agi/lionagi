@@ -1,7 +1,7 @@
 .. _lionagi_protocols_generic_log:
 
 ===========================================================
-Logging: LogManager, Log Entries, and LogManagerConfig
+Log, LogManager, and Config
 ===========================================================
 .. module:: lionagi.protocols.generic.log
    :synopsis: Provides a log manager system for storing and persisting logs.

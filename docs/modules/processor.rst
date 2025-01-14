@@ -1,7 +1,7 @@
 .. _lionagi_protocols_generic_processor:
 
 ================================================
-Processor and Executor for Event Management
+Event Processor and Executor
 ================================================
 .. module:: lionagi.protocols.generic.processor
    :synopsis: Defines asynchronous event processing with capacity-limited queues 
