@@ -64,7 +64,7 @@ Tools to filter nested structures by a predicate.
 
    Traverse a nested dict or list and remove items (or sub-branches) for which 
    ``condition(x)`` is False, preserving only those that pass. If a node is 
-   itself a dict/list, it’s kept if it passes or has children that pass.
+   itself a dict/list, it's kept if it passes or has children that pass.
 
    **Parameters**:
 
@@ -123,7 +123,7 @@ lists/dicts as necessary.
 
 .. function:: ninsert(nested_structure, /, indices: list[str|int], value: Any) -> None
 
-   Like a nested "insert" – if the path’s container doesn't exist, 
+   Like a nested "insert" - if the path's container doesn't exist, 
    it creates empty dicts or lists automatically.
 
    **Parameters**:
@@ -197,7 +197,7 @@ Analogous to a standard dict.pop() or list.pop(), but nested.
    - **default**: If provided, returned when the path doesn't exist.
 
    **Returns**:
-   - The removed item’s value.
+   - The removed item's value.
 
    **Example**::
       

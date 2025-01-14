@@ -191,11 +191,11 @@ Progression
 
    .. method:: __gt__(other: Progression[E]) -> bool
 
-      Compares whether this progression’s :attr:`order` is “greater.”
+      Compares whether this progression's :attr:`order` is “greater.”
 
    .. method:: __lt__(other: Progression[E]) -> bool
 
-      Compares whether this progression’s :attr:`order` is “less.”
+      Compares whether this progression's :attr:`order` is “less.”
 
    .. method:: __ge__(other: Progression[E]) -> bool
 

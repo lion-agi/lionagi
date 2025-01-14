@@ -39,7 +39,7 @@ These “field models” are specialized definitions for typical
 .. py:data:: INSTRUCTION_FIELD
    :annotation: FieldModel
    The main task or objective.  
-   Enforces that it’s a JSON-like object or None.
+   Enforces that it's a JSON-like object or None.
 
 .. py:data:: GUIDANCE_FIELD
    :annotation: FieldModel
@@ -73,7 +73,7 @@ These “field models” are specialized definitions for typical
 
 Consolidates the **instruction** pattern with standard fields:
 
-- :attr:`instruction`: The user’s main objective 
+- :attr:`instruction`: The user's main objective 
   (type: ``JsonValue | None``).
 - :attr:`guidance`: Extra pointers or constraints 
   (type: ``JsonValue | None``).
@@ -157,7 +157,7 @@ Usage::
 A specialized :class:`Node` that includes an :attr:`instruct` 
 field of type :class:`Instruct`. This is useful when building 
 **graph** structures in LionAGI and embedding instructions 
-directly in the graph’s nodes. For instance, each node in a 
+directly in the graph's nodes. For instance, each node in a 
 workflow graph might carry specific instructions for LLM steps 
 or sub-tasks.
 

@@ -52,12 +52,12 @@ Execution
 
    Tracks the **runtime details** of an event, including status, duration, 
    response, and any error messages. Designed to store partial or final results 
-   and the overall outcome of an event’s execution.
+   and the overall outcome of an event's execution.
 
    Attributes
    ----------
    status : EventStatus
-       The current status of the event’s execution.
+       The current status of the event's execution.
    duration : float | None
        Time in seconds that the event took to execute (if known).
    response : Any
@@ -142,7 +142,7 @@ Event
    .. method:: invoke() -> None
       :async:
 
-      An **asynchronous** method intended to perform the event’s main action. 
+      An **asynchronous** method intended to perform the event's main action. 
       Raises :exc:`NotImplementedError` unless overridden by a subclass.
 
    .. classmethod:: from_dict(data: dict) -> Event

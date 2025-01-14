@@ -44,7 +44,7 @@ exchanges.
 **Key Methods**:
 
 - :meth:`update_response_model(text=None, data=None) -> BaseModel|dict|str|None`  
-  Attempt to parse the provided text or dictionary into the operative’s
+  Attempt to parse the provided text or dictionary into the operative's
   response model. The result is stored in :attr:`response_model`.
 
 - :meth:`raise_validate_pydantic(text) -> None`  

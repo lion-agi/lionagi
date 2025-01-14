@@ -198,13 +198,13 @@ ID
    .. staticmethod:: get_id(item: E) -> IDType
 
       Retrieves an :class:`IDType` from multiple item forms. If the item is 
-      already an Element, returns its ``id``. If it’s a string or a UUID, 
+      already an Element, returns its ``id``. If it's a string or a UUID, 
       validates it as a v4 UUID. Raises ``ValueError`` if conversion fails.
 
    .. staticmethod:: is_id(item: Any) -> bool
 
       Checks whether the given object can be validated as an :class:`IDType`. 
-      Returns ``True`` if it’s a valid ID, else ``False``.
+      Returns ``True`` if it's a valid ID, else ``False``.
 
    Example
    -------

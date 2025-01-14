@@ -4,7 +4,7 @@ Form & Report
 
 This module provides **form-based data structures** for tasks that involve
 collecting inputs, producing outputs, and managing intermediate fields. A form
-can be seen as a specialized, dynamic Pydantic model (extending LionAGI’s
+can be seen as a specialized, dynamic Pydantic model (extending LionAGI's
 :class:`OperableModel`) that captures:
 
 - **Required** fields (input vs. request)
@@ -14,10 +14,10 @@ can be seen as a specialized, dynamic Pydantic model (extending LionAGI’s
 
 Three core classes are provided:
 
-1. :class:`BaseForm` – Foundation for form handling (output fields, checks).
-2. :class:`Form` – Builds on :class:`BaseForm` for typical “input -> output”
+1. :class:`BaseForm` - Foundation for form handling (output fields, checks).
+2. :class:`Form` - Builds on :class:`BaseForm` for typical “input -> output”
    tasks. Automates assignment parsing and input/request field distinction.
-3. :class:`Report` – Aggregates multiple completed forms, storing tasks that
+3. :class:`Report` - Aggregates multiple completed forms, storing tasks that
    have been processed and generating a final “report.”
 
 
@@ -137,10 +137,10 @@ Designed to collect **multiple tasks** (forms) into one object:
 
 - :attr:`completed_tasks`: A pile of :class:`Form` instances that are done.
 - :meth:`save_completed_form(form, update_results=False)`:
-  Store a completed form in the report. Optionally update the report’s
-  fields with the form’s results.
+  Store a completed form in the report. Optionally update the report's
+  fields with the form's results.
 - :meth:`create_form(...)`:
-  Helper for building new tasks (forms) from the report’s perspective.
+  Helper for building new tasks (forms) from the report's perspective.
 - :meth:`from_form(...)`:
   Alternative constructor that transforms an existing form into a report.
 

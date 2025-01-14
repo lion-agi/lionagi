@@ -32,8 +32,8 @@ Exchange
    :undoc-members:
    :show-inheritance:
 
-   The Exchange uses an internal buffer for collecting mail from each sender’s
-   mailbox and delivering messages to the correct recipient’s mailbox.
+   The Exchange uses an internal buffer for collecting mail from each sender's
+   mailbox and delivering messages to the correct recipient's mailbox.
 
 
 Mail

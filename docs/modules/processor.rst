@@ -74,7 +74,7 @@ Processor
 
    .. attribute:: execution_mode
 
-      A boolean indicating if the processor’s :meth:`execute` method is actively running.
+      A boolean indicating if the processor's :meth:`execute` method is actively running.
 
    Methods
    -------
@@ -117,7 +117,7 @@ Processor
       :async:
 
       Retrieves and processes events from the queue, up to :attr:`available_capacity`. 
-      Each event’s ``status`` is set to :attr:`~lionagi.protocols.generic.event.EventStatus.PROCESSING`
+      Each event's ``status`` is set to :attr:`~lionagi.protocols.generic.event.EventStatus.PROCESSING`
       if it passes a permission check (:meth:`request_permission`). After processing 
       these events, the capacity is reset if any were processed.
 
