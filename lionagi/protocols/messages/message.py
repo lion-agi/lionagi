@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Implements the `RoledMessage` base for system, user, assistant,
+and action messages, plus Jinja2 environment and template loading.
+"""
+
 import json
 from pathlib import Path
 from typing import Any
@@ -27,6 +32,10 @@ __all__ = ("RoledMessage",)
 
 
 class RoledMessage(Node, Sendable):
+    """
+    A base class for all messages that have a `role` and carry structured
+    `content`. Subclasses might be `Instruction`, `ActionRequest`, etc.
+    """
 
     content: dict = Field(
         default_factory=dict,
@@ -69,11 +78,11 @@ class RoledMessage(Node, Sendable):
     @property
     def image_content(self) -> list[dict[str, Any]] | None:
         """
-        Return image content if present in the message.
+        Extract structured image data from the message content if it is
+        represented as a chat message array.
 
         Returns:
-            Optional[List[Dict[str, Any]]]: A list of image content
-                dictionaries, or None if no images are present.
+            list[dict[str,Any]] | None: If no images found, None.
         """
         msg_ = self.chat_msg
         if isinstance(msg_, dict) and isinstance(msg_["content"], list):
@@ -83,11 +92,10 @@ class RoledMessage(Node, Sendable):
     @property
     def chat_msg(self) -> dict[str, Any] | None:
         """
-        Return message in chat representation format.
+        A dictionary representation typically used in chat-based contexts.
 
         Returns:
-            Optional[Dict[str, Any]]: The message formatted for chat use,
-                or None if formatting fails.
+            dict: `{"role": <role>, "content": <rendered content>}`
         """
         try:
             return {"role": str(self.role), "content": self.rendered}
@@ -96,6 +104,13 @@ class RoledMessage(Node, Sendable):
 
     @property
     def rendered(self) -> str:
+        """
+        Attempt to format the message with a Jinja template (if provided).
+        If no template, fallback to JSON.
+
+        Returns:
+            str: The final formatted string.
+        """
         try:
             if isinstance(self.template, str):
                 return self.template.format(**self.content)
@@ -106,12 +121,19 @@ class RoledMessage(Node, Sendable):
 
     @classmethod
     def create(cls, **kwargs):
-        raise NotImplementedError(
-            "create method must be implemented in subclass"
-        )
+        raise NotImplementedError("create() must be implemented in subclass.")
 
     @classmethod
     def from_dict(cls, dict_: dict):
+        """
+        Deserialize a dictionary into a RoledMessage or subclass.
+
+        Args:
+            dict_ (dict): The raw data.
+
+        Returns:
+            RoledMessage: A newly constructed instance.
+        """
         try:
             self: RoledMessage = super().from_dict(
                 {k: v for k, v in dict_.items() if v}
@@ -123,14 +145,23 @@ class RoledMessage(Node, Sendable):
 
     def is_clone(self) -> bool:
         """
-        Check if the message is a clone of another message.
+        Check if this message is flagged as a clone.
 
         Returns:
-            bool: True if the message is a clone, False otherwise.
+            bool: True if flagged `MESSAGE_CLONE`.
         """
         return self._flag == MessageFlag.MESSAGE_CLONE
 
     def clone(self, keep_role: bool = True) -> "RoledMessage":
+        """
+        Create a shallow copy of this message, possibly resetting the role.
+
+        Args:
+            keep_role (bool): If False, set the new message's role to `UNSET`.
+
+        Returns:
+            RoledMessage: The new cloned message.
+        """
         instance = self.__class__(
             content=self.content,
             role=self.role if keep_role else MessageRole.UNSET,
@@ -141,27 +172,15 @@ class RoledMessage(Node, Sendable):
 
     def to_log(self) -> Log:
         """
-        Convert the message to a Log object.
-
-        Creates a Log instance containing the message content and additional
-        information as loginfo.
+        Convert this message into a `Log`, preserving all current fields.
 
         Returns:
-            Log: A Log object representing the message.
+            Log: An immutable log entry derived from this message.
         """
         return Log.create(self)
 
     @field_serializer("role")
     def _serialize_role(self, value: MessageRole):
-        """
-        Serialize the role for storage or transmission.
-
-        Args:
-            value: The MessageRole to serialize
-
-        Returns:
-            str: The string value of the role
-        """
         if isinstance(value, MessageRole):
             return value.value
         return str(value)
@@ -187,11 +206,25 @@ class RoledMessage(Node, Sendable):
 
     @field_serializer("template")
     def _serialize_template(self, value: Template | str):
+        # We do not store or transmit the raw Template object.
         if isinstance(value, Template):
             return None
         return value
 
     def update(self, sender, recipient, template, **kwargs):
+        """
+        Generic update mechanism for customizing the message in place.
+
+        Args:
+            sender (SenderRecipient):
+                New sender or role.
+            recipient (SenderRecipient):
+                New recipient or role.
+            template (Template | str):
+                New jinja Template or format string.
+            **kwargs:
+                Additional content to merge into self.content.
+        """
         if sender:
             self.sender = validate_sender_recipient(sender)
         if recipient:
@@ -214,3 +247,6 @@ class RoledMessage(Node, Sendable):
             f"Message(role={self.role}, sender={self.sender}, "
             f"content='{content_preview}')"
         )
+
+
+# File: lionagi/protocols/messages/message.py

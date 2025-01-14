@@ -2,6 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Holds foundational enumerations and types for messages, including
+roles like `SYSTEM`, `USER`, and helper functions for validating
+sender/recipient fields.
+"""
+
 from enum import Enum
 from typing import Any, TypeAlias
 
@@ -17,6 +23,9 @@ __all__ = (
 
 
 class MessageRole(str, Enum):
+    """
+    Predefined roles for conversation participants or message semantics.
+    """
 
     SYSTEM = "system"
     USER = "user"
@@ -26,15 +35,27 @@ class MessageRole(str, Enum):
 
 
 class MessageFlag(str, Enum):
+    """
+    Internal flags for certain message states, e.g., clones or loads.
+    """
 
     MESSAGE_CLONE = "MESSAGE_CLONE"
     MESSAGE_LOAD = "MESSAGE_LOAD"
 
 
 SenderRecipient: TypeAlias = IDType | MessageRole | str
+"""
+A union type indicating that a sender or recipient could be:
+- A lionagi IDType,
+- A string-based role or ID,
+- A specific enum role from `MessageRole`.
+"""
 
 
 class MessageField(str, Enum):
+    """
+    Common field names used in message objects.
+    """
 
     CREATED_AT = "created_at"
     ROLE = "role"
@@ -49,6 +70,18 @@ MESSAGE_FIELDS = [i.value for i in MessageField.__members__.values()]
 
 
 def validate_sender_recipient(value: Any, /) -> SenderRecipient:
+    """
+    Normalize a sender/recipient value into a recognized type.
+
+    Args:
+        value (Any): Input to interpret as a role or ID.
+
+    Returns:
+        SenderRecipient: A validated and normalized entity.
+
+    Raises:
+        ValueError: If the input cannot be recognized as a role or ID.
+    """
     if isinstance(value, MessageRole | MessageFlag):
         return value
 
@@ -71,3 +104,6 @@ def validate_sender_recipient(value: Any, /) -> SenderRecipient:
         return ID.get_id(value)
     except IDError as e:
         raise ValueError("Invalid sender or recipient") from e
+
+
+# File: lionagi/protocols/messages/base.py

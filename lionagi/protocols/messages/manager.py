@@ -2,13 +2,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Implements the `MessageManager` class, a manager for collecting or
+manipulating sequences of `RoledMessage` objects, including system,
+instructions, or action requests/responses.
+"""
+
 from typing import Any, Literal
 
 from jinja2 import Template
 from pydantic import BaseModel, JsonValue
 
 from .._concepts import Manager
-from ..generic.log import Log
 from ..generic.pile import Pile
 from ..generic.progression import Progression
 from .action_request import ActionRequest
@@ -22,6 +27,11 @@ DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
 
 
 class MessageManager(Manager):
+    """
+    A manager maintaining an ordered list of `RoledMessage` items.
+    Capable of setting or replacing a system message, adding instructions,
+    assistant responses, or actions, and retrieving them conveniently.
+    """
 
     def __init__(
         self,
@@ -31,6 +41,7 @@ class MessageManager(Manager):
     ):
         super().__init__()
         m_ = []
+        # Attempt to parse 'messages' as a list or from a dictionary
         if isinstance(messages, list):
             for i in messages:
                 if isinstance(i, dict):
@@ -58,10 +69,7 @@ class MessageManager(Manager):
 
     def set_system(self, system: System) -> None:
         """
-        Set or update the system message.
-
-        Args:
-            system: The new system message to set
+        Replace or set the system message. If one existed, remove it.
         """
         if not self.system:
             self.system = system
@@ -73,17 +81,12 @@ class MessageManager(Manager):
             self.messages.exclude(old_system)
 
     async def aclear_messages(self):
-        """Asynchronously clear all messages except system message."""
+        """Async clear all messages except system."""
         async with self.messages:
             self.clear_messages()
 
     async def a_add_message(self, **kwargs):
-        """
-        Asynchronously add a message.
-
-        Args:
-            **kwargs: Message creation parameters
-        """
+        """Add a message asynchronously with a manager-level lock."""
         async with self.messages:
             return self.add_message(**kwargs)
 
@@ -103,15 +106,23 @@ class MessageManager(Manager):
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
     ) -> Instruction:
+        """
+        Construct or update an Instruction message with advanced parameters.
 
-        params = {k: v for k, v in locals().items() if v is not None}
+        If `instruction` is an existing Instruction, it is updated in place.
+        Otherwise, a new instance is created.
+        """
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k != "instruction" and v is not None
+        }
 
         if isinstance(instruction, Instruction):
-            params.pop("instruction")
             instruction.update(**params)
             return instruction
         else:
-            return Instruction.create(**params)
+            return Instruction.create(instruction=instruction, **params)
 
     @staticmethod
     def create_assistant_response(
@@ -122,17 +133,25 @@ class MessageManager(Manager):
         template: Template | str = None,
         template_context: dict[str, Any] = None,
     ) -> AssistantResponse:
-
-        params = {k: v for k, v in locals().items() if v is not None}
-        template_context = params.pop("template_context", {})
-        params.update(template_context)
+        """
+        Build or update an `AssistantResponse`. If `assistant_response` is an
+        existing instance, it's updated. Otherwise, a new one is created.
+        """
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k not in ["assistant_response", "template_context"]
+        }
+        t_ctx = template_context or {}
+        params.update(t_ctx)
 
         if isinstance(assistant_response, AssistantResponse):
-            params.pop("assistant_response")
             assistant_response.update(**params)
             return assistant_response
 
-        return AssistantResponse.create(**params)
+        return AssistantResponse.create(
+            assistant_response=assistant_response, **params
+        )
 
     @staticmethod
     def create_action_request(
@@ -145,20 +164,33 @@ class MessageManager(Manager):
         template: Template | str = None,
         template_context: dict[str, Any] = None,
     ) -> ActionRequest:
+        """
+        Build or update an ActionRequest.
 
+        Args:
+            sender: Sender role or ID.
+            recipient: Recipient role or ID.
+            function: Function name for the request.
+            arguments: Arguments for the function.
+            action_request: Possibly existing ActionRequest to update.
+            template: Optional jinja template.
+            template_context: Extra context for the template.
+
+        Returns:
+            ActionRequest: The new or updated request object.
+        """
         params = {
             "sender": sender,
             "recipient": recipient,
             "function": function,
             "arguments": arguments,
             "template": template,
-            **(template_context or {}),
         }
+        params.update(template_context or {})
 
         if isinstance(action_request, ActionRequest):
             action_request.update(**params)
             return action_request
-
         return ActionRequest.create(**params)
 
     @staticmethod
@@ -170,20 +202,35 @@ class MessageManager(Manager):
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
     ) -> ActionResponse:
+        """
+        Create or update an ActionResponse, referencing a prior ActionRequest.
 
+        Args:
+            action_request (ActionRequest):
+                The request being answered.
+            action_output (Any):
+                The result of the invoked function.
+            action_response (ActionResponse|Any):
+                Possibly existing ActionResponse to update.
+            sender:
+                Sender ID or role.
+            recipient:
+                Recipient ID or role.
+
+        Returns:
+            ActionResponse: The newly created or updated response object.
+        """
         if not isinstance(action_request, ActionRequest):
             raise ValueError(
                 "Error: please provide a corresponding action request for an "
                 "action response."
             )
-
         params = {
             "action_request": action_request,
             "output": action_output,
             "sender": sender,
             "recipient": recipient,
         }
-
         if isinstance(action_response, ActionResponse):
             action_response.update(**params)
             return action_response
@@ -200,6 +247,10 @@ class MessageManager(Manager):
         template: Template | str = None,
         template_context: dict[str, Any] = None,
     ) -> System:
+        """
+        Create or update a `System` message. If `system` is an instance, update.
+        Otherwise, create a new System message.
+        """
         params = {
             "system_datetime": system_datetime,
             "sender": sender,
@@ -247,8 +298,14 @@ class MessageManager(Manager):
         action_output: Any = None,
         action_request: ActionRequest | None = None,
         action_response: ActionResponse | Any = None,
-    ) -> tuple[RoledMessage, Log]:
-
+    ) -> RoledMessage:
+        """
+        The central method to add a new message of various types:
+        - System
+        - Instruction
+        - AssistantResponse
+        - ActionRequest / ActionResponse
+        """
         _msg = None
         if (
             sum(
@@ -334,75 +391,102 @@ class MessageManager(Manager):
         return _msg
 
     def clear_messages(self):
+        """Remove all messages except the system message if it exists."""
         self.messages.clear()
         if self.system:
             self.messages.insert(0, self.system)
 
     @property
     def last_response(self) -> AssistantResponse | None:
-        """Get the last assistant response message."""
-        for i in reversed(self.messages.progression):
-            if isinstance(self.messages[i], AssistantResponse):
-                return self.messages[i]
+        """
+        Retrieve the most recent `AssistantResponse`.
+        """
+        for mid in reversed(self.messages.progression):
+            if isinstance(self.messages[mid], AssistantResponse):
+                return self.messages[mid]
+        return None
 
     @property
     def last_instruction(self) -> Instruction | None:
-        """Get the last instruction message."""
-        for i in reversed(self.messages.progression):
-            if isinstance(self.messages[i], Instruction):
-                return self.messages[i]
+        """
+        Retrieve the most recent `Instruction`.
+        """
+        for mid in reversed(self.messages.progression):
+            if isinstance(self.messages[mid], Instruction):
+                return self.messages[mid]
+        return None
 
     @property
     def assistant_responses(self) -> Pile[AssistantResponse]:
-        """Get all assistant response messages."""
+        """All `AssistantResponse` messages in the manager."""
         return Pile(
             collections=[
-                self.messages[i]
-                for i in self.messages.progression
-                if isinstance(self.messages[i], AssistantResponse)
+                self.messages[mid]
+                for mid in self.messages.progression
+                if isinstance(self.messages[mid], AssistantResponse)
+            ]
+        )
+
+    @property
+    def actions(self) -> Pile[ActionRequest | ActionResponse]:
+        """All action messages in the manager."""
+        return Pile(
+            collections=[
+                self.messages[mid]
+                for mid in self.messages.progression
+                if isinstance(
+                    self.messages[mid], (ActionRequest, ActionResponse)
+                )
             ]
         )
 
     @property
     def action_requests(self) -> Pile[ActionRequest]:
-        """Get all action request messages."""
+        """All `ActionRequest` messages in the manager."""
         return Pile(
             collections=[
-                self.messages[i]
-                for i in self.messages.progression
-                if isinstance(self.messages[i], ActionRequest)
+                self.messages[mid]
+                for mid in self.messages.progression
+                if isinstance(self.messages[mid], ActionRequest)
             ]
         )
 
     @property
     def action_responses(self) -> Pile[ActionResponse]:
-        """Get all action response messages."""
+        """All `ActionResponse` messages in the manager."""
         return Pile(
             collections=[
-                self.messages[i]
-                for i in self.messages.progression
-                if isinstance(self.messages[i], ActionResponse)
+                self.messages[mid]
+                for mid in self.messages.progression
+                if isinstance(self.messages[mid], ActionResponse)
             ]
         )
 
     @property
     def instructions(self) -> Pile[Instruction]:
-        """Get all instruction messages."""
+        """All `Instruction` messages in the manager."""
         return Pile(
             collections=[
-                self.messages[i]
-                for i in self.messages.progression
-                if isinstance(self.messages[i], Instruction)
+                self.messages[mid]
+                for mid in self.messages.progression
+                if isinstance(self.messages[mid], Instruction)
             ]
         )
 
     def remove_last_instruction_tool_schemas(self) -> None:
-        id_ = self.last_instruction.id
-        self.messages[id_].tool_schemas = None
+        """
+        Convenience method to strip 'tool_schemas' from the most recent Instruction.
+        """
+        if self.last_instruction:
+            self.messages[self.last_instruction.id].tool_schemas = None
 
     def concat_recent_action_responses_to_instruction(
         self, instruction: Instruction
     ) -> None:
+        """
+        Example method to merge the content of recent ActionResponses
+        into an instruction's context.
+        """
         for i in reversed(self.messages.progression):
             if isinstance(self.messages[i], ActionResponse):
                 instruction.context.append(self.messages[i].content)
@@ -410,16 +494,25 @@ class MessageManager(Manager):
                 break
 
     def to_chat_msgs(self, progression=None) -> list[dict]:
+        """
+        Convert a subset (or all) of messages into a chat representation array.
+
+        Args:
+            progression (Optional[Sequence]): A subset of message IDs or the full progression.
+
+        Returns:
+            list[dict]: Each item is a dict with 'role' and 'content'.
+        """
         if progression == []:
             return []
         try:
             return [
-                self.messages[i].chat_msg
-                for i in (progression or self.progression)
+                self.messages[mid].chat_msg
+                for mid in (progression or self.progression)
             ]
         except Exception as e:
             raise ValueError(
-                "Invalid progress, not all requested messages are in the message pile"
+                "One or more messages in the requested progression are invalid."
             ) from e
 
     def __bool__(self):
@@ -427,3 +520,6 @@ class MessageManager(Manager):
 
     def __contains__(self, message: RoledMessage) -> bool:
         return message in self.messages
+
+
+# File: lionagi/protocols/messages/manager.py

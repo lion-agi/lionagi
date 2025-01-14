@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Defines the `System` class, representing system-level instructions or
+settings that guide the AI's behavior from a privileged role.
+"""
+
 from datetime import datetime
 from typing import Any, NoReturn, Self
 
@@ -19,14 +24,16 @@ def format_system_content(
     system_message: str,
 ) -> dict:
     """
-    Format system message content with optional datetime information.
+    Insert optional datetime string into the system message content.
 
     Args:
-        system_datetime: Flag or string for datetime inclusion
-        system_message: The system message content
+        system_datetime (bool|str|None):
+            If True, embed current time. If str, use as time. If None, omit.
+        system_message (str):
+            The main system message text.
 
     Returns:
-        Note: Formatted system content
+        dict: The combined system content.
     """
     content: dict = {"system_message": system_message}
     if system_datetime:
@@ -40,6 +47,11 @@ def format_system_content(
 
 
 class System(RoledMessage):
+    """
+    A specialized message that sets a *system-level* context or policy.
+    Usually the first in a conversation, instructing the AI about general
+    constraints or identity.
+    """
 
     template: str | Template | None = jinja_env.get_template(
         "system_message.jinja2"
@@ -58,14 +70,26 @@ class System(RoledMessage):
         **kwargs,
     ) -> Self:
         """
-        Create a new system message.
+        Construct a system message with optional datetime annotation.
 
         Args:
-            system_message: The system message content
-            system_datetime: Optional datetime flag or string
+            system_message (str):
+                The main text instructing the AI about behavior/identity.
+            system_datetime (bool|str, optional):
+                If True or str, embed a time reference. If str, it is used directly.
+            sender (SenderRecipient, optional):
+                Typically `MessageRole.SYSTEM`.
+            recipient (SenderRecipient, optional):
+                Typically `MessageRole.ASSISTANT`.
+            template (Template|str|None):
+                An optional custom template for rendering.
+            system (Any):
+                Alias for `system_message` (deprecated).
+            **kwargs:
+                Additional content merged into the final dict.
 
         Returns:
-            System: The new system message
+            System: A newly created system-level message.
         """
         if system and system_message:
             raise ValueError(
@@ -78,14 +102,14 @@ class System(RoledMessage):
             system_datetime=system_datetime, system_message=system_message
         )
         content.update(kwargs)
-        params = {}
-        params["role"] = MessageRole.SYSTEM
-        params["content"] = content
-        params["sender"] = sender or MessageRole.SYSTEM
-        params["recipient"] = recipient or MessageRole.ASSISTANT
+        params = {
+            "role": MessageRole.SYSTEM,
+            "content": content,
+            "sender": sender or MessageRole.SYSTEM,
+            "recipient": recipient or MessageRole.ASSISTANT,
+        }
         if template:
             params["template"] = template
-
         return cls(**params)
 
     def update(
@@ -98,13 +122,21 @@ class System(RoledMessage):
         **kwargs,
     ) -> NoReturn:
         """
-        Update the system message components.
+        Adjust fields of this system message.
 
         Args:
-            system: New system message content
-            sender: New sender
-            recipient: New recipient
-            system_datetime: New datetime flag or string
+            system_message (JsonValue):
+                New system message text.
+            sender (SenderRecipient):
+                Updated sender or role.
+            recipient (SenderRecipient):
+                Updated recipient or role.
+            system_datetime (bool|str):
+                If set, embed new datetime info.
+            template (Template|str|None):
+                New template override.
+            **kwargs:
+                Additional fields for self.content.
         """
         if any([system_message, system_message]):
             self.content = format_system_content(
@@ -113,3 +145,6 @@ class System(RoledMessage):
         super().update(
             sender=sender, recipient=recipient, template=template, **kwargs
         )
+
+
+# File: lionagi/protocols/messages/system.py
