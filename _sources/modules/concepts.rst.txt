@@ -34,9 +34,8 @@ Manager
 -------
 .. class:: Manager
    :module: lionagi.protocols._concepts
-   :show-inheritance:
 
-   Inherits from :class:`Observer`
+   **Inherits from**: :class:`Observer`
 
    A “manager” is a specialized observer that administers or orchestrates certain objects 
    in the system. Managers typically handle creation, updates, or deletions of resources. 
@@ -100,9 +99,8 @@ Communicatable
 --------------
 .. class:: Communicatable(Observable)
    :module: lionagi.protocols._concepts
-   :show-inheritance:
 
-   Inherits from :class:`Observable`
+   **Inherits from**: :class:`Observable`
 
    A more specialized form of **observable** object that also supports 
    mailbox-based messaging. This means the subclass must define:

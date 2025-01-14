@@ -306,7 +306,7 @@ included is an <code class="xref py py-class docutils literal notranslate"><span
 <dt class="sig sig-object py" id="lionagi.protocols.graph.edge.EdgeCondition">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.graph.edge.</span></span><span class="sig-name descname"><span class="pre">EdgeCondition</span></span><a class="headerlink" href="#lionagi.protocols.graph.edge.EdgeCondition" title="Link to this definition">¶</a></dt>
 <dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code>, <a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Condition" title="lionagi.protocols._concepts.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p>
-<p>A <strong>condition</strong> that can be attached to an <code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code> to control or
+<p>A <strong>condition</strong> that can be attached to an <a class="reference internal" href="#lionagi.protocols.graph.edge.Edge" title="lionagi.protocols.graph.edge.Edge"><code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code></a> to control or
 constrain its traversability. This class also integrates with Pydantic for
 data validation and serialization.</p>
 <section id="attributes">
@@ -332,12 +332,258 @@ data validation and serialization.</p>
 </section>
 <section id="edge">
 <h2>Edge<a class="headerlink" href="#edge" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.edge.Edge">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.graph.edge.</span></span><span class="sig-name descname"><span class="pre">Edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Element</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.graph.edge.Edge" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></p>
+<p>Represents a <strong>directed connection</strong> from a head node to a tail node in a
+LionAGI graph. An optional <a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.condition" title="lionagi.protocols.graph.edge.Edge.condition"><code class="xref py py-attr docutils literal notranslate"><span class="pre">condition</span></code></a> determines if traversal is
+allowed. Additional metadata (like <a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.label" title="lionagi.protocols.graph.edge.Edge.label"><code class="xref py py-attr docutils literal notranslate"><span class="pre">label</span></code></a>) or properties can be
+stored in <code class="xref py py-attr docutils literal notranslate"><span class="pre">properties</span></code>.</p>
+<section id="id2">
+<h3>Attributes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>head<span class="classifier">IDType</span></dt><dd><p>The ID of the head node.</p>
+</dd>
+<dt>tail<span class="classifier">IDType</span></dt><dd><p>The ID of the tail node.</p>
+</dd>
+<dt>properties<span class="classifier">dict[str, Any]</span></dt><dd><p>A dictionary holding additional properties, such as labels or
+an <a class="reference internal" href="#lionagi.protocols.graph.edge.EdgeCondition" title="lionagi.protocols.graph.edge.EdgeCondition"><code class="xref py py-class docutils literal notranslate"><span class="pre">EdgeCondition</span></code></a>.</p>
+</dd>
+</dl>
+</section>
+<section id="properties">
+<h3>Properties<a class="headerlink" href="#properties" title="Link to this heading">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.edge.Edge.label">
+<span class="sig-name descname"><span class="pre">label</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lionagi.protocols.graph.edge.Edge.label" title="Link to this definition">¶</a></dt>
+<dd><p>Read or set a list of labels describing this edge.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.edge.Edge.condition">
+<span class="sig-name descname"><span class="pre">condition</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#lionagi.protocols.graph.edge.EdgeCondition" title="lionagi.protocols.graph.edge.EdgeCondition"><span class="pre">EdgeCondition</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lionagi.protocols.graph.edge.Edge.condition" title="Link to this definition">¶</a></dt>
+<dd><p>A condition that determines if this edge is traversable. If None,
+traversal is unrestricted.</p>
+</dd></dl>
+
+</section>
+<section id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.edge.Edge.check_condition">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.edge.Edge.check_condition" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluates the <a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.condition" title="lionagi.protocols.graph.edge.Edge.condition"><code class="xref py py-attr docutils literal notranslate"><span class="pre">condition</span></code></a> (if any). Returns True if
+no condition is assigned or if the condition passes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.edge.Edge.update_property">
+<span class="sig-name descname"><span class="pre">update_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.edge.Edge.update_property" title="Link to this definition">¶</a></dt>
+<dd><p>Adds or updates a custom property in <code class="xref py py-attr docutils literal notranslate"><span class="pre">properties</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.edge.Edge.update_condition_source">
+<span class="sig-name descname"><span class="pre">update_condition_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.edge.Edge.update_condition_source" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the <code class="xref py py-attr docutils literal notranslate"><span class="pre">source</span></code> field in the assigned <a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.condition" title="lionagi.protocols.graph.edge.Edge.condition"><code class="xref py py-attr docutils literal notranslate"><span class="pre">condition</span></code></a>
+without replacing the entire condition object.</p>
+</dd></dl>
+
+</section>
+<section id="id3">
+<h3>Example<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.graph.edge</span><span class="w"> </span><span class="kn">import</span> <span class="n">Edge</span><span class="p">,</span> <span class="n">EdgeCondition</span>
+
+<span class="n">edge_condition</span> <span class="o">=</span> <span class="n">EdgeCondition</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;some_source&quot;</span><span class="p">)</span>
+<span class="n">edge</span> <span class="o">=</span> <span class="n">Edge</span><span class="p">(</span><span class="n">head</span><span class="o">=</span><span class="n">my_head_node</span><span class="p">,</span> <span class="n">tail</span><span class="o">=</span><span class="n">my_tail_node</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="n">edge_condition</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;friendship&quot;</span><span class="p">])</span>
+<span class="c1"># edge now connects two nodes with a condition and a descriptive label.</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
 </section>
 <section id="node">
 <h2>Node<a class="headerlink" href="#node" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.node.Node">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.graph.node.</span></span><span class="sig-name descname"><span class="pre">Node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Relational</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.graph.node.Node" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>, <a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Relational" title="lionagi.protocols._concepts.Relational"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code></a></p>
+<p>A <strong>graph node</strong> that can store arbitrary content, an optional numeric
+embedding, and metadata in <code class="xref py py-attr docutils literal notranslate"><span class="pre">metadata</span></code>. Nodes integrate with the
+LionAGI adapter system, enabling easy import/export to JSON, pandas
+Series, etc.</p>
+<section id="id4">
+<h3>Attributes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>content<span class="classifier">Any</span></dt><dd><p>Arbitrary payload or data associated with this node.</p>
+</dd>
+<dt>embedding<span class="classifier">list[float] | None</span></dt><dd><p>An optional vector representation (e.g., for search or similarity).</p>
+</dd>
+</dl>
+</section>
+<section id="id5">
+<h3>Methods<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.node.Node.adapt_to">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adapt_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.node.Node.adapt_to" title="Link to this definition">¶</a></dt>
+<dd><p>Converts this node to a specified format using a registered adapter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.node.Node.adapt_from">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adapt_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.protocols.graph.node.Node" title="lionagi.protocols.graph.node.Node"><span class="pre">Node</span></a></span></span><a class="headerlink" href="#lionagi.protocols.graph.node.Node.adapt_from" title="Link to this definition">¶</a></dt>
+<dd><p>Constructs a node from an external representation, possibly returning
+a subclass if <code class="docutils literal notranslate"><span class="pre">lion_class</span></code> data is present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.node.Node.list_adapters">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_adapters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.graph.node.Node.list_adapters" title="Link to this definition">¶</a></dt>
+<dd><p>Lists all available adapter keys for node conversions.</p>
+</dd></dl>
+
+</section>
+<section id="id6">
+<h3>Example<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.graph.node</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PersonNode</span><span class="p">(</span><span class="n">Node</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">person</span> <span class="o">=</span> <span class="n">PersonNode</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">},</span> <span class="n">embedding</span><span class="o">=</span><span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">person</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>   <span class="c1"># =&gt; {&#39;name&#39;: &#39;Alice&#39;}</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">person</span><span class="o">.</span><span class="n">embedding</span><span class="p">)</span> <span class="c1"># =&gt; [0.1, 0.2, 0.3]</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
 </section>
 <section id="graph">
 <h2>Graph<a class="headerlink" href="#graph" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.graph.graph.</span></span><span class="sig-name descname"><span class="pre">Graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Relational</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>, <a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Relational" title="lionagi.protocols._concepts.Relational"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code></a></p>
+<p>Represents an entire <strong>directed graph</strong> of <code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">Edge</span></code> objects.
+Internally, it uses two <a class="reference internal" href="pile.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> instances
+(one for nodes, one for edges) and a <cite>node_edge_mapping</cite> for quick lookups.</p>
+<section id="id7">
+<h3>Attributes<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>internal_nodes<span class="classifier">Pile[Node]</span></dt><dd><p>Stores all nodes in the graph.</p>
+</dd>
+<dt>internal_edges<span class="classifier">Pile[Edge]</span></dt><dd><p>Stores all edges in the graph.</p>
+</dd>
+<dt>node_edge_mapping<span class="classifier">dict</span></dt><dd><p>Maps each node ID to its incoming and outgoing edges for quick access.</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Methods<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.add_node">
+<span class="sig-name descname"><span class="pre">add_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Relational" title="lionagi.protocols._concepts.Relational"><span class="pre">Relational</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.add_node" title="Link to this definition">¶</a></dt>
+<dd><p>Inserts a node into the graph. Raises <code class="xref py py-exc docutils literal notranslate"><span class="pre">RelationError</span></code> if invalid
+or already present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.add_edge">
+<span class="sig-name descname"><span class="pre">add_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge" title="lionagi.protocols.graph.edge.Edge"><span class="pre">Edge</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.add_edge" title="Link to this definition">¶</a></dt>
+<dd><p>Inserts an edge into the graph, linking two existing nodes.
+Raises <code class="xref py py-exc docutils literal notranslate"><span class="pre">RelationError</span></code> if invalid or if referenced nodes
+are not found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.remove_node">
+<span class="sig-name descname"><span class="pre">remove_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.remove_node" title="Link to this definition">¶</a></dt>
+<dd><p>Removes a node and all associated edges from the graph.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.remove_edge">
+<span class="sig-name descname"><span class="pre">remove_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">edge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge" title="lionagi.protocols.graph.edge.Edge"><span class="pre">Edge</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.remove_edge" title="Link to this definition">¶</a></dt>
+<dd><p>Removes a specific edge by object or ID.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.find_node_edge">
+<span class="sig-name descname"><span class="pre">find_node_edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'both'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'in'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'out'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'both'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge" title="lionagi.protocols.graph.edge.Edge"><span class="pre">Edge</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.find_node_edge" title="Link to this definition">¶</a></dt>
+<dd><p>Finds edges connected to the given node in a specified direction.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.get_heads">
+<span class="sig-name descname"><span class="pre">get_heads</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="pile.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><span class="pre">Pile</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#lionagi.protocols.graph.node.Node" title="lionagi.protocols.graph.node.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.get_heads" title="Link to this definition">¶</a></dt>
+<dd><p>Returns all nodes with no incoming edges (i.e., “head” nodes of subgraphs).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.get_predecessors">
+<span class="sig-name descname"><span class="pre">get_predecessors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.graph.node.Node" title="lionagi.protocols.graph.node.Node"><span class="pre">Node</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="pile.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><span class="pre">Pile</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#lionagi.protocols.graph.node.Node" title="lionagi.protocols.graph.node.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.get_predecessors" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves nodes that point to the given node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.get_successors">
+<span class="sig-name descname"><span class="pre">get_successors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.graph.node.Node" title="lionagi.protocols.graph.node.Node"><span class="pre">Node</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="pile.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><span class="pre">Pile</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#lionagi.protocols.graph.node.Node" title="lionagi.protocols.graph.node.Node"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.get_successors" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves nodes that are pointed to by the given node.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.to_networkx">
+<span class="sig-name descname"><span class="pre">to_networkx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.to_networkx" title="Link to this definition">¶</a></dt>
+<dd><p>Converts this graph to a <cite>networkx.DiGraph</cite> object, including node
+and edge properties.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.display">
+<span class="sig-name descname"><span class="pre">display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lion_class'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'label'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.display" title="Link to this definition">¶</a></dt>
+<dd><p>Visualizes the graph using networkx and matplotlib (if installed).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.is_acyclic">
+<span class="sig-name descname"><span class="pre">is_acyclic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.is_acyclic" title="Link to this definition">¶</a></dt>
+<dd><p>Checks whether the graph has any cycles. Returns True if acyclic.</p>
+</dd></dl>
+
+</section>
+<section id="dunder-methods">
+<h3>Dunder Methods<a class="headerlink" href="#dunder-methods" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.graph.graph.Graph.__contains__">
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols.graph.graph.Graph.__contains__" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if a given node or edge is in the graph.</p>
+</dd></dl>
+
+</section>
+<section id="id9">
+<h3>Example<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.graph.node</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.graph.edge</span><span class="w"> </span><span class="kn">import</span> <span class="n">Edge</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.graph.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">Graph</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">()</span>
+<span class="n">node_a</span><span class="p">,</span> <span class="n">node_b</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(),</span> <span class="n">Node</span><span class="p">()</span>
+<span class="n">g</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node_a</span><span class="p">)</span>
+<span class="n">g</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">node_b</span><span class="p">)</span>
+
+<span class="n">e</span> <span class="o">=</span> <span class="n">Edge</span><span class="p">(</span><span class="n">head</span><span class="o">=</span><span class="n">node_a</span><span class="p">,</span> <span class="n">tail</span><span class="o">=</span><span class="n">node_b</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;relation&quot;</span><span class="p">])</span>
+<span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">get_heads</span><span class="p">())</span>  <span class="c1"># node_a is a &quot;head&quot; if no inbound edges</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">is_acyclic</span><span class="p">())</span> <span class="c1"># likely True unless you create a cycle</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
 </section>
 <section id="file-locations">
 <h2>File Locations<a class="headerlink" href="#file-locations" title="Link to this heading">¶</a></h2>
@@ -416,9 +662,44 @@ data validation and serialization.</p>
 <li><a class="reference internal" href="#lionagi.protocols.graph.edge.EdgeCondition"><code class="docutils literal notranslate"><span class="pre">EdgeCondition</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#edge">Edge</a></li>
-<li><a class="reference internal" href="#node">Node</a></li>
-<li><a class="reference internal" href="#graph">Graph</a></li>
+<li><a class="reference internal" href="#edge">Edge</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge"><code class="docutils literal notranslate"><span class="pre">Edge</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.label"><code class="docutils literal notranslate"><span class="pre">Edge.label</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.condition"><code class="docutils literal notranslate"><span class="pre">Edge.condition</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.check_condition"><code class="docutils literal notranslate"><span class="pre">Edge.check_condition()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.update_property"><code class="docutils literal notranslate"><span class="pre">Edge.update_property()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.edge.Edge.update_condition_source"><code class="docutils literal notranslate"><span class="pre">Edge.update_condition_source()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#node">Node</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.graph.node.Node"><code class="docutils literal notranslate"><span class="pre">Node</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.graph.node.Node.adapt_to"><code class="docutils literal notranslate"><span class="pre">Node.adapt_to()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.node.Node.adapt_from"><code class="docutils literal notranslate"><span class="pre">Node.adapt_from()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.node.Node.list_adapters"><code class="docutils literal notranslate"><span class="pre">Node.list_adapters()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#graph">Graph</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph"><code class="docutils literal notranslate"><span class="pre">Graph</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.add_node"><code class="docutils literal notranslate"><span class="pre">Graph.add_node()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.add_edge"><code class="docutils literal notranslate"><span class="pre">Graph.add_edge()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.remove_node"><code class="docutils literal notranslate"><span class="pre">Graph.remove_node()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.remove_edge"><code class="docutils literal notranslate"><span class="pre">Graph.remove_edge()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.find_node_edge"><code class="docutils literal notranslate"><span class="pre">Graph.find_node_edge()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.get_heads"><code class="docutils literal notranslate"><span class="pre">Graph.get_heads()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.get_predecessors"><code class="docutils literal notranslate"><span class="pre">Graph.get_predecessors()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.get_successors"><code class="docutils literal notranslate"><span class="pre">Graph.get_successors()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.to_networkx"><code class="docutils literal notranslate"><span class="pre">Graph.to_networkx()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.display"><code class="docutils literal notranslate"><span class="pre">Graph.display()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.is_acyclic"><code class="docutils literal notranslate"><span class="pre">Graph.is_acyclic()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.graph.graph.Graph.__contains__"><code class="docutils literal notranslate"><span class="pre">Graph.__contains__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#file-locations">File Locations</a></li>
 </ul>
 </li>

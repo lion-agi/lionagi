@@ -296,8 +296,8 @@
 <ul class="simple">
 <li><p>A <a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig" title="lionagi.protocols.generic.log.LogManagerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManagerConfig</span></code></a> class that holds configuration for where and how
 logs are stored (directory, file naming, capacity, etc.).</p></li>
-<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Log</span></code> class, an <strong>immutable</strong> record wrapping a dictionary of data.</p></li>
-<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code> class, which manages collections of <code class="xref py py-class docutils literal notranslate"><span class="pre">Log</span></code> objects,
+<li><p>A <a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><code class="xref py py-class docutils literal notranslate"><span class="pre">Log</span></code></a> class, an <strong>immutable</strong> record wrapping a dictionary of data.</p></li>
+<li><p>A <a class="reference internal" href="#lionagi.protocols.generic.log.LogManager" title="lionagi.protocols.generic.log.LogManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code></a> class, which manages collections of <a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><code class="xref py py-class docutils literal notranslate"><span class="pre">Log</span></code></a> objects,
 handles persistence (CSV/JSON), and enforces capacity-based auto-saving.</p></li>
 </ul>
 </section>
@@ -337,6 +337,18 @@ conditions.</p>
 </section>
 <section id="validation">
 <h3>Validation<a class="headerlink" href="#validation" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManagerConfig._validate_non_negative">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_validate_non_negative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManagerConfig._validate_non_negative" title="Link to this definition">¶</a></dt>
+<dd><p>Private class method that ensures that <code class="docutils literal notranslate"><span class="pre">capacity</span></code> and <code class="docutils literal notranslate"><span class="pre">hash_digits</span></code> are non-negative integers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManagerConfig._ensure_dot_extension">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_ensure_dot_extension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManagerConfig._ensure_dot_extension" title="Link to this definition">¶</a></dt>
+<dd><p>Private class method that ensures the extension starts with a dot and is one of the supported formats.</p>
+</dd></dl>
+
 </section>
 <section id="example">
 <h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
@@ -357,9 +369,179 @@ conditions.</p>
 </section>
 <section id="log">
 <h2>Log<a class="headerlink" href="#log" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.Log">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.log.</span></span><span class="sig-name descname"><span class="pre">Log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Element</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.log.Log" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></p>
+<p>Represents an <strong>immutable</strong> log entry, wrapping a dictionary of content. Once
+created or loaded from a dictionary, its data can no longer be modified. This
+ensures that all logs are preserved in their original state.</p>
+<section id="id2">
+<h3>Attributes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>content<span class="classifier">dict[str, Any]</span></dt><dd><p>The primary content of the log entry, typically an arbitrary dictionary
+of metadata or snapshot data.</p>
+</dd>
+</dl>
+</section>
+<section id="private-attributes">
+<h3>Private Attributes<a class="headerlink" href="#private-attributes" title="Link to this heading">¶</a></h3>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">_immutable</span> <span class="pre">:</span> <span class="pre">bool</span></span></dt>
+<dd><p>Private flag indicating whether this log entry is locked from further changes.</p>
+</dd></dl>
+
+</section>
+<section id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.Log.__setattr__">
+<span class="sig-name descname"><span class="pre">__setattr__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.Log.__setattr__" title="Link to this definition">¶</a></dt>
+<dd><p>Prevents mutation if this log is already marked immutable. Raises
+<code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code> if a change is attempted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.Log.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><span class="pre">Log</span></a></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.Log.from_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><code class="xref py py-class docutils literal notranslate"><span class="pre">Log</span></code></a> from a dictionary. Marks the new log as immutable.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.Log.create">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><span class="pre">Element</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><span class="pre">Log</span></a></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.Log.create" title="Link to this definition">¶</a></dt>
+<dd><p>Constructs a new log from either an <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>
+(using its <code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dict()</span></code> method) or a dictionary. If the resulting content
+is empty, a log entry with an error message is created.</p>
+</dd></dl>
+
+</section>
+<section id="id3">
+<h3>Example<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">Log</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.element</span><span class="w"> </span><span class="kn">import</span> <span class="n">Element</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">UserSession</span><span class="p">(</span><span class="n">Element</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_data</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session_data</span> <span class="o">=</span> <span class="n">session_data</span>
+
+<span class="n">session</span> <span class="o">=</span> <span class="n">UserSession</span><span class="p">({</span><span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="s2">&quot;alice&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;login&quot;</span><span class="p">})</span>
+<span class="n">log_entry</span> <span class="o">=</span> <span class="n">Log</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">log_entry</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
 </section>
 <section id="logmanager">
 <h2>LogManager<a class="headerlink" href="#logmanager" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.log.</span></span><span class="sig-name descname"><span class="pre">LogManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Manager</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Manager" title="lionagi.protocols._concepts.Manager"><code class="xref py py-class docutils literal notranslate"><span class="pre">Manager</span></code></a></p>
+<p>A manager that stores <a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><code class="xref py py-class docutils literal notranslate"><span class="pre">Log</span></code></a> objects in a <a class="reference internal" href="pile.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a>.
+It optionally dumps them to files (CSV/JSON) automatically when certain conditions
+are met (like reaching a capacity limit or application exit).</p>
+<section id="id4">
+<h3>Attributes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logs<span class="classifier">Pile[Log]</span></dt><dd><p>The collection of logs being managed.</p>
+</dd>
+<dt>_config<span class="classifier">LogManagerConfig</span></dt><dd><p>Configuration parameters that control directory, file naming,
+capacity, and auto-save behavior.</p>
+</dd>
+</dl>
+</section>
+<section id="initialization">
+<h3>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig" title="lionagi.protocols.generic.log.LogManagerConfig"><span class="pre">LogManagerConfig</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes a LogManager. If <code class="docutils literal notranslate"><span class="pre">_config</span></code> is not provided, a new
+<a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig" title="lionagi.protocols.generic.log.LogManagerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManagerConfig</span></code></a> is created from additional keyword arguments.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>logs<span class="classifier">Any</span></dt><dd><p>Initial logs, can be a dictionary, list, or existing <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code>.</p>
+</dd>
+<dt>_config<span class="classifier">LogManagerConfig | None</span></dt><dd><p>If None, builds config from remaining kwargs.</p>
+</dd>
+<dt><a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs</dt><dd><p>Additional arguments passed to <a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig" title="lionagi.protocols.generic.log.LogManagerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManagerConfig</span></code></a>.</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h4>
+<p>If <code class="xref py py-attr docutils literal notranslate"><span class="pre">auto_save_on_exit</span></code> is True, a dump is automatically performed
+on interpreter shutdown.</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="id7">
+<h3>Methods<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><span class="pre">Log</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager.log" title="Link to this definition">¶</a></dt>
+<dd><p>Adds a log synchronously. If the capacity is reached, triggers a
+<a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.dump" title="lionagi.protocols.generic.log.LogManager.dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dump()</span></code></a> call automatically.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager.alog">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.generic.log.Log" title="lionagi.protocols.generic.log.Log"><span class="pre">Log</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager.alog" title="Link to this definition">¶</a></dt>
+<dd><p>Asynchronous version of <a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.log" title="lionagi.protocols.generic.log.LogManager.log"><code class="xref py py-meth docutils literal notranslate"><span class="pre">log()</span></code></a>, also checks capacity for auto-dump.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager.dump">
+<span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">persist_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager.dump" title="Link to this definition">¶</a></dt>
+<dd><p>Dumps the logs to a file. If the extension is unsupported, raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.
+Can optionally clear logs from memory afterward.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager.adump">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clear</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">persist_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager.adump" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.dump" title="lionagi.protocols.generic.log.LogManager.dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dump()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager.save_at_exit">
+<span class="sig-name descname"><span class="pre">save_at_exit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager.save_at_exit" title="Link to this definition">¶</a></dt>
+<dd><p>Called at interpreter exit if <code class="xref py py-attr docutils literal notranslate"><span class="pre">LogManagerConfig.auto_save_on_exit</span></code> is True.
+Attempts to dump logs before shutdown.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.log.LogManager.from_config">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig" title="lionagi.protocols.generic.log.LogManagerConfig"><span class="pre">LogManagerConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">logs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager" title="lionagi.protocols.generic.log.LogManager"><span class="pre">LogManager</span></a></span></span><a class="headerlink" href="#lionagi.protocols.generic.log.LogManager.from_config" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a new <code class="docutils literal notranslate"><span class="pre">LogManager</span></code> from a given config object, optionally
+seeded with logs.</p>
+</dd></dl>
+
+</section>
+<section id="id8">
+<h3>Example<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.log</span><span class="w"> </span><span class="kn">import</span> <span class="n">Log</span><span class="p">,</span> <span class="n">LogManager</span><span class="p">,</span> <span class="n">LogManagerConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">LogManagerConfig</span><span class="p">(</span><span class="n">capacity</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+<span class="n">manager</span> <span class="o">=</span> <span class="n">LogManager</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Create logs</span>
+<span class="n">log_entry</span> <span class="o">=</span> <span class="n">Log</span><span class="o">.</span><span class="n">create</span><span class="p">({</span><span class="s2">&quot;event&quot;</span><span class="p">:</span> <span class="s2">&quot;user_signup&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="s2">&quot;bob&quot;</span><span class="p">})</span>
+<span class="n">manager</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">log_entry</span><span class="p">)</span>   <span class="c1"># add log synchronously</span>
+
+<span class="c1"># Dump logs manually</span>
+<span class="n">manager</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
 </section>
 <section id="file-location">
 <h2>File Location<a class="headerlink" href="#file-location" title="Link to this heading">¶</a></h2>
@@ -429,11 +611,35 @@ conditions.</p>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#logmanagerconfig">LogManagerConfig</a><ul>
-<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig"><code class="docutils literal notranslate"><span class="pre">LogManagerConfig</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig"><code class="docutils literal notranslate"><span class="pre">LogManagerConfig</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig._validate_non_negative"><code class="docutils literal notranslate"><span class="pre">LogManagerConfig._validate_non_negative()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManagerConfig._ensure_dot_extension"><code class="docutils literal notranslate"><span class="pre">LogManagerConfig._ensure_dot_extension()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#log">Log</a></li>
-<li><a class="reference internal" href="#logmanager">LogManager</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#log">Log</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.Log"><code class="docutils literal notranslate"><span class="pre">Log</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.Log.__setattr__"><code class="docutils literal notranslate"><span class="pre">Log.__setattr__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.Log.from_dict"><code class="docutils literal notranslate"><span class="pre">Log.from_dict()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.Log.create"><code class="docutils literal notranslate"><span class="pre">Log.create()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#logmanager">LogManager</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager"><code class="docutils literal notranslate"><span class="pre">LogManager</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.__init__"><code class="docutils literal notranslate"><span class="pre">LogManager.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.log"><code class="docutils literal notranslate"><span class="pre">LogManager.log()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.alog"><code class="docutils literal notranslate"><span class="pre">LogManager.alog()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.dump"><code class="docutils literal notranslate"><span class="pre">LogManager.dump()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.adump"><code class="docutils literal notranslate"><span class="pre">LogManager.adump()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.save_at_exit"><code class="docutils literal notranslate"><span class="pre">LogManager.save_at_exit()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.log.LogManager.from_config"><code class="docutils literal notranslate"><span class="pre">LogManager.from_config()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#file-location">File Location</a></li>
 </ul>
 </li>

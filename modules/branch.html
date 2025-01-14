@@ -292,12 +292,12 @@
 <span id="branch-the-orchestrator"></span><span id="lionagi-branch-class"></span><h1>Branch: The Orchestrator<a class="headerlink" href="#module-lionagi.session.branch" title="Link to this heading">¶</a></h1>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code> represents a single “branch” of conversation in LionAGI.
+<p>A <a class="reference internal" href="#lionagi.session.branch.Branch" title="lionagi.session.branch.Branch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code></a> represents a single “branch” of conversation in LionAGI.
 It <strong>manages</strong>:</p>
 <ul class="simple">
-<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code> for storing logs,</p></li>
+<li><p>A <a class="reference internal" href="log.html#lionagi.protocols.generic.log.LogManager" title="lionagi.protocols.generic.log.LogManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManager</span></code></a> for storing logs,</p></li>
 <li><p>A <a class="reference internal" href="log.html#lionagi.protocols.generic.log.LogManagerConfig" title="lionagi.protocols.generic.log.LogManagerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogManagerConfig</span></code></a> (if needed),</p></li>
-<li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code> as the base object,</p></li>
+<li><p>A <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> as the base object,</p></li>
 <li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Communicatable</span></code> mailbox for cross-branch communication,</p></li>
 <li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code> link,</p></li>
 <li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">SenderRecipient</span></code> to identify user or role,</p></li>
@@ -312,6 +312,95 @@ It <strong>manages</strong>:</p>
 </section>
 <section id="branch">
 <h2>Branch<a class="headerlink" href="#branch" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.session.branch.Branch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.session.branch.</span></span><span class="sig-name descname"><span class="pre">Branch</span></span><a class="headerlink" href="#lionagi.session.branch.Branch" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Communicatable</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Relational</span></code></p>
+<p>Manages a conversation ‘branch’ with messages, tools, and iModels.</p>
+<blockquote>
+<div><p>The Branch class serves as a high-level interface or orchestrator that:</p>
+<ul class="simple">
+<li><p>Handles message management (MessageManager)</p></li>
+<li><p>Registers and invokes tools/actions (ActionManager)</p></li>
+<li><p>Manages model instances (iModelManager)</p></li>
+<li><p>Logs activity (LogManager)</p></li>
+<li><p>Communicates via mailboxes (Mailbox)</p></li>
+</ul>
+<p>Key responsibilities:</p>
+<ul class="simple">
+<li><p>Storing and organizing messages, including system instructions, user instructions, and model responses</p></li>
+<li><p>Handling asynchronous or synchronous execution of LLM calls and tool invocations</p></li>
+<li><p>Providing a consistent interface for “operate,” “chat,” “communicate,” “parse,” etc.</p></li>
+</ul>
+<dl class="simple">
+<dt>user<span class="classifier">SenderRecipient, optional</span></dt><dd><p>The user or sender context for this branch</p>
+</dd>
+<dt>name<span class="classifier">str, optional</span></dt><dd><p>A human-readable name for this branch</p>
+</dd>
+<dt>messages<span class="classifier">Pile[RoledMessage], optional</span></dt><dd><p>Initial messages for seeding the MessageManager</p>
+</dd>
+<dt>system<span class="classifier">System | JsonValue, optional</span></dt><dd><p>Optional system-level configuration or message for the LLM</p>
+</dd>
+<dt>system_sender<span class="classifier">SenderRecipient, optional</span></dt><dd><p>Sender to attribute to the system message if it is added</p>
+</dd>
+<dt>chat_model<span class="classifier">iModel | dict, optional</span></dt><dd><p>The primary “chat” iModel for conversation</p>
+</dd>
+<dt>parse_model<span class="classifier">iModel | dict, optional</span></dt><dd><p>The “parse” iModel for structured data parsing</p>
+</dd>
+<dt>imodel<span class="classifier">iModel, optional</span></dt><dd><p>Deprecated. Alias for chat_model</p>
+</dd>
+<dt>tools<span class="classifier">FuncTool | list[FuncTool], optional</span></dt><dd><p>Tools or a list of tools for the ActionManager</p>
+</dd>
+<dt>log_config<span class="classifier">LogManagerConfig | dict, optional</span></dt><dd><p>Configuration dict or object for the LogManager</p>
+</dd>
+<dt>system_datetime<span class="classifier">bool | str, optional</span></dt><dd><p>Whether to include timestamps in system messages</p>
+</dd>
+<dt>system_template<span class="classifier">Template | str, optional</span></dt><dd><p>Optional Jinja2 template for system messages</p>
+</dd>
+<dt>system_template_context<span class="classifier">dict, optional</span></dt><dd><p>Context for rendering the system template</p>
+</dd>
+<dt>logs<span class="classifier">Pile[Log], optional</span></dt><dd><p>Existing logs to seed the LogManager</p>
+</dd>
+<dt><a href="#id2"><span class="problematic" id="id3">**</span></a>kwargs</dt><dd><p>Additional parameters passed to Element parent init</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>user<span class="classifier">SenderRecipient | None</span></dt><dd><p>The user or “owner” of this branch (often tied to a session)</p>
+</dd>
+<dt>name<span class="classifier">str | None</span></dt><dd><p>A human-readable name for this branch</p>
+</dd>
+<dt>mailbox<span class="classifier">Mailbox</span></dt><dd><p>A mailbox for sending and receiving Package objects to/from other branches</p>
+</dd>
+<dt>system<span class="classifier">System | None</span></dt><dd><p>The system message/configuration, if any</p>
+</dd>
+<dt>msgs<span class="classifier">MessageManager</span></dt><dd><p>Returns the associated MessageManager</p>
+</dd>
+<dt>acts<span class="classifier">ActionManager</span></dt><dd><p>Returns the associated ActionManager for tool management</p>
+</dd>
+<dt>mdls<span class="classifier">iModelManager</span></dt><dd><p>Returns the associated iModelManager</p>
+</dd>
+<dt>messages<span class="classifier">Pile[RoledMessage]</span></dt><dd><p>Convenience property to retrieve all messages from MessageManager</p>
+</dd>
+<dt>logs<span class="classifier">Pile[Log]</span></dt><dd><p>Convenience property to retrieve all logs from the LogManager</p>
+</dd>
+<dt>chat_model<span class="classifier">iModel</span></dt><dd><p>The primary “chat” model (iModel) used for conversational LLM calls</p>
+</dd>
+<dt>parse_model<span class="classifier">iModel</span></dt><dd><p>The “parse” model (iModel) used for structured data parsing</p>
+</dd>
+<dt>tools<span class="classifier">dict[str, Tool]</span></dt><dd><p>All registered tools (actions) in the ActionManager</p>
+</dd>
+</dl>
+<p>Common usage:
+1. Instantiate a Branch, optionally providing a system message and some initial tools
+2. Use chat() or communicate() for user queries
+3. If you want structured responses or function calls, use operate()
+4. If you want to parse or validate final text, use parse()
+5. Tools can be registered anytime via acts or with the arguments to the constructor</p>
+<p>Also includes mailbox-based methods like send() and receive() for cross-branch
+or cross-system communication in a multi-agent scenario.</p>
+</div></blockquote>
+</dd></dl>
+
 </section>
 <section id="key-differences-from-a-basic-session">
 <h2>Key Differences from a Basic Session<a class="headerlink" href="#key-differences-from-a-basic-session" title="Link to this heading">¶</a></h2>
@@ -390,7 +479,10 @@ state to a new branch.</p></li>
 <li><a class="reference internal" href="#">Branch: The Orchestrator</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#contents">Contents</a></li>
-<li><a class="reference internal" href="#branch">Branch</a></li>
+<li><a class="reference internal" href="#branch">Branch</a><ul>
+<li><a class="reference internal" href="#lionagi.session.branch.Branch"><code class="docutils literal notranslate"><span class="pre">Branch</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#key-differences-from-a-basic-session">Key Differences from a Basic Session</a></li>
 </ul>
 </li>

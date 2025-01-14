@@ -305,15 +305,685 @@ DataFrame, etc.), and vice versa. Adapters are registered in a global
 </section>
 <section id="adapter-and-registry">
 <h2>Adapter and Registry<a class="headerlink" href="#adapter-and-registry" title="Link to this heading">¶</a></h2>
+<p>The core components of the adapter system are the <code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code> protocol
+and the <code class="xref py py-class docutils literal notranslate"><span class="pre">AdapterRegistry</span></code> class that manages adapter instances.</p>
+<section id="protocol-documentation">
+<h3>Protocol Documentation<a class="headerlink" href="#protocol-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.adapter.Adapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.adapter.</span></span><span class="sig-name descname"><span class="pre">Adapter</span></span><a class="headerlink" href="#lionagi.protocols.adapters.adapter.Adapter" title="Link to this definition">¶</a></dt>
+<dd><dl>
+<dt><strong>Protocol</strong>: A formal interface describing a two-way converter that transforms</dt><dd><p>objects between external representations and internal formats.</p>
+<dl class="simple">
+<dt>obj_key<span class="classifier">str</span></dt><dd><p>A unique key or extension that identifies what format this
+adapter supports (e.g. “.csv”, “json”, “pd_dataframe”)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>from_obj(subj_cls, obj, /, <a href="#id2"><span class="problematic" id="id3">*</span></a>, many, <a href="#id4"><span class="problematic" id="id5">**</span></a>kwargs)</dt><dd><p>Converts a raw external object into a dictionary or list of dictionaries.</p>
+</dd>
+<dt>to_obj(subj, /, <a href="#id6"><span class="problematic" id="id7">*</span></a>, many, <a href="#id8"><span class="problematic" id="id9">**</span></a>kwargs)</dt><dd><p>Converts an internal object into the target format.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="method-documentation">
+<h3>Method Documentation<a class="headerlink" href="#method-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.Adapter.from_obj">
+<span class="sig-prename descclassname"><span class="pre">Adapter.</span></span><span class="sig-name descname"><span class="pre">from_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.Adapter.from_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Converts a raw external object (file contents, JSON string, etc.)
+into a dictionary or list of dictionaries.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>The target class type to convert into</p>
+</dd>
+<dt>obj<span class="classifier">Any</span></dt><dd><p>The raw object to convert from</p>
+</dd>
+<dt>many<span class="classifier">bool</span></dt><dd><p>Whether to expect/return multiple items</p>
+</dd>
+<dt><a href="#id10"><span class="problematic" id="id11">**</span></a>kwargs</dt><dd><p>Additional conversion options</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>dict | list[dict]</dt><dd><p>The converted data in dictionary form</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.Adapter.to_obj">
+<span class="sig-prename descclassname"><span class="pre">Adapter.</span></span><span class="sig-name descname"><span class="pre">to_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.Adapter.to_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Converts an internal object (e.g., a Pydantic-based model)
+into the target format (file, JSON, DataFrame, etc.).</p>
+<section id="id12">
+<h4>Parameters<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">T</span></dt><dd><p>The object to convert</p>
+</dd>
+<dt>many<span class="classifier">bool</span></dt><dd><p>Whether to expect/handle multiple items</p>
+</dd>
+<dt><a href="#id13"><span class="problematic" id="id14">**</span></a>kwargs</dt><dd><p>Additional conversion options</p>
+</dd>
+</dl>
+</section>
+<section id="id15">
+<h4>Returns<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>Any</dt><dd><p>The converted object in the target format</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="registry-documentation">
+<h3>Registry Documentation<a class="headerlink" href="#registry-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.adapter.AdapterRegistry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.adapter.</span></span><span class="sig-name descname"><span class="pre">AdapterRegistry</span></span><a class="headerlink" href="#lionagi.protocols.adapters.adapter.AdapterRegistry" title="Link to this definition">¶</a></dt>
+<dd><dl>
+<dt>A container that maps string/file extensions or object keys to</dt><dd><p>specific adapter implementations.</p>
+<dl class="simple">
+<dt>list_adapters()</dt><dd><p>List all registered adapter keys</p>
+</dd>
+<dt>register(adapter)</dt><dd><p>Register a new adapter class</p>
+</dd>
+<dt>get(obj_key)</dt><dd><p>Get the adapter instance for a key</p>
+</dd>
+<dt>adapt_from(subj_cls, obj, obj_key, <a href="#id16"><span class="problematic" id="id17">**</span></a>kwargs)</dt><dd><p>Convert from external format using the appropriate adapter</p>
+</dd>
+<dt>adapt_to(subj, obj_key, <a href="#id18"><span class="problematic" id="id19">**</span></a>kwargs)</dt><dd><p>Convert to external format using the appropriate adapter</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id20">
+<h3>Method Documentation<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.AdapterRegistry.list_adapters">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdapterRegistry.</span></span><span class="sig-name descname"><span class="pre">list_adapters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.AdapterRegistry.list_adapters" title="Link to this definition">¶</a></dt>
+<dd><p>List all registered adapter keys.</p>
+<section id="id21">
+<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>list[tuple[str | type, …]]</dt><dd><p>List of registered adapter keys</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.AdapterRegistry.register">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdapterRegistry.</span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adapter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.AdapterRegistry.register" title="Link to this definition">¶</a></dt>
+<dd><p>Register a new adapter class.</p>
+<section id="id22">
+<h4>Parameters<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>adapter<span class="classifier">type[Adapter]</span></dt><dd><p>The adapter class to register</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h4>Raises<a class="headerlink" href="#raises" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>AttributeError</dt><dd><p>If adapter is missing required methods</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.AdapterRegistry.get">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdapterRegistry.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.AdapterRegistry.get" title="Link to this definition">¶</a></dt>
+<dd><p>Get the adapter instance for a key.</p>
+<section id="id23">
+<h4>Parameters<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>obj_key<span class="classifier">type | str</span></dt><dd><p>The key or type to look up</p>
+</dd>
+</dl>
+</section>
+<section id="id24">
+<h4>Returns<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>Adapter</dt><dd><p>The registered adapter instance</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.AdapterRegistry.adapt_from">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdapterRegistry.</span></span><span class="sig-name descname"><span class="pre">adapt_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.AdapterRegistry.adapt_from" title="Link to this definition">¶</a></dt>
+<dd><p>Convert from external format using the appropriate adapter.</p>
+<section id="id25">
+<h4>Parameters<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>The target class type</p>
+</dd>
+<dt>obj<span class="classifier">Any</span></dt><dd><p>The object to convert</p>
+</dd>
+<dt>obj_key<span class="classifier">type | str</span></dt><dd><p>The adapter key to use</p>
+</dd>
+<dt><a href="#id26"><span class="problematic" id="id27">**</span></a>kwargs</dt><dd><p>Additional conversion options</p>
+</dd>
+</dl>
+</section>
+<section id="id28">
+<h4>Returns<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>dict | list[dict]</dt><dd><p>The converted data</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.AdapterRegistry.adapt_to">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">AdapterRegistry.</span></span><span class="sig-name descname"><span class="pre">adapt_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.AdapterRegistry.adapt_to" title="Link to this definition">¶</a></dt>
+<dd><p>Convert to external format using the appropriate adapter.</p>
+<section id="id29">
+<h4>Parameters<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">T</span></dt><dd><p>The object to convert</p>
+</dd>
+<dt>obj_key<span class="classifier">type | str</span></dt><dd><p>The adapter key to use</p>
+</dd>
+<dt><a href="#id30"><span class="problematic" id="id31">**</span></a>kwargs</dt><dd><p>Additional conversion options</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h4>Returns<a class="headerlink" href="#id32" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>Any</dt><dd><p>The converted object</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
 </section>
 <section id="json-adapters">
 <h2>JSON Adapters<a class="headerlink" href="#json-adapters" title="Link to this heading">¶</a></h2>
+<p>The JSON adapter module provides two adapter implementations for working with
+JSON data: one for in-memory strings and another for file operations.</p>
+<section id="class-documentation">
+<h3>Class Documentation<a class="headerlink" href="#class-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.json_adapter.JsonAdapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.json_adapter.</span></span><span class="sig-name descname"><span class="pre">JsonAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapters.json_adapter.JsonAdapter" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols.adapters.adapter.Adapter" title="lionagi.protocols.adapters.adapter.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
+<dl>
+<dt>Adapter that converts to/from JSON <strong>strings</strong> in memory.</dt><dd><p>Example usage: taking a Python dictionary and making JSON,
+or parsing JSON string to a dict.</p>
+<dl class="simple">
+<dt>obj_key<span class="classifier">str</span></dt><dd><p>“json” - identifies this adapter for JSON string operations</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>from_obj(subj_cls, obj, /, <a href="#id33"><span class="problematic" id="id34">*</span></a>, many=False, <a href="#id35"><span class="problematic" id="id36">**</span></a>kwargs)</dt><dd><p>Convert a JSON string into a dict or list of dicts</p>
+</dd>
+<dt>to_obj(subj, /, <a href="#id37"><span class="problematic" id="id38">*</span></a>, many=False, <a href="#id39"><span class="problematic" id="id40">**</span></a>kwargs)</dt><dd><p>Convert an object (or collection) to a JSON string</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id41">
+<h3>Method Documentation<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.JsonAdapter.from_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JsonAdapter.</span></span><span class="sig-name descname"><span class="pre">from_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.JsonAdapter.from_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Convert a JSON string into a dict or list of dicts.</p>
+<section id="id42">
+<h4>Parameters<a class="headerlink" href="#id42" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>The target class for context (not always used)</p>
+</dd>
+<dt>obj<span class="classifier">str</span></dt><dd><p>The JSON string</p>
+</dd>
+<dt>many<span class="classifier">bool, optional</span></dt><dd><p>If True, expects a JSON array (returns list[dict]).
+Otherwise returns a single dict or the first element.</p>
+</dd>
+<dt><a href="#id43"><span class="problematic" id="id44">**</span></a>kwargs</dt><dd><p>Extra arguments for json.loads()</p>
+</dd>
+</dl>
+</section>
+<section id="id45">
+<h4>Returns<a class="headerlink" href="#id45" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>dict | list[dict]</dt><dd><p>The loaded JSON data</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.JsonAdapter.to_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JsonAdapter.</span></span><span class="sig-name descname"><span class="pre">to_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.JsonAdapter.to_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Convert an object (or collection) to a JSON string.</p>
+<section id="id46">
+<h4>Parameters<a class="headerlink" href="#id46" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">T</span></dt><dd><p>The object to serialize</p>
+</dd>
+<dt>many<span class="classifier">bool, optional</span></dt><dd><p>If True, convert multiple items to a JSON array</p>
+</dd>
+<dt><a href="#id47"><span class="problematic" id="id48">**</span></a>kwargs</dt><dd><p>Extra arguments for json.dumps()</p>
+</dd>
+</dl>
+</section>
+<section id="id49">
+<h4>Returns<a class="headerlink" href="#id49" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>str</dt><dd><p>The resulting JSON string</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="file-adapter-documentation">
+<h3>File Adapter Documentation<a class="headerlink" href="#file-adapter-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.json_adapter.JsonFileAdapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.json_adapter.</span></span><span class="sig-name descname"><span class="pre">JsonFileAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapters.json_adapter.JsonFileAdapter" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols.adapters.adapter.Adapter" title="lionagi.protocols.adapters.adapter.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
+<dl>
+<dt>Adapter that reads/writes JSON data to/from a file on disk.</dt><dd><p>The file extension key is “.json”.</p>
+<dl class="simple">
+<dt>obj_key<span class="classifier">str</span></dt><dd><p>“.json” - identifies this adapter for JSON file operations</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>from_obj(subj_cls, obj, /, <a href="#id50"><span class="problematic" id="id51">*</span></a>, many=False, <a href="#id52"><span class="problematic" id="id53">**</span></a>kwargs)</dt><dd><p>Read a JSON file from disk and return a dict or list of dicts</p>
+</dd>
+<dt>to_obj(subj, /, <a href="#id54"><span class="problematic" id="id55">*</span></a>, fp, many=False, mode=”w”, <a href="#id56"><span class="problematic" id="id57">**</span></a>kwargs)</dt><dd><p>Write a dict (or list) to a JSON file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id58">
+<h3>Method Documentation<a class="headerlink" href="#id58" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.JsonFileAdapter.from_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JsonFileAdapter.</span></span><span class="sig-name descname"><span class="pre">from_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.JsonFileAdapter.from_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Read a JSON file from disk and return a dict or list of dicts.</p>
+<section id="id59">
+<h4>Parameters<a class="headerlink" href="#id59" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>The target class for context</p>
+</dd>
+<dt>obj<span class="classifier">str | Path</span></dt><dd><p>The JSON file path</p>
+</dd>
+<dt>many<span class="classifier">bool</span></dt><dd><p>If True, expects a list. Otherwise single dict or first element.</p>
+</dd>
+<dt><a href="#id60"><span class="problematic" id="id61">**</span></a>kwargs</dt><dd><p>Extra arguments for json.load()</p>
+</dd>
+</dl>
+</section>
+<section id="id62">
+<h4>Returns<a class="headerlink" href="#id62" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>dict | list[dict]</dt><dd><p>The loaded data from file</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.JsonFileAdapter.to_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">JsonFileAdapter.</span></span><span class="sig-name descname"><span class="pre">to_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.JsonFileAdapter.to_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Write a dict (or list) to a JSON file.</p>
+<section id="id63">
+<h4>Parameters<a class="headerlink" href="#id63" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">T</span></dt><dd><p>The object/collection to serialize</p>
+</dd>
+<dt>fp<span class="classifier">str | Path</span></dt><dd><p>The file path to write</p>
+</dd>
+<dt>many<span class="classifier">bool</span></dt><dd><p>If True, write as a JSON array of multiple items</p>
+</dd>
+<dt>mode<span class="classifier">str, default=”w”</span></dt><dd><p>File open mode</p>
+</dd>
+<dt><a href="#id64"><span class="problematic" id="id65">**</span></a>kwargs</dt><dd><p>Extra arguments for json.dump()</p>
+</dd>
+</dl>
+</section>
+<section id="id66">
+<h4>Returns<a class="headerlink" href="#id66" title="Link to this heading">¶</a></h4>
+<p>None</p>
+</section>
+</dd></dl>
+
+</section>
 </section>
 <section id="csv-and-excel-adapters">
 <h2>CSV and Excel Adapters<a class="headerlink" href="#csv-and-excel-adapters" title="Link to this heading">¶</a></h2>
+<p>The pandas adapters module provides implementations for reading and writing
+CSV and Excel files using pandas DataFrame operations.</p>
+<section id="csv-adapter-documentation">
+<h3>CSV Adapter Documentation<a class="headerlink" href="#csv-adapter-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.pandas_.csv_adapter.CSVFileAdapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.pandas_.csv_adapter.</span></span><span class="sig-name descname"><span class="pre">CSVFileAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapters.pandas_.csv_adapter.CSVFileAdapter" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols.adapters.adapter.Adapter" title="lionagi.protocols.adapters.adapter.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
+<dl>
+<dt>Reads/writes CSV files to a list of dicts or vice versa,</dt><dd><p>using <cite>pandas</cite>.</p>
+<dl class="simple">
+<dt>obj_key<span class="classifier">str</span></dt><dd><p>“.csv” - identifies this adapter for CSV file operations</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>from_obj(subj_cls, obj, /, <a href="#id67"><span class="problematic" id="id68">*</span></a>, many=False, <a href="#id69"><span class="problematic" id="id70">**</span></a>kwargs)</dt><dd><p>Read a CSV file into a list of dictionaries</p>
+</dd>
+<dt>to_obj(subj, /, <a href="#id71"><span class="problematic" id="id72">*</span></a>, fp, many=False, <a href="#id73"><span class="problematic" id="id74">**</span></a>kwargs)</dt><dd><p>Write an object’s data to a CSV file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id75">
+<h3>Method Documentation<a class="headerlink" href="#id75" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.CSVFileAdapter.from_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CSVFileAdapter.</span></span><span class="sig-name descname"><span class="pre">from_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.CSVFileAdapter.from_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Read a CSV file into a list of dictionaries.</p>
+<section id="id76">
+<h4>Parameters<a class="headerlink" href="#id76" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>The target class for context (not used)</p>
+</dd>
+<dt>obj<span class="classifier">str | Path</span></dt><dd><p>The CSV file path</p>
+</dd>
+<dt>many<span class="classifier">bool, optional</span></dt><dd><p>If True, returns list[dict]; if False, returns only
+the first dict</p>
+</dd>
+<dt><a href="#id77"><span class="problematic" id="id78">**</span></a>kwargs</dt><dd><p>Additional options for <cite>pd.read_csv</cite></p>
+</dd>
+</dl>
+</section>
+<section id="id79">
+<h4>Returns<a class="headerlink" href="#id79" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>list[dict]</dt><dd><p>The parsed CSV data as a list of row dictionaries</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.CSVFileAdapter.to_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">CSVFileAdapter.</span></span><span class="sig-name descname"><span class="pre">to_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.CSVFileAdapter.to_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Write an object’s data to a CSV file.</p>
+<section id="id80">
+<h4>Parameters<a class="headerlink" href="#id80" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">T</span></dt><dd><p>The item(s) to convert. If <cite>many=True</cite>, can be a Collective</p>
+</dd>
+<dt>fp<span class="classifier">str | Path</span></dt><dd><p>File path to write the CSV</p>
+</dd>
+<dt>many<span class="classifier">bool</span></dt><dd><p>If True, we assume a collection of items, else a single item</p>
+</dd>
+<dt><a href="#id81"><span class="problematic" id="id82">**</span></a>kwargs</dt><dd><p>Extra params for <cite>DataFrame.to_csv</cite></p>
+</dd>
+</dl>
+</section>
+<section id="id83">
+<h4>Returns<a class="headerlink" href="#id83" title="Link to this heading">¶</a></h4>
+<p>None</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="excel-adapter-documentation">
+<h3>Excel Adapter Documentation<a class="headerlink" href="#excel-adapter-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.pandas_.excel_adapter.ExcelFileAdapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.pandas_.excel_adapter.</span></span><span class="sig-name descname"><span class="pre">ExcelFileAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapters.pandas_.excel_adapter.ExcelFileAdapter" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols.adapters.adapter.Adapter" title="lionagi.protocols.adapters.adapter.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
+<p>Reads/writes Excel (XLSX) files, using <cite>pandas</cite>.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>obj_key<span class="classifier">str</span></dt><dd><p>“.xlsx” - identifies this adapter for Excel file operations</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>from_obj(subj_cls, obj, /, <a href="#id84"><span class="problematic" id="id85">*</span></a>, many=False, <a href="#id86"><span class="problematic" id="id87">**</span></a>kwargs)</dt><dd><p>Read an Excel file into a list of dictionaries</p>
+</dd>
+<dt>to_obj(subj, /, <a href="#id88"><span class="problematic" id="id89">*</span></a>, fp, many=False, <a href="#id90"><span class="problematic" id="id91">**</span></a>kwargs)</dt><dd><p>Write data to an Excel file</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+</section>
+<section id="id92">
+<h3>Method Documentation<a class="headerlink" href="#id92" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.ExcelFileAdapter.from_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ExcelFileAdapter.</span></span><span class="sig-name descname"><span class="pre">from_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.ExcelFileAdapter.from_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Read an Excel file into a list of dictionaries.</p>
+<section id="id93">
+<h4>Parameters<a class="headerlink" href="#id93" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>Target class for context</p>
+</dd>
+<dt>obj<span class="classifier">str | Path</span></dt><dd><p>The Excel file path</p>
+</dd>
+<dt>many<span class="classifier">bool, optional</span></dt><dd><p>If True, returns list[dict]. If False, returns single dict or first element</p>
+</dd>
+<dt><a href="#id94"><span class="problematic" id="id95">**</span></a>kwargs</dt><dd><p>Additional options for <cite>pd.read_excel</cite></p>
+</dd>
+</dl>
+</section>
+<section id="id96">
+<h4>Returns<a class="headerlink" href="#id96" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>list[dict]</dt><dd><p>The parsed Excel data as a list of row dictionaries</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.ExcelFileAdapter.to_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ExcelFileAdapter.</span></span><span class="sig-name descname"><span class="pre">to_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">many</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.ExcelFileAdapter.to_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Write data to an Excel file.</p>
+<section id="id97">
+<h4>Parameters<a class="headerlink" href="#id97" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">T</span></dt><dd><p>The object(s) to convert to Excel rows</p>
+</dd>
+<dt>fp<span class="classifier">str | Path</span></dt><dd><p>Path to save the XLSX file</p>
+</dd>
+<dt>many<span class="classifier">bool</span></dt><dd><p>If True, writes multiple items (e.g., a Collective)</p>
+</dd>
+<dt><a href="#id98"><span class="problematic" id="id99">**</span></a>kwargs</dt><dd><p>Extra parameters for <cite>DataFrame.to_excel</cite></p>
+</dd>
+</dl>
+</section>
+<section id="id100">
+<h4>Returns<a class="headerlink" href="#id100" title="Link to this heading">¶</a></h4>
+<p>None</p>
+</section>
+</dd></dl>
+
+</section>
 </section>
 <section id="pandas-dataframe-and-series-adapters">
 <h2>Pandas DataFrame and Series Adapters<a class="headerlink" href="#pandas-dataframe-and-series-adapters" title="Link to this heading">¶</a></h2>
+<p>The pandas adapters module provides implementations for converting between
+pandas data structures (DataFrame/Series) and Python dictionaries.</p>
+<section id="dataframe-adapter-documentation">
+<h3>DataFrame Adapter Documentation<a class="headerlink" href="#dataframe-adapter-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.pandas_.pd_dataframe_adapter.PandasDataFrameAdapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.pandas_.pd_dataframe_adapter.</span></span><span class="sig-name descname"><span class="pre">PandasDataFrameAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapters.pandas_.pd_dataframe_adapter.PandasDataFrameAdapter" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols.adapters.adapter.Adapter" title="lionagi.protocols.adapters.adapter.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
+<dl>
+<dt>Converts a set of objects to a single <cite>pd.DataFrame</cite>, or</dt><dd><p>a DataFrame to a list of dictionaries. Typically used in memory,
+not for saving to file.</p>
+<dl class="simple">
+<dt>obj_key<span class="classifier">str</span></dt><dd><p>“pd_dataframe” - identifies this adapter for DataFrame operations</p>
+</dd>
+<dt>alias<span class="classifier">tuple</span></dt><dd><p>(“pandas_dataframe”, “pd.DataFrame”, “pd_dataframe”)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>from_obj(subj_cls, obj, /, <a href="#id101"><span class="problematic" id="id102">**</span></a>kwargs)</dt><dd><p>Convert an existing DataFrame into a list of dicts</p>
+</dd>
+<dt>to_obj(subj, /, <a href="#id103"><span class="problematic" id="id104">**</span></a>kwargs)</dt><dd><p>Convert multiple items into a DataFrame</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id105">
+<h3>Method Documentation<a class="headerlink" href="#id105" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.PandasDataFrameAdapter.from_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PandasDataFrameAdapter.</span></span><span class="sig-name descname"><span class="pre">from_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.PandasDataFrameAdapter.from_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Convert an existing DataFrame into a list of dicts.</p>
+<section id="id106">
+<h4>Parameters<a class="headerlink" href="#id106" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>The internal class to which we might parse</p>
+</dd>
+<dt>obj<span class="classifier">pd.DataFrame</span></dt><dd><p>The DataFrame to convert</p>
+</dd>
+<dt><a href="#id107"><span class="problematic" id="id108">**</span></a>kwargs</dt><dd><p>Additional args for DataFrame.to_dict (like <cite>orient</cite>)</p>
+</dd>
+</dl>
+</section>
+<section id="id109">
+<h4>Returns<a class="headerlink" href="#id109" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>list[dict]</dt><dd><p>Each row as a dictionary</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.PandasDataFrameAdapter.to_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PandasDataFrameAdapter.</span></span><span class="sig-name descname"><span class="pre">to_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.PandasDataFrameAdapter.to_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Convert multiple items into a DataFrame, adjusting <cite>created_at</cite> to datetime.</p>
+<section id="id110">
+<h4>Parameters<a class="headerlink" href="#id110" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">list[T]</span></dt><dd><p>The items to convert. Each item must have <cite>to_dict()</cite></p>
+</dd>
+<dt><a href="#id111"><span class="problematic" id="id112">**</span></a>kwargs</dt><dd><p>Additional arguments for <cite>pd.DataFrame(…)</cite></p>
+</dd>
+</dl>
+</section>
+<section id="id113">
+<h4>Returns<a class="headerlink" href="#id113" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>pd.DataFrame</dt><dd><p>The resulting DataFrame</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="series-adapter-documentation">
+<h3>Series Adapter Documentation<a class="headerlink" href="#series-adapter-documentation" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.pandas_.pd_series_adapter.PandasSeriesAdapter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.adapters.pandas_.pd_series_adapter.</span></span><span class="sig-name descname"><span class="pre">PandasSeriesAdapter</span></span><a class="headerlink" href="#lionagi.protocols.adapters.pandas_.pd_series_adapter.PandasSeriesAdapter" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols.adapters.adapter.Adapter" title="lionagi.protocols.adapters.adapter.Adapter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Adapter</span></code></a></p>
+<dl>
+<dt>Converts a single item to a Pandas Series and vice versa.</dt><dd><p>Great for 1-row data or simpler key-value pairs.</p>
+<dl class="simple">
+<dt>obj_key<span class="classifier">str</span></dt><dd><p>“pd_series” - identifies this adapter for Series operations</p>
+</dd>
+<dt>alias<span class="classifier">tuple</span></dt><dd><p>(“pandas_series”, “pd.series”, “pd_series”)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>from_obj(subj_cls, obj, /, <a href="#id114"><span class="problematic" id="id115">**</span></a>kwargs)</dt><dd><p>Convert a Pandas Series into a dictionary</p>
+</dd>
+<dt>to_obj(subj, /, <a href="#id116"><span class="problematic" id="id117">**</span></a>kwargs)</dt><dd><p>Convert a single item to a Series</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="id118">
+<h3>Method Documentation<a class="headerlink" href="#id118" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.PandasSeriesAdapter.from_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PandasSeriesAdapter.</span></span><span class="sig-name descname"><span class="pre">from_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj_cls</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.PandasSeriesAdapter.from_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Convert a Pandas Series into a dictionary.</p>
+<section id="id119">
+<h4>Parameters<a class="headerlink" href="#id119" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj_cls<span class="classifier">type[T]</span></dt><dd><p>Possibly the class we might use to rehydrate the item</p>
+</dd>
+<dt>obj<span class="classifier">pd.Series</span></dt><dd><p>The series to interpret</p>
+</dd>
+<dt><a href="#id120"><span class="problematic" id="id121">**</span></a>kwargs</dt><dd><p>Additional arguments for <cite>Series.to_dict</cite></p>
+</dd>
+</dl>
+</section>
+<section id="id122">
+<h4>Returns<a class="headerlink" href="#id122" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>dict</dt><dd><p>The data from the Series as a dictionary</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.adapters.PandasSeriesAdapter.to_obj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PandasSeriesAdapter.</span></span><span class="sig-name descname"><span class="pre">to_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.adapters.PandasSeriesAdapter.to_obj" title="Link to this definition">¶</a></dt>
+<dd><p>Convert a single item to a Series.</p>
+<section id="id123">
+<h4>Parameters<a class="headerlink" href="#id123" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>subj<span class="classifier">T</span></dt><dd><p>The item, which must have <cite>to_dict()</cite></p>
+</dd>
+<dt><a href="#id124"><span class="problematic" id="id125">**</span></a>kwargs</dt><dd><p>Extra args passed to <cite>pd.Series</cite></p>
+</dd>
+</dl>
+</section>
+<section id="id126">
+<h4>Returns<a class="headerlink" href="#id126" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>pd.Series</dt><dd><p>The resulting Series</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
 </section>
 <section id="example-usage">
 <h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
@@ -410,10 +1080,93 @@ DataFrame, etc.), and vice versa. Adapters are registered in a global
 <li><a class="reference internal" href="#">Adapter System</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#contents">Contents</a></li>
-<li><a class="reference internal" href="#adapter-and-registry">Adapter and Registry</a></li>
-<li><a class="reference internal" href="#json-adapters">JSON Adapters</a></li>
-<li><a class="reference internal" href="#csv-and-excel-adapters">CSV and Excel Adapters</a></li>
-<li><a class="reference internal" href="#pandas-dataframe-and-series-adapters">Pandas DataFrame and Series Adapters</a></li>
+<li><a class="reference internal" href="#adapter-and-registry">Adapter and Registry</a><ul>
+<li><a class="reference internal" href="#protocol-documentation">Protocol Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.adapter.Adapter"><code class="docutils literal notranslate"><span class="pre">Adapter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#method-documentation">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.Adapter.from_obj"><code class="docutils literal notranslate"><span class="pre">Adapter.from_obj()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.Adapter.to_obj"><code class="docutils literal notranslate"><span class="pre">Adapter.to_obj()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#registry-documentation">Registry Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.adapter.AdapterRegistry"><code class="docutils literal notranslate"><span class="pre">AdapterRegistry</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id20">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.AdapterRegistry.list_adapters"><code class="docutils literal notranslate"><span class="pre">AdapterRegistry.list_adapters()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.AdapterRegistry.register"><code class="docutils literal notranslate"><span class="pre">AdapterRegistry.register()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.AdapterRegistry.get"><code class="docutils literal notranslate"><span class="pre">AdapterRegistry.get()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.AdapterRegistry.adapt_from"><code class="docutils literal notranslate"><span class="pre">AdapterRegistry.adapt_from()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.AdapterRegistry.adapt_to"><code class="docutils literal notranslate"><span class="pre">AdapterRegistry.adapt_to()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#json-adapters">JSON Adapters</a><ul>
+<li><a class="reference internal" href="#class-documentation">Class Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.json_adapter.JsonAdapter"><code class="docutils literal notranslate"><span class="pre">JsonAdapter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id41">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.JsonAdapter.from_obj"><code class="docutils literal notranslate"><span class="pre">JsonAdapter.from_obj()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.JsonAdapter.to_obj"><code class="docutils literal notranslate"><span class="pre">JsonAdapter.to_obj()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-adapter-documentation">File Adapter Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.json_adapter.JsonFileAdapter"><code class="docutils literal notranslate"><span class="pre">JsonFileAdapter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id58">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.JsonFileAdapter.from_obj"><code class="docutils literal notranslate"><span class="pre">JsonFileAdapter.from_obj()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.JsonFileAdapter.to_obj"><code class="docutils literal notranslate"><span class="pre">JsonFileAdapter.to_obj()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#csv-and-excel-adapters">CSV and Excel Adapters</a><ul>
+<li><a class="reference internal" href="#csv-adapter-documentation">CSV Adapter Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.pandas_.csv_adapter.CSVFileAdapter"><code class="docutils literal notranslate"><span class="pre">CSVFileAdapter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id75">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.CSVFileAdapter.from_obj"><code class="docutils literal notranslate"><span class="pre">CSVFileAdapter.from_obj()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.CSVFileAdapter.to_obj"><code class="docutils literal notranslate"><span class="pre">CSVFileAdapter.to_obj()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#excel-adapter-documentation">Excel Adapter Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.pandas_.excel_adapter.ExcelFileAdapter"><code class="docutils literal notranslate"><span class="pre">ExcelFileAdapter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id92">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.ExcelFileAdapter.from_obj"><code class="docutils literal notranslate"><span class="pre">ExcelFileAdapter.from_obj()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.ExcelFileAdapter.to_obj"><code class="docutils literal notranslate"><span class="pre">ExcelFileAdapter.to_obj()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pandas-dataframe-and-series-adapters">Pandas DataFrame and Series Adapters</a><ul>
+<li><a class="reference internal" href="#dataframe-adapter-documentation">DataFrame Adapter Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.pandas_.pd_dataframe_adapter.PandasDataFrameAdapter"><code class="docutils literal notranslate"><span class="pre">PandasDataFrameAdapter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id105">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.PandasDataFrameAdapter.from_obj"><code class="docutils literal notranslate"><span class="pre">PandasDataFrameAdapter.from_obj()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.PandasDataFrameAdapter.to_obj"><code class="docutils literal notranslate"><span class="pre">PandasDataFrameAdapter.to_obj()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#series-adapter-documentation">Series Adapter Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.pandas_.pd_series_adapter.PandasSeriesAdapter"><code class="docutils literal notranslate"><span class="pre">PandasSeriesAdapter</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id118">Method Documentation</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.PandasSeriesAdapter.from_obj"><code class="docutils literal notranslate"><span class="pre">PandasSeriesAdapter.from_obj()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.adapters.PandasSeriesAdapter.to_obj"><code class="docutils literal notranslate"><span class="pre">PandasSeriesAdapter.to_obj()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#example-usage">Example Usage</a></li>
 <li><a class="reference internal" href="#file-locations">File Locations</a></li>
 </ul>

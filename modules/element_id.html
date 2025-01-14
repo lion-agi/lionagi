@@ -293,7 +293,7 @@
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
 <p>This module contains classes and functions that handle <strong>UUID-based IDs</strong>,
-simple identity checks, and a foundational <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code> class built on
+simple identity checks, and a foundational <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> class built on
 Pydantic. With these abstractions, other parts of the system can reliably
 create and reference unique objects by ID, track metadata, and manage
 timestamps.</p>
@@ -373,6 +373,62 @@ if the input is invalid.</p>
 </section>
 <section id="element">
 <h2>Element<a class="headerlink" href="#element" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.element.Element">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.element.</span></span><span class="sig-name descname"><span class="pre">Element</span></span><a class="headerlink" href="#lionagi.protocols.generic.element.Element" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code>, <a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Observable" title="lionagi.protocols._concepts.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">lionagi.protocols._concepts.Observable</span></code></a></p>
+<p>A <strong>Pydantic-based</strong> class that provides a <strong>unique ID</strong>, a <strong>creation timestamp</strong>,
+and a flexible metadata dictionary. This forms a foundation for many other
+LionAGI components that need to be both <strong>observable</strong> and <strong>serializable</strong>.</p>
+<section id="id1">
+<h3>Attributes<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>id<span class="classifier">IDType</span></dt><dd><p>A unique identifier (UUIDv4). Defaults to a newly generated one.</p>
+</dd>
+<dt>created_at<span class="classifier">float</span></dt><dd><p>A float-based Unix timestamp. Defaults to current time.</p>
+</dd>
+<dt>metadata<span class="classifier">dict</span></dt><dd><p>A dictionary for storing additional user-defined data.</p>
+</dd>
+</dl>
+</section>
+<section id="id2">
+<h3>Methods<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.element.Element.class_name">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">class_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.element.Element.class_name" title="Link to this definition">¶</a></dt>
+<dd><p>Returns either the class name (e.g., <code class="docutils literal notranslate"><span class="pre">Element</span></code>) or the fully qualified
+path (e.g., <code class="docutils literal notranslate"><span class="pre">lionagi.protocols.generic.element.Element</span></code>) depending
+on the <code class="docutils literal notranslate"><span class="pre">full</span></code> flag.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.element.Element.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.element.Element.to_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Converts this Element into a dictionary, appending the
+<code class="docutils literal notranslate"><span class="pre">&quot;lion_class&quot;</span></code> field to metadata for class identification.
+Fields that are <a class="reference internal" href="utils.html#lionagi.utils.UNDEFINED" title="lionagi.utils.UNDEFINED"><code class="xref py py-data docutils literal notranslate"><span class="pre">lionagi.utils.UNDEFINED</span></code></a> are omitted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.element.Element.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><span class="pre">Element</span></a></span></span><a class="headerlink" href="#lionagi.protocols.generic.element.Element.from_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Creates an Element or Element subclass instance from a dictionary.
+If the dictionary metadata includes a <code class="docutils literal notranslate"><span class="pre">lion_class</span></code> different from
+this class, it attempts a dynamic lookup or import of that subclass.</p>
+</dd></dl>
+
+</section>
+<section id="id3">
+<h3>Notes<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>The Pydantic validators ensure that <code class="docutils literal notranslate"><span class="pre">id</span></code> is always a valid <a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a>
+and <code class="docutils literal notranslate"><span class="pre">created_at</span></code> is a float-based timestamp.</p></li>
+<li><p>Instances of <code class="docutils literal notranslate"><span class="pre">Element</span></code> are hashable and can be used as dictionary keys
+(hashing by their <code class="xref py py-attr docutils literal notranslate"><span class="pre">id</span></code>).</p></li>
+</ul>
+</section>
+</dd></dl>
+
 </section>
 <section id="validate-order">
 <h2>validate_order<a class="headerlink" href="#validate-order" title="Link to this heading">¶</a></h2>
@@ -380,14 +436,14 @@ if the input is invalid.</p>
 <dt class="sig sig-object py" id="lionagi.protocols.generic.element.validate_order">
 <span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.element.</span></span><span class="sig-name descname"><span class="pre">validate_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><span class="pre">IDType</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.generic.element.validate_order" title="Link to this definition">¶</a></dt>
 <dd><p>Validates and flattens an <strong>ordering</strong> structure into a list of
-<a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a> objects. Accepts various input forms—like a single <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>,
+<a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a> objects. Accepts various input forms—like a single <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>,
 a list of items, or a mapping (dictionary) of items—and ensures a consistent
 flat list of IDs.</p>
 <section id="parameters">
 <h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>order<span class="classifier">Any</span></dt><dd><p>A potentially nested structure of items, each item possibly being an
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>, a string, a <code class="xref py py-class docutils literal notranslate"><span class="pre">UUID</span></code>, or an <a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a>.</p>
+<a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>, a string, a <code class="xref py py-class docutils literal notranslate"><span class="pre">UUID</span></code>, or an <a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a>.</p>
 </dd>
 </dl>
 </section>
@@ -408,7 +464,7 @@ types are encountered.</p>
 </section>
 <section id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
-<p>Basic usage with a single <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>:</p>
+<p>Basic usage with a single <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">element</span> <span class="o">=</span> <span class="n">SomeElementSubclass</span><span class="p">()</span>
 <span class="n">order_list</span> <span class="o">=</span> <span class="n">validate_order</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
 <span class="c1"># order_list is now [element.id]</span>
@@ -436,7 +492,7 @@ objects interchangeably.</p>
 <section id="type-parameters">
 <h3>Type Parameters<a class="headerlink" href="#type-parameters" title="Link to this heading">¶</a></h3>
 <dl>
-<dt>E<span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></span></dt><dd><p>Constrains the generic type to elements that inherit from <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>.</p>
+<dt>E<span class="classifier"><a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></span></dt><dd><p>Constrains the generic type to elements that inherit from <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>.</p>
 </dd>
 </dl>
 </section>
@@ -445,7 +501,7 @@ objects interchangeably.</p>
 <dl class="simple">
 <dt>ID<span class="classifier">TypeAlias</span></dt><dd><p>Refers to <a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a>.</p>
 </dd>
-<dt>Item<span class="classifier">TypeAlias</span></dt><dd><p>Can be an instance of <code class="docutils literal notranslate"><span class="pre">E</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code>.</p>
+<dt>Item<span class="classifier">TypeAlias</span></dt><dd><p>Can be an instance of <code class="docutils literal notranslate"><span class="pre">E</span></code> or <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>.</p>
 </dd>
 <dt>Ref<span class="classifier">TypeAlias</span></dt><dd><p>Can be an <a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><code class="xref py py-class docutils literal notranslate"><span class="pre">IDType</span></code></a>, an Element, or a UUID string.</p>
 </dd>
@@ -457,8 +513,8 @@ objects interchangeably.</p>
 </dd>
 </dl>
 </section>
-<section id="id1">
-<h3>Methods<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Methods<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <dl class="py method">
 <dt class="sig sig-object py" id="lionagi.protocols.generic.element.ID.get_id">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">E</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><span class="pre">IDType</span></a></span></span><a class="headerlink" href="#lionagi.protocols.generic.element.ID.get_id" title="Link to this definition">¶</a></dt>
@@ -571,7 +627,15 @@ Returns <code class="docutils literal notranslate"><span class="pre">True</span>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#element">Element</a></li>
+<li><a class="reference internal" href="#element">Element</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.element.Element"><code class="docutils literal notranslate"><span class="pre">Element</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.element.Element.class_name"><code class="docutils literal notranslate"><span class="pre">Element.class_name()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.element.Element.to_dict"><code class="docutils literal notranslate"><span class="pre">Element.to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.element.Element.from_dict"><code class="docutils literal notranslate"><span class="pre">Element.from_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#validate-order">validate_order</a><ul>
 <li><a class="reference internal" href="#lionagi.protocols.generic.element.validate_order"><code class="docutils literal notranslate"><span class="pre">validate_order()</span></code></a></li>
 </ul>

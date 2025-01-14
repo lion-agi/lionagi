@@ -292,7 +292,7 @@
 <span id="pile"></span><span id="lionagi-protocols-generic-pile"></span><h1>Pile<a class="headerlink" href="#module-lionagi.protocols.generic.pile" title="Link to this heading">¶</a></h1>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> class is a <strong>thread-safe</strong>, <strong>async-compatible</strong> collection
+<p>The <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> class is a <strong>thread-safe</strong>, <strong>async-compatible</strong> collection
 of items. It merges the capabilities of an ordered container with concurrency
 locks and optional <strong>type constraints</strong>. Piles are well-suited for multi-threaded
 or async environments, where items must be inserted, retrieved, or removed
@@ -301,18 +301,339 @@ Excel, or DataFrames) for convenient data import/export.</p>
 </section>
 <section id="id1">
 <h2>Pile<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.pile.</span></span><span class="sig-name descname"><span class="pre">Pile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">Element,</span> <span class="pre">Collective[E],</span> <span class="pre">Generic[E]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>, <a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Collective" title="lionagi.protocols._concepts.Collective"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collective</span></code></a></p>
+<p>A <strong>concurrent</strong>, <strong>ordered</strong> collection that manages items along with
+their IDs, preserves insertion order via an internal <code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code>,
+and enforces optional type constraints. A <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> is also
+<strong>async-compatible</strong>, providing methods like <code class="docutils literal notranslate"><span class="pre">asetitem</span></code>, <code class="docutils literal notranslate"><span class="pre">apop</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">aupdate</span></code> for cooperative concurrency.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>collections<span class="classifier">dict[IDType, T]</span></dt><dd><p>A dictionary mapping each item’s unique ID to the actual item.</p>
+</dd>
+<dt>item_type<span class="classifier">set[type[T]] | None</span></dt><dd><p>A set of allowed item types. If None, any <code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code> is allowed.</p>
+</dd>
+<dt>progression<span class="classifier">Progression</span></dt><dd><p>Tracks the <strong>order</strong> of items by their IDs.</p>
+</dd>
+<dt>strict_type<span class="classifier">bool</span></dt><dd><p>If True, items must match exactly one of the <cite>item_type</cite> classes
+(no subclassing allowed). If False, subclasses are also valid.</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Thread safety is provided via an internal lock, used in
+<code class="xref py py-func docutils literal notranslate"><span class="pre">synchronized()</span></code>-decorated methods.</p></li>
+<li><p>Asynchronous methods use an async lock, managed by
+<code class="xref py py-func docutils literal notranslate"><span class="pre">async_synchronized()</span></code>.</p></li>
+</ul>
+</section>
+<section id="initialization">
+<h3>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.ItemSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.RefSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a new <code class="docutils literal notranslate"><span class="pre">Pile</span></code> with optional initial items, item type constraints,
+a custom order, and a strict-type toggle.</p>
+<section id="parameters">
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
+<dl class="simple">
+<dt>collections<span class="classifier">ID.ItemSeq | None</span></dt><dd><p>The initial set of items (could be a list, dict, or
+<a class="reference internal" href="concepts.html#lionagi.protocols._concepts.Collective" title="lionagi.protocols._concepts.Collective"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collective</span></code></a>).</p>
+</dd>
+<dt>item_type<span class="classifier">set[type[T]] | None</span></dt><dd><p>A set of permitted item types. If not provided, any <code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code>
+is allowed.</p>
+</dd>
+<dt>order<span class="classifier">ID.RefSeq | None</span></dt><dd><p>A predetermined ordering or references for the items.</p>
+</dd>
+<dt>strict_type<span class="classifier">bool</span></dt><dd><p>Whether to enforce <strong>exact</strong> type matching for each item
+(subclasses not allowed if True).</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</section>
+<section id="core-methods-synchronous">
+<h3>Core Methods (Synchronous)<a class="headerlink" href="#core-methods-synchronous" title="Link to this heading">¶</a></h3>
+<p>The following synchronous methods are locked with <code class="xref py py-func docutils literal notranslate"><span class="pre">synchronized()</span></code>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.pop">
+<span class="sig-name descname"><span class="pre">pop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.RefSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">D</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">UNDEFINED</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><span class="pre">Pile</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">D</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.pop" title="Link to this definition">¶</a></dt>
+<dd><p>Removes and returns item(s) indexed by <code class="docutils literal notranslate"><span class="pre">key</span></code>. If not found and
+<code class="docutils literal notranslate"><span class="pre">default</span></code> is provided, returns <code class="docutils literal notranslate"><span class="pre">default</span></code> instead of raising an error.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.remove">
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.remove" title="Link to this definition">¶</a></dt>
+<dd><p>Removes a <em>specific item</em> if present. Raises a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if not found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.include">
+<span class="sig-name descname"><span class="pre">include</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.ItemSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.Item</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.include" title="Link to this definition">¶</a></dt>
+<dd><p>Adds item(s) if not already present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.exclude">
+<span class="sig-name descname"><span class="pre">exclude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.ItemSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.Item</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.exclude" title="Link to this definition">¶</a></dt>
+<dd><p>Excludes/removes item(s) if present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.clear" title="Link to this definition">¶</a></dt>
+<dd><p>Clears <strong>all</strong> items from the pile.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.ItemSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.Item</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.update" title="Link to this definition">¶</a></dt>
+<dd><p>Updates the pile with items from another source. Existing items are
+replaced if they match IDs, or newly included if not present.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.insert">
+<span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.insert" title="Link to this definition">¶</a></dt>
+<dd><p>Inserts a single item at the given index.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.append">
+<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">T</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.append" title="Link to this definition">¶</a></dt>
+<dd><p>Appends a single item to the end. (Alias for including one item.)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.RefSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">D</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">UNDEFINED</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><span class="pre">Pile</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">D</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.get" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieves item(s) from the pile, returning <code class="docutils literal notranslate"><span class="pre">default</span></code> if the key is not found
+and a default is given.</p>
+</dd></dl>
+
+</section>
+<section id="additional-synchronous-accessors">
+<h3>Additional Synchronous Accessors<a class="headerlink" href="#additional-synchronous-accessors" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.keys">
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.keys" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a list of item IDs (as strings) in the current order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.values" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the list of items in order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.IDType" title="lionagi.protocols.generic.element.IDType"><span class="pre">IDType</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.items" title="Link to this definition">¶</a></dt>
+<dd><p>Returns (ID, item) pairs in order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.is_empty">
+<span class="sig-name descname"><span class="pre">is_empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.is_empty" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if the pile is empty.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.size" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the number of items in the pile.</p>
+</dd></dl>
+
+</section>
+<section id="overridden-python-dunder-methods">
+<h3>Overridden Python Dunder Methods<a class="headerlink" href="#overridden-python-dunder-methods" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.__len__" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the number of items in the pile (same as <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.size" title="lionagi.protocols.generic.pile.Pile.size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">size()</span></code></a>).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.__iter__">
+<span class="sig-name descname"><span class="pre">__iter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.__iter__" title="Link to this definition">¶</a></dt>
+<dd><p>Iterates over items in the pile according to the internal order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.__contains__">
+<span class="sig-name descname"><span class="pre">__contains__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.RefSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.Ref</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.__contains__" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if an item or ID reference is in the pile.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.__bool__">
+<span class="sig-name descname"><span class="pre">__bool__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.__bool__" title="Link to this definition">¶</a></dt>
+<dd><p>Returns True if the pile is not empty.</p>
+</dd></dl>
+
+</section>
+<section id="async-methods">
+<h3>Async Methods<a class="headerlink" href="#async-methods" title="Link to this heading">¶</a></h3>
+<p>The following methods are decorated with <code class="xref py py-func docutils literal notranslate"><span class="pre">async_synchronized()</span></code>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.asetitem">
+<span class="sig-name descname"><span class="pre">asetitem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.RefSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.ItemSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.Item</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.asetitem" title="Link to this definition">¶</a></dt>
+<dd><p>Async equivalent of <code class="docutils literal notranslate"><span class="pre">__setitem__</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.apop">
+<span class="sig-name descname"><span class="pre">apop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.RefSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">UNDEFINED</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.apop" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.pop" title="lionagi.protocols.generic.pile.Pile.pop"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pop()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.aremove">
+<span class="sig-name descname"><span class="pre">aremove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.RefSeq</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.aremove" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.remove" title="lionagi.protocols.generic.pile.Pile.remove"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.ainclude">
+<span class="sig-name descname"><span class="pre">ainclude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.ItemSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.Item</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.ainclude" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.include" title="lionagi.protocols.generic.pile.Pile.include"><code class="xref py py-meth docutils literal notranslate"><span class="pre">include()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.aexclude">
+<span class="sig-name descname"><span class="pre">aexclude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.Ref</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.RefSeq</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.aexclude" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.exclude" title="lionagi.protocols.generic.pile.Pile.exclude"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exclude()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.aclear">
+<span class="sig-name descname"><span class="pre">aclear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.aclear" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.clear" title="lionagi.protocols.generic.pile.Pile.clear"><code class="xref py py-meth docutils literal notranslate"><span class="pre">clear()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.aupdate">
+<span class="sig-name descname"><span class="pre">aupdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ID.ItemSeq</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ID.Item</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.aupdate" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.update" title="lionagi.protocols.generic.pile.Pile.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.aget">
+<span class="sig-name descname"><span class="pre">aget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">UNDEFINED</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.aget" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.get" title="lionagi.protocols.generic.pile.Pile.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.__aiter__">
+<span class="sig-name descname"><span class="pre">__aiter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">AsyncIterator</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.__aiter__" title="Link to this definition">¶</a></dt>
+<dd><p>Provides an async iterator over the items in the pile.</p>
+</dd></dl>
+
+</section>
+<section id="file-export-import">
+<h3>File Export &amp; Import<a class="headerlink" href="#file-export-import" title="Link to this heading">¶</a></h3>
+<p>Pile supports <strong>adapters</strong> for JSON, CSV, Excel, and Pandas DataFrame format.
+Some key methods:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.to_df">
+<span class="sig-name descname"><span class="pre">to_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pd.DataFrame</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.to_df" title="Link to this definition">¶</a></dt>
+<dd><p>Converts the pile’s data to a pandas DataFrame via the Pandas adapter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.to_csv_file">
+<span class="sig-name descname"><span class="pre">to_csv_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.to_csv_file" title="Link to this definition">¶</a></dt>
+<dd><p>Exports the items to a CSV file using the CSV adapter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.to_json_file">
+<span class="sig-name descname"><span class="pre">to_json_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_or_buf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_pd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.to_json_file" title="Link to this definition">¶</a></dt>
+<dd><p>Saves the pile to a JSON file. By default uses a basic JSON dump,
+but if <code class="docutils literal notranslate"><span class="pre">use_pd</span></code> is True, uses pandas to export.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.adapt_from">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">adapt_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.adapt_from" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a <code class="docutils literal notranslate"><span class="pre">Pile</span></code> from an external source (like a file path,
+DataFrame, or JSON object) by invoking the matching adapter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols.generic.pile.Pile.adapt_to">
+<span class="sig-name descname"><span class="pre">adapt_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.Pile.adapt_to" title="Link to this definition">¶</a></dt>
+<dd><p>Converts this <code class="docutils literal notranslate"><span class="pre">Pile</span></code> to another format (e.g., a DataFrame or JSON)
+via the registered adapters.</p>
+</dd></dl>
+
+</section>
+<section id="operators-for-set-like-behaviors">
+<h3>Operators for Set-Like Behaviors<a class="headerlink" href="#operators-for-set-like-behaviors" title="Link to this heading">¶</a></h3>
+<p>Pile implements some set-inspired methods. For instance:</p>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">__or__,</span> <span class="pre">__ior__</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Union</span> <span class="pre">or</span> <span class="pre">in-place</span> <span class="pre">union</span> <span class="pre">with</span> <span class="pre">another</span> <span class="pre">pile.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">__xor__,</span> <span class="pre">__ixor__</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Symmetric</span> <span class="pre">difference</span> <span class="pre">or</span> <span class="pre">in-place</span> <span class="pre">symmetric</span> <span class="pre">difference.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">__and__,</span> <span class="pre">__iand__</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Intersection</span> <span class="pre">or</span> <span class="pre">in-place</span> <span class="pre">intersection.</span></span></dt>
+<dd></dd></dl>
+
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.pile</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.element</span><span class="w"> </span><span class="kn">import</span> <span class="n">Element</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyItem</span><span class="p">(</span><span class="n">Element</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">Pile</span><span class="p">()</span>
+<span class="n">item1</span><span class="p">,</span> <span class="n">item2</span> <span class="o">=</span> <span class="n">MyItem</span><span class="p">(),</span> <span class="n">MyItem</span><span class="p">()</span>
+<span class="n">p</span><span class="o">.</span><span class="n">include</span><span class="p">(</span><span class="n">item1</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># e.g. &quot;Pile(2)&quot;</span>
+
+<span class="c1"># Export to CSV</span>
+<span class="n">p</span><span class="o">.</span><span class="n">to_csv_file</span><span class="p">(</span><span class="s2">&quot;mypile.csv&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
 </section>
 <section id="id2">
 <h2>pile<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="lionagi.protocols.generic.pile.pile">
-<span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.pile.</span></span><span class="sig-name descname"><span class="pre">pile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pd.DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Pile</span></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.pile" title="Link to this definition">¶</a></dt>
-<dd><p>A <strong>factory</strong> function for creating a <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> with flexible input. It
+<span class="sig-prename descclassname"><span class="pre">lionagi.protocols.generic.pile.</span></span><span class="sig-name descname"><span class="pre">pile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collections</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progression</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pd.DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><span class="pre">Pile</span></a></span></span><a class="headerlink" href="#lionagi.protocols.generic.pile.pile" title="Link to this definition">¶</a></dt>
+<dd><p>A <strong>factory</strong> function for creating a <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> with flexible input. It
 inspects parameters (e.g., a DataFrame or file path) to automatically pick
 the correct adapter if needed. Otherwise, it just instantiates a normal
 <code class="docutils literal notranslate"><span class="pre">Pile</span></code> with the given collections, type, and ordering.</p>
-<section id="parameters">
-<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Parameters<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <dl class="simple">
 <dt>collections<span class="classifier">Any</span></dt><dd><p>Initial items for the pile. Could be a single item, a list/tuple,
 or a dictionary of items.</p>
@@ -339,8 +660,8 @@ If None, no restriction besides inheriting <code class="xref py py-class docutil
 </dd>
 </dl>
 </section>
-<section id="example">
-<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Example<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.protocols.generic.pile</span><span class="w"> </span><span class="kn">import</span> <span class="n">pile</span>
 
 <span class="c1"># Create from a CSV file</span>
@@ -369,7 +690,7 @@ If None, no restriction besides inheriting <code class="xref py py-class docutil
 as an ID.</p></li>
 <li><p>Otherwise returns [value].</p></li>
 </ul>
-<p>Used internally by the <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> for consistent item parsing.</p>
+<p>Used internally by the <a class="reference internal" href="#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> for consistent item parsing.</p>
 </dd></dl>
 
 </section>
@@ -439,7 +760,45 @@ as an ID.</p></li>
             <ul>
 <li><a class="reference internal" href="#">Pile</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
-<li><a class="reference internal" href="#id1">Pile</a></li>
+<li><a class="reference internal" href="#id1">Pile</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile"><code class="docutils literal notranslate"><span class="pre">Pile</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.__init__"><code class="docutils literal notranslate"><span class="pre">Pile.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.pop"><code class="docutils literal notranslate"><span class="pre">Pile.pop()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.remove"><code class="docutils literal notranslate"><span class="pre">Pile.remove()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.include"><code class="docutils literal notranslate"><span class="pre">Pile.include()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.exclude"><code class="docutils literal notranslate"><span class="pre">Pile.exclude()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.clear"><code class="docutils literal notranslate"><span class="pre">Pile.clear()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.update"><code class="docutils literal notranslate"><span class="pre">Pile.update()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.insert"><code class="docutils literal notranslate"><span class="pre">Pile.insert()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.append"><code class="docutils literal notranslate"><span class="pre">Pile.append()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.get"><code class="docutils literal notranslate"><span class="pre">Pile.get()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.keys"><code class="docutils literal notranslate"><span class="pre">Pile.keys()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.values"><code class="docutils literal notranslate"><span class="pre">Pile.values()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.items"><code class="docutils literal notranslate"><span class="pre">Pile.items()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.is_empty"><code class="docutils literal notranslate"><span class="pre">Pile.is_empty()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.size"><code class="docutils literal notranslate"><span class="pre">Pile.size()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.__len__"><code class="docutils literal notranslate"><span class="pre">Pile.__len__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.__iter__"><code class="docutils literal notranslate"><span class="pre">Pile.__iter__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.__contains__"><code class="docutils literal notranslate"><span class="pre">Pile.__contains__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.__bool__"><code class="docutils literal notranslate"><span class="pre">Pile.__bool__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.asetitem"><code class="docutils literal notranslate"><span class="pre">Pile.asetitem()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.apop"><code class="docutils literal notranslate"><span class="pre">Pile.apop()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.aremove"><code class="docutils literal notranslate"><span class="pre">Pile.aremove()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.ainclude"><code class="docutils literal notranslate"><span class="pre">Pile.ainclude()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.aexclude"><code class="docutils literal notranslate"><span class="pre">Pile.aexclude()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.aclear"><code class="docutils literal notranslate"><span class="pre">Pile.aclear()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.aupdate"><code class="docutils literal notranslate"><span class="pre">Pile.aupdate()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.aget"><code class="docutils literal notranslate"><span class="pre">Pile.aget()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.__aiter__"><code class="docutils literal notranslate"><span class="pre">Pile.__aiter__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.to_df"><code class="docutils literal notranslate"><span class="pre">Pile.to_df()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.to_csv_file"><code class="docutils literal notranslate"><span class="pre">Pile.to_csv_file()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.to_json_file"><code class="docutils literal notranslate"><span class="pre">Pile.to_json_file()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.adapt_from"><code class="docutils literal notranslate"><span class="pre">Pile.adapt_from()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.generic.pile.Pile.adapt_to"><code class="docutils literal notranslate"><span class="pre">Pile.adapt_to()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#id2">pile</a><ul>
 <li><a class="reference internal" href="#lionagi.protocols.generic.pile.pile"><code class="docutils literal notranslate"><span class="pre">pile()</span></code></a></li>
 </ul>

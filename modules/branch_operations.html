@@ -290,53 +290,734 @@
         <article role="main" id="furo-main-content">
           <section id="branch-level-operations">
 <span id="lionagi-branch-operations"></span><h1>Branch-Level Operations<a class="headerlink" href="#branch-level-operations" title="Link to this heading">¶</a></h1>
-<p>These operations define how a <code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code>
-actually <strong>does</strong> things—ranging from direct LLM calls (<cite>chat</cite>, <cite>communicate</cite>)
-to advanced flows (<cite>operate</cite>, <cite>instruct</cite>, <cite>interpret</cite>, <cite>ReAct</cite>, etc.). Each
+<p>These operations define how a <a class="reference internal" href="branch.html#lionagi.session.branch.Branch" title="lionagi.session.branch.Branch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code></a>
+actually <strong>does</strong> things—ranging from direct LLM calls (<cite>chat</cite>, <cite>interpret</cite>, <cite>communicate</cite>)
+to advanced flows (<cite>operate</cite>, <cite>instruct</cite>, <cite>ReAct</cite>, etc.). Each
 is implemented as a separate function and exposed as an <strong>asynchronous</strong>
 method on <code class="docutils literal notranslate"><span class="pre">Branch</span></code>.</p>
 <p>For convenience, they can be categorized as:</p>
 <ul class="simple">
-<li><p><strong>Simple conversation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">chat()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">communicate()</span></code></p></li>
-<li><p><strong>Structured conversation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">operate()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">instruct()</span></code></p></li>
+<li><p><strong>Simple conversation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">chat()</span></code></p></li>
+<li><p><strong>Structured in-memory conversation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">communicate()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">operate()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">instruct()</span></code></p></li>
 <li><p><strong>Short or specialized</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">interpret()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">translate()</span></code></p></li>
-<li><p><strong>Action invocation</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">_act()</span></code>, <code class="xref py py-func docutils literal notranslate"><span class="pre">act()</span></code></p></li>
+<li><p><strong>Action invocation</strong>: <a class="reference internal" href="#id0" title="_act"><code class="xref py py-func docutils literal notranslate"><span class="pre">_act()</span></code></a>, <code class="xref py py-func docutils literal notranslate"><span class="pre">act()</span></code></p></li>
 <li><p><strong>Selection</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">select()</span></code></p></li>
-<li><p><strong>ReAct</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">ReAct()</span></code> for multi-step reasoning</p></li>
+<li><p><strong>in-memory ReAct</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">ReAct()</span></code> for multi-step reasoning</p></li>
 <li><p><strong>Parsing</strong>: <code class="xref py py-func docutils literal notranslate"><span class="pre">parse()</span></code> to convert text to a structured model</p></li>
 </ul>
 <section id="act">
 <h2><code class="docutils literal notranslate"><span class="pre">_act</span></code><a class="headerlink" href="#act" title="Link to this heading">¶</a></h2>
+<p>A <strong>low-level</strong> method invoked by <code class="xref py py-meth docutils literal notranslate"><span class="pre">branch.act()</span></code>. It matches an
+action request (function + arguments) to the <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code>
+and executes it, returning an <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionResponseModel</span></code>. Typically
+you won’t call <code class="docutils literal notranslate"><span class="pre">_act</span></code> directly; use <code class="xref py py-meth docutils literal notranslate"><span class="pre">act()</span></code> instead.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">_act</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">branch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd><p>Internal method to invoke a tool (action) asynchronously.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>branch<span class="classifier">Branch</span></dt><dd><p>The branch instance managing the action</p>
+</dd>
+<dt>action_request<span class="classifier">ActionRequest | BaseModel | dict</span></dt><dd><p>Must contain <cite>function</cite> and <cite>arguments</cite></p>
+</dd>
+<dt>suppress_errors<span class="classifier">bool, optional</span></dt><dd><p>If True, errors are logged instead of raised</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>ActionResponseModel</dt><dd><p>Result of the tool invocation or None if suppressed</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<p>This function:
+- Extracts function name and arguments from the request
+- Invokes the function through the branch’s ActionManager
+- Logs the execution
+- Updates the branch’s message history
+- Returns a standardized ActionResponse</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="id1">
 <h2><code class="docutils literal notranslate"><span class="pre">act</span></code><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<p>The <em>public</em> interface for invoking tools. Accepts a single or list
+of action requests. Optionally retries, logs errors, or merges results.
+This is best used for <strong>explicit function calls</strong> triggered from user
+instructions or system logic.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.act">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">act</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sanitize_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backoff_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">UNDEFINED</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_timing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throttle_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten_tuple_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.act" title="Link to this definition">¶</a></dt>
+<dd><p>Public, potentially batched, asynchronous interface to run one or multiple action requests.</p>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>action_request<span class="classifier">list | ActionRequest | BaseModel | dict</span></dt><dd><p>A single or list of action requests, each requiring <cite>function</cite> and <cite>arguments</cite></p>
+</dd>
+<dt>suppress_errors<span class="classifier">bool, default=True</span></dt><dd><p>If True, log errors instead of raising exceptions</p>
+</dd>
+<dt>sanitize_input<span class="classifier">bool, default=False</span></dt><dd><p>Reserved. Potentially sanitize the action arguments</p>
+</dd>
+<dt>unique_input<span class="classifier">bool, default=False</span></dt><dd><p>Reserved. Filter out duplicate requests</p>
+</dd>
+<dt>num_retries<span class="classifier">int, default=0</span></dt><dd><p>Number of times to retry on failure</p>
+</dd>
+<dt>initial_delay<span class="classifier">float, default=0</span></dt><dd><p>Delay before first attempt (seconds)</p>
+</dd>
+<dt>retry_delay<span class="classifier">float, default=0</span></dt><dd><p>Base delay between retries</p>
+</dd>
+<dt>backoff_factor<span class="classifier">float, default=1</span></dt><dd><p>Multiplier for the retry_delay after each attempt</p>
+</dd>
+<dt>retry_default<span class="classifier">Any, default=UNDEFINED</span></dt><dd><p>Fallback value if all retries fail (if suppressing errors)</p>
+</dd>
+<dt>retry_timeout<span class="classifier">float | None, default=None</span></dt><dd><p>Overall timeout for all attempts (None = no limit)</p>
+</dd>
+<dt>retry_timing<span class="classifier">bool, default=False</span></dt><dd><p>If True, track time used for retries</p>
+</dd>
+<dt>max_concurrent<span class="classifier">int | None, default=None</span></dt><dd><p>Maximum concurrent tasks (if batching)</p>
+</dd>
+<dt>throttle_period<span class="classifier">float | None, default=None</span></dt><dd><p>Minimum spacing (in seconds) between requests</p>
+</dd>
+<dt>flatten<span class="classifier">bool, default=True</span></dt><dd><p>If a list of results is returned, flatten them if possible</p>
+</dd>
+<dt>dropna<span class="classifier">bool, default=True</span></dt><dd><p>Remove None or invalid results from final output if True</p>
+</dd>
+<dt>unique_output<span class="classifier">bool, default=True</span></dt><dd><p>Only return unique results if True</p>
+</dd>
+<dt>flatten_tuple_set<span class="classifier">bool, default=False</span></dt><dd><p>Flatten nested tuples in results if True</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Any</dt><dd><p>The result or results from the invoked tool(s)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
 </section>
 <section id="chat">
 <h2><code class="docutils literal notranslate"><span class="pre">chat</span></code><a class="headerlink" href="#chat" title="Link to this heading">¶</a></h2>
+<p>The fundamental LLM-based conversation method. Combines existing
+messages with a new instruction (and optional guidance/context)
+into a single prompt, sends it to the chat model, and returns
+the final <code class="xref py py-class docutils literal notranslate"><span class="pre">AssistantResponse</span></code>. It can also produce an
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code> if you set certain flags.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.chat">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">chat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instruction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guidance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imodel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tool_schemas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain_content</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_ins_res_message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.chat" title="Link to this definition">¶</a></dt>
+<dd><p>Invokes the chat model with the current conversation history. This method does not
+automatically add messages to the branch. It is typically used for orchestrating.</p>
+<section id="id4">
+<h3>Parameters<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>instruction<span class="classifier">Any, optional</span></dt><dd><p>Main user instruction text or structured data</p>
+</dd>
+<dt>guidance<span class="classifier">Any, optional</span></dt><dd><p>Additional system or user guidance text</p>
+</dd>
+<dt>context<span class="classifier">Any, optional</span></dt><dd><p>Context data to pass to the model</p>
+</dd>
+<dt>sender<span class="classifier">Any, optional</span></dt><dd><p>The user or entity sending this message (defaults to Branch.user)</p>
+</dd>
+<dt>recipient<span class="classifier">Any, optional</span></dt><dd><p>The recipient of this message (defaults to self.id)</p>
+</dd>
+<dt>request_fields<span class="classifier">Any, optional</span></dt><dd><p>Partial field-level validation reference</p>
+</dd>
+<dt>response_format<span class="classifier">type[BaseModel], optional</span></dt><dd><p>A Pydantic model type for structured model responses</p>
+</dd>
+<dt>progression<span class="classifier">Any, optional</span></dt><dd><p>Custom ordering of messages in the conversation</p>
+</dd>
+<dt>imodel<span class="classifier">iModel, optional</span></dt><dd><p>An override for the chat model to use</p>
+</dd>
+<dt>tool_schemas<span class="classifier">Any, optional</span></dt><dd><p>Additional schemas for tool invocation in function-calling</p>
+</dd>
+<dt>images<span class="classifier">list, optional</span></dt><dd><p>Optional images relevant to the model’s context</p>
+</dd>
+<dt>image_detail<span class="classifier">Literal[“low”, “high”, “auto”], optional</span></dt><dd><p>Level of detail for image-based context</p>
+</dd>
+<dt>plain_content<span class="classifier">str, optional</span></dt><dd><p>Plain text content, will override any other content</p>
+</dd>
+<dt>return_ins_res_message<span class="classifier">bool, default=False</span></dt><dd><p>If True, returns both Instruction and AssistantResponse objects</p>
+</dd>
+<dt><a href="#id5"><span class="problematic" id="id6">**</span></a>kwargs</dt><dd><p>Additional parameters for the LLM invocation</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Returns<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>tuple[Instruction, AssistantResponse] | str</dt><dd><p>If return_ins_res_message=True, returns (Instruction, AssistantResponse)
+Otherwise returns just the response content as a string</p>
+</dd>
+</dl>
+</section>
+<section id="id8">
+<h3>Notes<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<p>High-level flow:
+1. Construct a sequence of messages from the stored progression
+2. Integrate any pending action responses into the context
+3. Invoke the chat model with the combined messages
+4. Capture and return the final response</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="communicate">
 <h2><code class="docutils literal notranslate"><span class="pre">communicate</span></code><a class="headerlink" href="#communicate" title="Link to this heading">¶</a></h2>
+<p>Similar to <code class="xref py py-meth docutils literal notranslate"><span class="pre">chat()</span></code>, but typically used for simpler calls
+that automatically add the user query and model response to
+the conversation. It also supports optional validation into
+a Pydantic model or partial “request_fields” extraction.
+If you do not need advanced flows like action calls,
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">communicate()</span></code> is a good, straightforward choice.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.communicate">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">communicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instruction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guidance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plain_content</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imodel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_parse_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuzzy_match_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clear_messages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operative_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.communicate" title="Link to this definition">¶</a></dt>
+<dd><p>A simpler orchestration than <cite>operate()</cite>, typically without tool invocation. Messages are
+automatically added to the conversation.</p>
+<section id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>instruction<span class="classifier">Instruction | dict, optional</span></dt><dd><p>The user’s main query or data</p>
+</dd>
+<dt>guidance<span class="classifier">Any, optional</span></dt><dd><p>Additional instructions or context for the LLM</p>
+</dd>
+<dt>context<span class="classifier">Any, optional</span></dt><dd><p>Extra data or context</p>
+</dd>
+<dt>plain_content<span class="classifier">str, optional</span></dt><dd><p>Plain text content appended to the instruction</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient, optional</span></dt><dd><p>Sender ID (defaults to Branch.user)</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient, optional</span></dt><dd><p>Recipient ID (defaults to self.id)</p>
+</dd>
+<dt>progression<span class="classifier">ID.IDSeq, optional</span></dt><dd><p>Custom ordering of messages</p>
+</dd>
+<dt>request_model<span class="classifier">type[BaseModel] | BaseModel | None, optional</span></dt><dd><p>Model for validating or structuring the LLM’s response</p>
+</dd>
+<dt>response_format<span class="classifier">type[BaseModel], optional</span></dt><dd><p>Alias for request_model. If both are provided, raises ValueError</p>
+</dd>
+<dt>request_fields<span class="classifier">dict | list[str], optional</span></dt><dd><p>If you only need certain fields from the LLM’s response</p>
+</dd>
+<dt>imodel<span class="classifier">iModel, optional</span></dt><dd><p>Deprecated alias for chat_model</p>
+</dd>
+<dt>chat_model<span class="classifier">iModel, optional</span></dt><dd><p>An alternative to the default chat model</p>
+</dd>
+<dt>parse_model<span class="classifier">iModel, optional</span></dt><dd><p>If parsing is needed, you can override the default parse model</p>
+</dd>
+<dt>skip_validation<span class="classifier">bool, optional</span></dt><dd><p>If True, returns the raw response string unvalidated</p>
+</dd>
+<dt>images<span class="classifier">list, optional</span></dt><dd><p>Any relevant images</p>
+</dd>
+<dt>image_detail<span class="classifier">Literal[“low”, “high”, “auto”], default=”auto”</span></dt><dd><p>Image detail level (if used)</p>
+</dd>
+<dt>num_parse_retries<span class="classifier">int, default=3</span></dt><dd><p>Maximum parsing retries (capped at 5)</p>
+</dd>
+<dt>fuzzy_match_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Additional settings for fuzzy field matching (if used)</p>
+</dd>
+<dt>clear_messages<span class="classifier">bool, optional</span></dt><dd><p>Whether to clear stored messages before sending</p>
+</dd>
+<dt>operative_model<span class="classifier">type[BaseModel], optional</span></dt><dd><p>Deprecated, alias for response_format</p>
+</dd>
+<dt><a href="#id10"><span class="problematic" id="id11">**</span></a>kwargs</dt><dd><p>Additional arguments for the underlying LLM call</p>
+</dd>
+</dl>
+</section>
+<section id="id12">
+<h3>Returns<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Any</dt><dd><ul class="simple">
+<li><p>Raw string (if skip_validation=True)</p></li>
+<li><p>A validated Pydantic model</p></li>
+<li><p>A dict of the requested fields</p></li>
+<li><p>or None if parsing fails and handle_validation=’return_none’</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id13">
+<h3>Notes<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
+<p>Flow:
+- Sends an instruction (or conversation) to the chat model
+- Optionally parses the response into a structured model or fields
+- Returns either the raw string, the parsed model, or a dict of fields</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="operate">
 <h2><code class="docutils literal notranslate"><span class="pre">operate</span></code><a class="headerlink" href="#operate" title="Link to this heading">¶</a></h2>
+<p>A <strong>robust</strong> conversation operation that merges user instructions
+with an internal “Operative” object for structured input and output.
+It can also automatically detect requested tool calls and run them,
+then re-check or finalize the LLM output. Often used in more
+advanced scenarios where you want strong parsing or multiple
+sub-steps in the final result.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.operate">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">operate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instruct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instruction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guidance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imodel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">invoke_actions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tool_schemas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_detail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parse_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_operative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_param_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_param_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handle_validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'return_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operative_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.operate" title="Link to this definition">¶</a></dt>
+<dd><p>Orchestrates an “operate” flow with optional tool invocation and structured response validation.
+Messages are automatically added to the conversation.</p>
+<section id="id14">
+<h3>Parameters<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>instruct<span class="classifier">Instruct, optional</span></dt><dd><p>Contains the instruction, guidance, context, etc.</p>
+</dd>
+<dt>instruction<span class="classifier">Instruction | JsonValue, optional</span></dt><dd><p>The main user instruction or content for the LLM</p>
+</dd>
+<dt>guidance<span class="classifier">JsonValue, optional</span></dt><dd><p>Additional system or user instructions</p>
+</dd>
+<dt>context<span class="classifier">JsonValue, optional</span></dt><dd><p>Extra context data</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient, optional</span></dt><dd><p>The sender ID for newly added messages</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient, optional</span></dt><dd><p>The recipient ID for newly added messages</p>
+</dd>
+<dt>progression<span class="classifier">Progression, optional</span></dt><dd><p>Custom ordering of conversation messages</p>
+</dd>
+<dt>imodel<span class="classifier">iModel, deprecated</span></dt><dd><p>Alias of chat_model</p>
+</dd>
+<dt>chat_model<span class="classifier">iModel, optional</span></dt><dd><p>The LLM used for the main chat operation</p>
+</dd>
+<dt>invoke_actions<span class="classifier">bool, default=True</span></dt><dd><p>If True, executes any requested tools found in the LLM’s response</p>
+</dd>
+<dt>tool_schemas<span class="classifier">list[dict], optional</span></dt><dd><p>Additional schema definitions for tool-based function-calling</p>
+</dd>
+<dt>images<span class="classifier">list, optional</span></dt><dd><p>Optional images appended to the LLM context</p>
+</dd>
+<dt>image_detail<span class="classifier">Literal[“low”, “high”, “auto”], optional</span></dt><dd><p>The level of image detail, if relevant</p>
+</dd>
+<dt>parse_model<span class="classifier">iModel, optional</span></dt><dd><p>Model used for deeper or specialized parsing</p>
+</dd>
+<dt>skip_validation<span class="classifier">bool, default=False</span></dt><dd><p>If True, bypasses final validation and returns raw text</p>
+</dd>
+<dt>tools<span class="classifier">ToolRef, optional</span></dt><dd><p>Tools to be registered or made available if invoke_actions is True</p>
+</dd>
+<dt>operative<span class="classifier">Operative, optional</span></dt><dd><p>If provided, reuses an existing operative’s config</p>
+</dd>
+<dt>response_format<span class="classifier">type[BaseModel], optional</span></dt><dd><p>Expected Pydantic model for the final response</p>
+</dd>
+<dt>return_operative<span class="classifier">bool, default=False</span></dt><dd><p>If True, returns the entire Operative object after processing</p>
+</dd>
+<dt>actions<span class="classifier">bool, default=False</span></dt><dd><p>If True, signals that function-calling is expected</p>
+</dd>
+<dt>reason<span class="classifier">bool, default=False</span></dt><dd><p>If True, signals that the LLM should provide chain-of-thought</p>
+</dd>
+<dt>action_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Additional parameters for the branch.act() call</p>
+</dd>
+<dt>field_models<span class="classifier">list[FieldModel], optional</span></dt><dd><p>Field-level definitions or overrides for the model schema</p>
+</dd>
+<dt>exclude_fields<span class="classifier">list | dict | None, optional</span></dt><dd><p>Which fields to exclude from final validation</p>
+</dd>
+<dt>request_params<span class="classifier">ModelParams, optional</span></dt><dd><p>Extra config for building the request model</p>
+</dd>
+<dt>request_param_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Additional kwargs for ModelParams constructor</p>
+</dd>
+<dt>response_params<span class="classifier">ModelParams, optional</span></dt><dd><p>Config for building the response model after actions</p>
+</dd>
+<dt>response_param_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Additional kwargs for response ModelParams</p>
+</dd>
+<dt>handle_validation<span class="classifier">Literal[“raise”, “return_value”, “return_none”], default=”return_value”</span></dt><dd><p>How to handle parsing failures</p>
+</dd>
+<dt>operative_model<span class="classifier">type[BaseModel], deprecated</span></dt><dd><p>Alias for response_format</p>
+</dd>
+<dt>request_model<span class="classifier">type[BaseModel], optional</span></dt><dd><p>Another alias for response_format</p>
+</dd>
+<dt><a href="#id15"><span class="problematic" id="id16">**</span></a>kwargs</dt><dd><p>Additional keyword arguments passed to branch.chat()</p>
+</dd>
+</dl>
+</section>
+<section id="id17">
+<h3>Returns<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>list | BaseModel | None | dict | str</dt><dd><ul class="simple">
+<li><p>The parsed or raw response from the LLM</p></li>
+<li><p>None if validation fails and handle_validation=’return_none’</p></li>
+<li><p>or the entire Operative object if return_operative=True</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><ul class="simple">
+<li><p>If both operative_model and response_format/request_model are given</p></li>
+<li><p>If the LLM’s response cannot be parsed and handle_validation=’raise’</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Notes<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h3>
+<p>Workflow:
+1. Builds or updates an Operative object to specify how the LLM should respond
+2. Sends an instruction (instruct) or direct instruction text to branch.chat()
+3. Optionally validates/parses the result into a model or dictionary
+4. If invoke_actions=True, any requested tool calls are automatically invoked
+5. Returns either the final structure, raw response, or an updated Operative</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="parse">
 <h2><code class="docutils literal notranslate"><span class="pre">parse</span></code><a class="headerlink" href="#parse" title="Link to this heading">¶</a></h2>
+<p>A dedicated method for parsing raw text into a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code> if you do not want to incorporate
+it in the main conversation flow. Supports fuzzy matching,
+custom field handling, etc.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.parse">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">parse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handle_validation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'return_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operative</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_algo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'jaro_winkler'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuzzy_match</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handle_unmatched</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'force'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress_conversion_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.parse" title="Link to this definition">¶</a></dt>
+<dd><p>Attempts to parse text into a structured Pydantic model using parse model logic.
+If fuzzy matching is enabled, tries to map partial or uncertain keys to the known
+fields of the model. Retries are performed if initial parsing fails.</p>
+<section id="id19">
+<h3>Parameters<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>text<span class="classifier">str</span></dt><dd><p>The raw text to parse</p>
+</dd>
+<dt>handle_validation<span class="classifier">Literal[“raise”, “return_value”, “return_none”], default=”return_value”</span></dt><dd><p>What to do if parsing fails</p>
+</dd>
+<dt>max_retries<span class="classifier">int, default=3</span></dt><dd><p>Number of times to retry parsing on failure</p>
+</dd>
+<dt>request_type<span class="classifier">type[BaseModel], optional</span></dt><dd><p>The Pydantic model to parse into</p>
+</dd>
+<dt>operative<span class="classifier">Operative, optional</span></dt><dd><p>An Operative object with known request model and settings</p>
+</dd>
+<dt>similarity_algo<span class="classifier">str, default=”jaro_winkler”</span></dt><dd><p>Algorithm name for fuzzy field matching</p>
+</dd>
+<dt>similarity_threshold<span class="classifier">float, default=0.85</span></dt><dd><p>Threshold for matching (0.0 - 1.0)</p>
+</dd>
+<dt>fuzzy_match<span class="classifier">bool, default=True</span></dt><dd><p>Whether to attempt fuzzy matching for unmatched fields</p>
+</dd>
+<dt>handle_unmatched<span class="classifier">Literal[“ignore”, “raise”, “remove”, “fill”, “force”], default=”force”</span></dt><dd><p>Policy for unrecognized fields</p>
+</dd>
+<dt>fill_value<span class="classifier">Any, optional</span></dt><dd><p>Default placeholder for missing fields (if fill is used)</p>
+</dd>
+<dt>fill_mapping<span class="classifier">dict[str, Any], optional</span></dt><dd><p>A mapping of specific fields to fill values</p>
+</dd>
+<dt>strict<span class="classifier">bool, default=False</span></dt><dd><p>If True, raises errors on ambiguous fields or data types</p>
+</dd>
+<dt>suppress_conversion_errors<span class="classifier">bool, default=False</span></dt><dd><p>If True, logs or ignores conversion errors instead of raising</p>
+</dd>
+<dt>response_format<span class="classifier">type[BaseModel], optional</span></dt><dd><p>Alternative to request_type for specifying model format</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h3>Returns<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>BaseModel | dict | str | None</dt><dd><p>Parsed model instance, or a fallback based on handle_validation</p>
+</dd>
+</dl>
+</section>
+<section id="id21">
+<h3>Raises<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If parsing fails and handle_validation=”raise”</p>
+</dd>
+</dl>
+</section>
+<section id="id22">
+<h3>Notes<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h3>
+<p>Flow:
+1. Attempts to parse text directly into model
+2. If fails, uses parse_model to reformat text
+3. Applies fuzzy matching if enabled
+4. Returns parsed model or fallback based on handle_validation</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="instruct">
 <h2><code class="docutils literal notranslate"><span class="pre">instruct</span></code><a class="headerlink" href="#instruct" title="Link to this heading">¶</a></h2>
+<p>Provides a <strong>mid-level</strong> approach: if your user instructions
+(wrapped in <code class="xref py py-class docutils literal notranslate"><span class="pre">Instruct</span></code>) indicate advanced features
+(like actions, or a custom structured response),
+it calls <code class="xref py py-meth docutils literal notranslate"><span class="pre">operate()</span></code> internally. Otherwise,
+it calls <code class="xref py py-meth docutils literal notranslate"><span class="pre">communicate()</span></code>. Best for single-turn instructions
+that may or may not trigger advanced logic.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.instruct">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">instruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instruct</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.instruct" title="Link to this definition">¶</a></dt>
+<dd><p>A convenience method that chooses between operate() and communicate()
+based on the contents of an Instruct object.</p>
+<section id="id23">
+<h3>Parameters<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>instruct<span class="classifier">Instruct</span></dt><dd><p>An object containing instruction, guidance, context, etc.</p>
+</dd>
+<dt><a href="#id24"><span class="problematic" id="id25">**</span></a>kwargs</dt><dd><p>Additional args forwarded to operate() or communicate()</p>
+</dd>
+</dl>
+</section>
+<section id="id26">
+<h3>Returns<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Any</dt><dd><p>The result of the underlying call (structured object, raw text, etc.)</p>
+</dd>
+</dl>
+</section>
+<section id="id27">
+<h3>Notes<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h3>
+<p>Decision Logic:
+- If the Instruct indicates tool usage or advanced response format,</p>
+<blockquote>
+<div><p>operate() is used</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>Otherwise, defaults to communicate()</p></li>
+</ul>
+<p>The method examines reserved keywords in the Instruct object to determine
+which underlying method to call. This provides a simpler interface when
+you’re not sure if advanced features will be needed.</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="interpret">
 <h2><code class="docutils literal notranslate"><span class="pre">interpret</span></code><a class="headerlink" href="#interpret" title="Link to this heading">¶</a></h2>
+<p>Rewrites or refines user input into a more structured,
+explicit prompt. Useful if the user’s original text might
+be ambiguous or suboptimal for the LLM. It does not store
+messages into the conversation by default.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.interpret">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">interpret</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.interpret" title="Link to this definition">¶</a></dt>
+<dd><p>Interprets (rewrites) a user’s raw input into a more formal or structured
+LLM prompt. This function can be seen as a “prompt translator,” which
+ensures the user’s original query is clarified or enhanced for better
+LLM responses.</p>
+<section id="id28">
+<h3>Parameters<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>text<span class="classifier">str</span></dt><dd><p>The raw user input or question that needs interpreting</p>
+</dd>
+<dt>domain<span class="classifier">str, optional</span></dt><dd><p>Optional domain hint (e.g. “finance”, “marketing”, “devops”)
+The LLM can use this hint to tailor its rewriting approach</p>
+</dd>
+<dt>style<span class="classifier">str, optional</span></dt><dd><p>Optional style hint (e.g. “concise”, “detailed”)</p>
+</dd>
+<dt><a href="#id29"><span class="problematic" id="id30">**</span></a>kwargs</dt><dd><p>Additional arguments passed to branch.chat()</p>
+</dd>
+</dl>
+</section>
+<section id="id31">
+<h3>Returns<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>str</dt><dd><p>A refined or “improved” user prompt string, suitable for feeding
+back into the LLM as a clearer instruction</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Notes<a class="headerlink" href="#id32" title="Link to this heading">¶</a></h3>
+<p>The method calls branch.chat() behind the scenes with a system prompt
+that instructs the LLM to rewrite the input. By default, it uses a low
+temperature (0.1) to encourage consistent, focused rewrites.</p>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h3>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">refined</span> <span class="o">=</span> <span class="k">await</span> <span class="n">interpret</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">text</span><span class="o">=</span><span class="s2">&quot;How do I do marketing analytics?&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">domain</span><span class="o">=</span><span class="s2">&quot;marketing&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">style</span><span class="o">=</span><span class="s2">&quot;detailed&quot;</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="go"># refined might be &quot;Explain step-by-step how to set up a marketing analytics</span>
+<span class="go">#  pipeline to track campaign performance...&quot;</span>
+</pre></div>
+</div>
+</section>
+</dd></dl>
+
 </section>
 <section id="react">
 <h2><code class="docutils literal notranslate"><span class="pre">ReAct</span></code><a class="headerlink" href="#react" title="Link to this heading">¶</a></h2>
+<p>Implements a multi-step “<strong>reason + act</strong>” approach, where
+the LLM is asked for chain-of-thought or intermediate steps
+that might require additional expansions. Once the chain-of-thought
+is complete, a final answer is produced.
+Optionally repeats expansions if “extension_needed” is signaled,
+up to a specified limit. Typically used in complex tasks.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.ReAct">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">ReAct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instruct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tool_schemas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension_allowed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_extensions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_analysis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analysis_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.ReAct" title="Link to this definition">¶</a></dt>
+<dd><p>Performs a multi-step “ReAct” flow (inspired by the ReAct paradigm in LLM usage),
+which may include chain-of-thought analysis, multiple expansions, and tool usage.</p>
+<section id="id33">
+<h3>Parameters<a class="headerlink" href="#id33" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>instruct<span class="classifier">Instruct | dict[str, Any]</span></dt><dd><p>The user’s instruction object or a dict with equivalent keys</p>
+</dd>
+<dt>interpret<span class="classifier">bool, default=False</span></dt><dd><p>If True, first interprets (branch.interpret) the instructions</p>
+</dd>
+<dt>tools<span class="classifier">Any, optional</span></dt><dd><p>Tools to be made available for the ReAct process. If omitted,
+defaults to True (all tools)</p>
+</dd>
+<dt>tool_schemas<span class="classifier">Any, optional</span></dt><dd><p>Additional or custom schemas for tools if function calling is needed</p>
+</dd>
+<dt>response_format<span class="classifier">type[BaseModel] | BaseModel, optional</span></dt><dd><p>The final schema for the user-facing output after ReAct expansions</p>
+</dd>
+<dt>extension_allowed<span class="classifier">bool, default=False</span></dt><dd><p>Whether to allow multiple expansions if analysis indicates more steps</p>
+</dd>
+<dt>max_extensions<span class="classifier">int, optional</span></dt><dd><p>The max number of expansions if extension_allowed is True</p>
+</dd>
+<dt>response_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Extra kwargs passed into the final communicate() call</p>
+</dd>
+<dt>return_analysis<span class="classifier">bool, default=False</span></dt><dd><p>If True, returns both final output and list of analysis objects</p>
+</dd>
+<dt>analysis_model<span class="classifier">iModel, optional</span></dt><dd><p>A custom LLM model for generating the ReAct analysis steps</p>
+</dd>
+<dt><a href="#id34"><span class="problematic" id="id35">**</span></a>kwargs</dt><dd><p>Additional keyword arguments passed into the initial operate() call</p>
+</dd>
+</dl>
+</section>
+<section id="id36">
+<h3>Returns<a class="headerlink" href="#id36" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Any | tuple[Any, list]</dt><dd><ul class="simple">
+<li><p>If return_analysis=False, returns only the final output</p></li>
+<li><p>If return_analysis=True, returns (final_output, list_of_analyses)</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id37">
+<h3>Notes<a class="headerlink" href="#id37" title="Link to this heading">¶</a></h3>
+<p>Flow:
+1. Optionally interprets the user instruction
+2. Generates chain-of-thought analysis using a specialized schema
+3. Optionally expands conversation if analysis indicates more steps
+4. Produces final answer by invoking branch.communicate()</p>
+<ul class="simple">
+<li><p>Messages are automatically added to the branch context</p></li>
+<li><p>If max_extensions &gt; 5, it is clamped to 5 with a warning</p></li>
+<li><p>The expansions loop continues until either analysis.extension_needed
+is False or extensions (remaining allowed expansions) is 0</p></li>
+</ul>
+</section>
+</dd></dl>
+
 </section>
 <section id="select">
 <h2><code class="docutils literal notranslate"><span class="pre">select</span></code><a class="headerlink" href="#select" title="Link to this heading">¶</a></h2>
+<p>A convenience operation for letting the LLM choose one or more
+items from a given list or dictionary. For instance, if you have
+10 possible solutions and want the model to pick the best one(s).
+Returns a structured “selection model” describing which was chosen.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.select">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instruct</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">choices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_num_selections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.select" title="Link to this definition">¶</a></dt>
+<dd><p>Performs a selection operation from given choices using an LLM-driven approach.</p>
+<section id="id38">
+<h3>Parameters<a class="headerlink" href="#id38" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>instruct<span class="classifier">Instruct | dict[str, Any]</span></dt><dd><p>The instruction model or dictionary for the LLM call</p>
+</dd>
+<dt>choices<span class="classifier">list[str] | type[Enum] | dict[str, Any]</span></dt><dd><p>The set of options to choose from</p>
+</dd>
+<dt>max_num_selections<span class="classifier">int, default=1</span></dt><dd><p>Maximum allowed selections</p>
+</dd>
+<dt>branch_kwargs<span class="classifier">dict[str, Any], optional</span></dt><dd><p>Extra arguments to create or configure a new branch if needed</p>
+</dd>
+<dt>return_branch<span class="classifier">bool, default=False</span></dt><dd><p>If True, returns both selection result and branch instance</p>
+</dd>
+<dt>verbose<span class="classifier">bool, default=False</span></dt><dd><p>If True, prints debug info</p>
+</dd>
+<dt><a href="#id39"><span class="problematic" id="id40">**</span></a>kwargs</dt><dd><p>Additional arguments for the underlying operate() call</p>
+</dd>
+</dl>
+</section>
+<section id="id41">
+<h3>Returns<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>SelectionModel | tuple[SelectionModel, Branch]</dt><dd><ul class="simple">
+<li><p>A SelectionModel containing the chosen items</p></li>
+<li><p>If return_branch=True, also returns the branch instance</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="id42">
+<h3>Notes<a class="headerlink" href="#id42" title="Link to this heading">¶</a></h3>
+<p>Flow:
+1. Parses choices into a consistent representation
+2. Creates a selection prompt with the choices
+3. Uses branch.operate() to get LLM’s selection
+4. Validates and corrects the selections
+5. Returns result in a structured SelectionModel</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="translate">
 <h2><code class="docutils literal notranslate"><span class="pre">translate</span></code><a class="headerlink" href="#translate" title="Link to this heading">¶</a></h2>
+<p>A specialized method for transforming text with a given
+“technique” (currently “SynthLang”), optionally compressing
+the result. This is a demonstration of hooking up
+domain-specific transformations in a single step.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="Branch.translate">
+<span class="sig-prename descclassname"><span class="pre">Branch.</span></span><span class="sig-name descname"><span class="pre">translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">technique</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SynthLang'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">technique_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chat_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compression_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Branch.translate" title="Link to this definition">¶</a></dt>
+<dd><p>Transform text using a chosen technique (currently only “SynthLang”).
+Optionally compresses text with a custom compress_model.</p>
+<section id="id43">
+<h3>Parameters<a class="headerlink" href="#id43" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>text<span class="classifier">str</span></dt><dd><p>The text to be translated or transformed</p>
+</dd>
+<dt>technique<span class="classifier">Literal[“SynthLang”], default=”SynthLang”</span></dt><dd><p>The translation/transform technique</p>
+</dd>
+<dt>technique_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Additional parameters for the chosen technique</p>
+</dd>
+<dt>compress<span class="classifier">bool, default=False</span></dt><dd><p>Whether to compress the resulting text further</p>
+</dd>
+<dt>chat_model<span class="classifier">iModel, optional</span></dt><dd><p>A custom model for the translation step</p>
+</dd>
+<dt>compress_model<span class="classifier">iModel, optional</span></dt><dd><p>A separate model for compression (if compress=True)</p>
+</dd>
+<dt>compression_ratio<span class="classifier">float, default=0.2</span></dt><dd><p>Desired compression ratio if compressing text (0.0 - 1.0)</p>
+</dd>
+<dt>compress_kwargs<span class="classifier">dict, optional</span></dt><dd><p>Additional arguments for the compression step</p>
+</dd>
+<dt>verbose<span class="classifier">bool, default=True</span></dt><dd><p>If True, prints debug/logging info</p>
+</dd>
+<dt>new_branch<span class="classifier">bool, default=True</span></dt><dd><p>If True, performs the translation in a new branch context</p>
+</dd>
+<dt><a href="#id44"><span class="problematic" id="id45">**</span></a>kwargs</dt><dd><p>Additional parameters passed through to the technique function</p>
+</dd>
+</dl>
+</section>
+<section id="id46">
+<h3>Returns<a class="headerlink" href="#id46" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>str</dt><dd><p>The transformed (and optionally compressed) text</p>
+</dd>
+</dl>
+</section>
+<section id="id47">
+<h3>Raises<a class="headerlink" href="#id47" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If an unsupported technique is specified</p>
+</dd>
+</dl>
+</section>
+<section id="id48">
+<h3>Notes<a class="headerlink" href="#id48" title="Link to this heading">¶</a></h3>
+<p>Currently only supports the “SynthLang” technique, which uses a
+symbolic systems template by default. The compression step is optional
+and can be configured with its own model and parameters.</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="differences-and-usage-notes">
 <h2>Differences and Usage Notes<a class="headerlink" href="#differences-and-usage-notes" title="Link to this heading">¶</a></h2>
@@ -408,7 +1089,7 @@ then parse final results or call custom logic.</p>
 <h2>File References<a class="headerlink" href="#file-references" title="Link to this heading">¶</a></h2>
 <p>These operations are scattered in files (like <cite>_act.py</cite>,
 <cite>chat.py</cite>, <cite>communicate.py</cite>, etc.), but each is also exposed
-directly as a method on <code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code>.</p>
+directly as a method on <a class="reference internal" href="branch.html#lionagi.session.branch.Branch" title="lionagi.session.branch.Branch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Branch</span></code></a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">_act</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations._act.act._act</span></code>
 <code class="docutils literal notranslate"><span class="pre">chat</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.chat.chat</span></code>
 <code class="docutils literal notranslate"><span class="pre">communicate</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">lionagi.operations.communicate.communicate</span></code>
@@ -486,17 +1167,50 @@ directly as a method on <code class="xref py py-class docutils literal notransla
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Branch-Level Operations</a><ul>
-<li><a class="reference internal" href="#act"><code class="docutils literal notranslate"><span class="pre">_act</span></code></a></li>
-<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">act</span></code></a></li>
-<li><a class="reference internal" href="#chat"><code class="docutils literal notranslate"><span class="pre">chat</span></code></a></li>
-<li><a class="reference internal" href="#communicate"><code class="docutils literal notranslate"><span class="pre">communicate</span></code></a></li>
-<li><a class="reference internal" href="#operate"><code class="docutils literal notranslate"><span class="pre">operate</span></code></a></li>
-<li><a class="reference internal" href="#parse"><code class="docutils literal notranslate"><span class="pre">parse</span></code></a></li>
-<li><a class="reference internal" href="#instruct"><code class="docutils literal notranslate"><span class="pre">instruct</span></code></a></li>
-<li><a class="reference internal" href="#interpret"><code class="docutils literal notranslate"><span class="pre">interpret</span></code></a></li>
-<li><a class="reference internal" href="#react"><code class="docutils literal notranslate"><span class="pre">ReAct</span></code></a></li>
-<li><a class="reference internal" href="#select"><code class="docutils literal notranslate"><span class="pre">select</span></code></a></li>
-<li><a class="reference internal" href="#translate"><code class="docutils literal notranslate"><span class="pre">translate</span></code></a></li>
+<li><a class="reference internal" href="#act"><code class="docutils literal notranslate"><span class="pre">_act</span></code></a><ul>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">_act()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">act</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.act"><code class="docutils literal notranslate"><span class="pre">Branch.act()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#chat"><code class="docutils literal notranslate"><span class="pre">chat</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.chat"><code class="docutils literal notranslate"><span class="pre">Branch.chat()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#communicate"><code class="docutils literal notranslate"><span class="pre">communicate</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.communicate"><code class="docutils literal notranslate"><span class="pre">Branch.communicate()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#operate"><code class="docutils literal notranslate"><span class="pre">operate</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.operate"><code class="docutils literal notranslate"><span class="pre">Branch.operate()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#parse"><code class="docutils literal notranslate"><span class="pre">parse</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.parse"><code class="docutils literal notranslate"><span class="pre">Branch.parse()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#instruct"><code class="docutils literal notranslate"><span class="pre">instruct</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.instruct"><code class="docutils literal notranslate"><span class="pre">Branch.instruct()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#interpret"><code class="docutils literal notranslate"><span class="pre">interpret</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.interpret"><code class="docutils literal notranslate"><span class="pre">Branch.interpret()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#react"><code class="docutils literal notranslate"><span class="pre">ReAct</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.ReAct"><code class="docutils literal notranslate"><span class="pre">Branch.ReAct()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#select"><code class="docutils literal notranslate"><span class="pre">select</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.select"><code class="docutils literal notranslate"><span class="pre">Branch.select()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#translate"><code class="docutils literal notranslate"><span class="pre">translate</span></code></a><ul>
+<li><a class="reference internal" href="#Branch.translate"><code class="docutils literal notranslate"><span class="pre">Branch.translate()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#differences-and-usage-notes">Differences and Usage Notes</a></li>
 <li><a class="reference internal" href="#file-references">File References</a></li>
 </ul>

@@ -304,50 +304,609 @@
 </section>
 <section id="base-types">
 <h2>Base Types<a class="headerlink" href="#base-types" title="Link to this heading">¶</a></h2>
-<p id="lionagi-messages-base">Key enumerations like <code class="xref py py-class docutils literal notranslate"><span class="pre">MessageRole</span></code> (<code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, <code class="docutils literal notranslate"><span class="pre">USER</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ASSISTANT</span></code>, etc.) and the basic notion of a “sender/recipient”
-reside here.</p>
+<p id="module-lionagi.protocols.messages.base"><span id="lionagi-messages-base"></span>Holds foundational enumerations and types for messages, including roles like SYSTEM, USER, and helper functions for validating sender/recipient fields.</p>
+<p>Key enumerations like <a class="reference internal" href="#lionagi.protocols.messages.base.MessageRole" title="lionagi.protocols.messages.base.MessageRole"><code class="xref py py-class docutils literal notranslate"><span class="pre">MessageRole</span></code></a> (<code class="docutils literal notranslate"><span class="pre">SYSTEM</span></code>, <code class="docutils literal notranslate"><span class="pre">USER</span></code>, <code class="docutils literal notranslate"><span class="pre">ASSISTANT</span></code>, etc.) and the basic notion of a “sender/recipient” reside here.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.base.MessageRole">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.base.</span></span><span class="sig-name descname"><span class="pre">MessageRole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Enum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.base.MessageRole" title="Link to this definition">¶</a></dt>
+<dd><p>Predefined roles for conversation participants or message semantics.</p>
+<section id="members">
+<h3>Members<a class="headerlink" href="#members" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>SYSTEM<span class="classifier">str</span></dt><dd><p>System-level message role</p>
+</dd>
+<dt>USER<span class="classifier">str</span></dt><dd><p>User message role</p>
+</dd>
+<dt>ASSISTANT<span class="classifier">str</span></dt><dd><p>Assistant (AI) message role</p>
+</dd>
+<dt>UNSET<span class="classifier">str</span></dt><dd><p>Unset or default role</p>
+</dd>
+<dt>ACTION<span class="classifier">str</span></dt><dd><p>Action-related message role</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.base.MessageFlag">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.base.</span></span><span class="sig-name descname"><span class="pre">MessageFlag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Enum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.base.MessageFlag" title="Link to this definition">¶</a></dt>
+<dd><p>Internal flags for certain message states, e.g., clones or loads.</p>
+<section id="id2">
+<h3>Members<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>MESSAGE_CLONE<span class="classifier">str</span></dt><dd><p>Flag indicating a cloned message</p>
+</dd>
+<dt>MESSAGE_LOAD<span class="classifier">str</span></dt><dd><p>Flag indicating a loaded message</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.base.MessageField">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.base.</span></span><span class="sig-name descname"><span class="pre">MessageField</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Enum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.base.MessageField" title="Link to this definition">¶</a></dt>
+<dd><p>Common field names used in message objects.</p>
+<section id="id3">
+<h3>Members<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>CREATED_AT<span class="classifier">str</span></dt><dd><p>Field name for creation timestamp</p>
+</dd>
+<dt>ROLE<span class="classifier">str</span></dt><dd><p>Field name for message role</p>
+</dd>
+<dt>CONTENT<span class="classifier">str</span></dt><dd><p>Field name for message content</p>
+</dd>
+<dt>ID<span class="classifier">str</span></dt><dd><p>Field name for message ID</p>
+</dd>
+<dt>SENDER<span class="classifier">str</span></dt><dd><p>Field name for message sender</p>
+</dd>
+<dt>RECIPIENT<span class="classifier">str</span></dt><dd><p>Field name for message recipient</p>
+</dd>
+<dt>METADATA<span class="classifier">str</span></dt><dd><p>Field name for message metadata</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.base.SenderRecipient">
+<span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.base.</span></span><span class="sig-name descname"><span class="pre">SenderRecipient</span></span><a class="headerlink" href="#lionagi.protocols.messages.base.SenderRecipient" title="Link to this definition">¶</a></dt>
+<dd><p>A union type indicating that a sender or recipient could be:
+- A lionagi IDType
+- A string-based role or ID
+- A specific enum role from MessageRole</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.base.MESSAGE_FIELDS">
+<span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.base.</span></span><span class="sig-name descname"><span class="pre">MESSAGE_FIELDS</span></span><a class="headerlink" href="#lionagi.protocols.messages.base.MESSAGE_FIELDS" title="Link to this definition">¶</a></dt>
+<dd><p>List of all common message field names from MessageField enum.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.base.validate_sender_recipient">
+<span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.base.</span></span><span class="sig-name descname"><span class="pre">validate_sender_recipient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.base.validate_sender_recipient" title="Link to this definition">¶</a></dt>
+<dd><p>Normalize a sender/recipient value into a recognized type.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>value<span class="classifier">Any</span></dt><dd><p>Input to interpret as a role or ID</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>SenderRecipient</dt><dd><p>A validated and normalized entity</p>
+</dd>
+</dl>
+</section>
+<section id="raises">
+<h3>Raises<a class="headerlink" href="#raises" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the input cannot be recognized as a role or ID</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
 </section>
 <section id="roledmessage">
 <h2>RoledMessage<a class="headerlink" href="#roledmessage" title="Link to this heading">¶</a></h2>
-<p id="lionagi-messages-message">Defines a general base class for typed messages with a <strong>role</strong>.
-Every specialized message (like system instructions, user instructions,
-or AI responses) inherits from <code class="xref py py-class docutils literal notranslate"><span class="pre">RoledMessage</span></code>.</p>
+<p id="module-lionagi.protocols.messages.message"><span id="lionagi-messages-message"></span>Implements the RoledMessage base for system, user, assistant, and action messages, plus Jinja2 environment and template loading.</p>
+<p>Defines a general base class for typed messages with a <strong>role</strong>. Every specialized message (like system instructions, user instructions, or AI responses) inherits from <a class="reference internal" href="#lionagi.protocols.messages.message.RoledMessage" title="lionagi.protocols.messages.message.RoledMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">RoledMessage</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.message.RoledMessage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.message.</span></span><span class="sig-name descname"><span class="pre">RoledMessage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sendable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.message.RoledMessage" title="Link to this definition">¶</a></dt>
+<dd><p>A base class for all messages that have a role and carry structured content. Subclasses might be Instruction, ActionRequest, etc.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>content<span class="classifier">dict</span></dt><dd><p>The content of the message</p>
+</dd>
+<dt>role<span class="classifier">MessageRole | None</span></dt><dd><p>The role of the message in the conversation</p>
+</dd>
+<dt>template<span class="classifier">str | Template | None</span></dt><dd><p>Optional Jinja template for rendering content</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient | None</span></dt><dd><p>The ID of the sender node or a role</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient | None</span></dt><dd><p>The ID of the recipient node or a role</p>
+</dd>
+</dl>
 </section>
-<section id="system">
-<h2>System<a class="headerlink" href="#system" title="Link to this heading">¶</a></h2>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code> sets <em>system-level</em> instructions. Typically the
-very first message in a conversation, it describes how the AI
-should behave overall.</p>
+<section id="properties">
+<h3>Properties<a class="headerlink" href="#properties" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>image_content<span class="classifier">list[dict[str, Any]] | None</span></dt><dd><p>Extract structured image data from the message content if it is represented as a chat message array</p>
+</dd>
+<dt>chat_msg<span class="classifier">dict[str, Any] | None</span></dt><dd><p>A dictionary representation typically used in chat-based contexts</p>
+</dd>
+<dt>rendered<span class="classifier">str</span></dt><dd><p>Attempt to format the message with a Jinja template (if provided)</p>
+</dd>
+</dl>
 </section>
-<section id="instruction">
-<h2>Instruction<a class="headerlink" href="#instruction" title="Link to this heading">¶</a></h2>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code> captures the <strong>user’s</strong> command or question.
-It may contain optional context or images, as well as a schema
-for structured responses.</p>
+<section id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>create(<a href="#id4"><span class="problematic" id="id5">**</span></a>kwargs)</dt><dd><p>Must be implemented in subclass to create new instances</p>
+</dd>
+<dt>from_dict(<a href="#id80"><span class="problematic" id="id81">dict_</span></a>)</dt><dd><p>Deserialize a dictionary into a RoledMessage or subclass</p>
+</dd>
+<dt>is_clone()</dt><dd><p>Check if this message is flagged as a clone</p>
+</dd>
+<dt>clone(keep_role=True)</dt><dd><p>Create a shallow copy of this message, possibly resetting the role</p>
+</dd>
+<dt>to_log()</dt><dd><p>Convert this message into a Log, preserving all current fields</p>
+</dd>
+<dt>update(sender, recipient, template, <a href="#id6"><span class="problematic" id="id7">**</span></a>kwargs)</dt><dd><p>Generic update mechanism for customizing the message in place</p>
+</dd>
+</dl>
 </section>
-<section id="assistantresponse">
-<h2>AssistantResponse<a class="headerlink" href="#assistantresponse" title="Link to this heading">¶</a></h2>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">AssistantResponse</span></code> is the AI’s reply to a user or system
-message. This may store raw model data (JSON output) in
-<code class="docutils literal notranslate"><span class="pre">metadata[&quot;model_response&quot;]</span></code>.</p>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<p>The RoledMessage class is designed to be subclassed by specific message types like System, Instruction, etc.
+It provides template-based rendering of content and serialization support for various field types.</p>
 </section>
-<section id="actionrequest">
-<h2>ActionRequest<a class="headerlink" href="#actionrequest" title="Link to this heading">¶</a></h2>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code> is a special message for requesting a
-function call or action. Contains a function name and arguments.</p>
+</dd></dl>
+
 </section>
-<section id="actionresponse">
-<h2>ActionResponse<a class="headerlink" href="#actionresponse" title="Link to this heading">¶</a></h2>
-<p>Pairs with an <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code>, providing the <strong>output</strong>
-of that requested function. The original request ID is also tracked.</p>
+<section id="module-lionagi.protocols.messages.system">
+<span id="system"></span><h2>System<a class="headerlink" href="#module-lionagi.protocols.messages.system" title="Link to this heading">¶</a></h2>
+<p>Defines the System class, representing system-level instructions or settings that guide the AI’s behavior from a privileged role.</p>
+<p><a class="reference internal" href="#lionagi.protocols.messages.system.System" title="lionagi.protocols.messages.system.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a> sets <em>system-level</em> instructions. Typically the very first message in a conversation, it describes how the AI should behave overall.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.system.System">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.system.</span></span><span class="sig-name descname"><span class="pre">System</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RoledMessage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.system.System" title="Link to this definition">¶</a></dt>
+<dd><p>A specialized message that sets a system-level context or policy. Usually the first in a conversation, instructing the AI about general constraints or identity.</p>
+<section id="id8">
+<h3>Attributes<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>template<span class="classifier">str | Template | None</span></dt><dd><p>Template for rendering system messages, defaults to system_message.jinja2</p>
+</dd>
+</dl>
 </section>
-<section id="messagemanager">
-<h2>MessageManager<a class="headerlink" href="#messagemanager" title="Link to this heading">¶</a></h2>
-<p>A manager for collecting messages in order, offering utility methods
-to add system instructions, user instructions, or assistant responses,
-and to fetch them (e.g. “last instruction”). Also includes
-<strong>action</strong> request/response handling.</p>
+<section id="id9">
+<h3>Methods<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
+<dl>
+<dt>create(system_message=”You are a helpful AI assistant. Let’s think step by step.”, system_datetime=None, sender=None, recipient=None, template=None, system=None, <a href="#id10"><span class="problematic" id="id11">**</span></a>kwargs)</dt><dd><p>Construct a system message with optional datetime annotation</p>
+<dl class="simple">
+<dt>system_message<span class="classifier">str</span></dt><dd><p>The main text instructing the AI about behavior/identity</p>
+</dd>
+<dt>system_datetime<span class="classifier">bool | str, optional</span></dt><dd><p>If True or str, embed a time reference. If str, it is used directly</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient, optional</span></dt><dd><p>Typically MessageRole.SYSTEM</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient, optional</span></dt><dd><p>Typically MessageRole.ASSISTANT</p>
+</dd>
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>An optional custom template for rendering</p>
+</dd>
+<dt>system<span class="classifier">Any</span></dt><dd><p>Alias for system_message (deprecated)</p>
+</dd>
+<dt><a href="#id12"><span class="problematic" id="id13">**</span></a>kwargs</dt><dd><p>Additional content merged into the final dict</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>System</dt><dd><p>A newly created system-level message</p>
+</dd>
+</dl>
+</dd>
+<dt>update(system_message=None, sender=None, recipient=None, system_datetime=None, template=None, <a href="#id14"><span class="problematic" id="id15">**</span></a>kwargs)</dt><dd><p>Adjust fields of this system message</p>
+<dl class="simple">
+<dt>system_message<span class="classifier">JsonValue</span></dt><dd><p>New system message text</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient</span></dt><dd><p>Updated sender or role</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient</span></dt><dd><p>Updated recipient or role</p>
+</dd>
+<dt>system_datetime<span class="classifier">bool | str</span></dt><dd><p>If set, embed new datetime info</p>
+</dd>
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>New template override</p>
+</dd>
+<dt><a href="#id16"><span class="problematic" id="id17">**</span></a>kwargs</dt><dd><p>Additional fields for self.content</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="id18">
+<h3>Notes<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h3>
+<p>The System class is designed to be the first message in a conversation, setting up the context and behavior expectations for the AI. It supports datetime annotations and custom templates for rendering the system message.</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-lionagi.protocols.messages.instruction">
+<span id="instruction"></span><h2>Instruction<a class="headerlink" href="#module-lionagi.protocols.messages.instruction" title="Link to this heading">¶</a></h2>
+<p>Defines the Instruction class, representing user commands or instructions sent to the system. Supports optional context, images, and schema requests.</p>
+<p><a class="reference internal" href="#lionagi.protocols.messages.instruction.Instruction" title="lionagi.protocols.messages.instruction.Instruction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a> captures the <strong>user’s</strong> command or question. It may contain optional context or images, as well as a schema for structured responses.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.instruction.Instruction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.instruction.</span></span><span class="sig-name descname"><span class="pre">Instruction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RoledMessage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.instruction.Instruction" title="Link to this definition">¶</a></dt>
+<dd><p>A user-facing message that conveys commands or tasks. It supports optional images, tool references, and schema-based requests.</p>
+<section id="id19">
+<h3>Properties<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>guidance<span class="classifier">str | None</span></dt><dd><p>Optional guiding text for the instruction</p>
+</dd>
+<dt>instruction<span class="classifier">JsonValue | None</span></dt><dd><p>The main instruction or command</p>
+</dd>
+<dt>context<span class="classifier">JsonValue | None</span></dt><dd><p>Additional context about the environment</p>
+</dd>
+<dt>tool_schemas<span class="classifier">JsonValue | None</span></dt><dd><p>Extra data describing available tools</p>
+</dd>
+<dt>plain_content<span class="classifier">str | None</span></dt><dd><p>Raw plain text fallback</p>
+</dd>
+<dt>image_detail<span class="classifier">Literal[“low”, “high”, “auto”] | None</span></dt><dd><p>Detail level for included images</p>
+</dd>
+<dt>images<span class="classifier">list</span></dt><dd><p>List of images associated with the instruction</p>
+</dd>
+<dt>request_fields<span class="classifier">dict | None</span></dt><dd><p>Fields requested in the response</p>
+</dd>
+<dt>response_format<span class="classifier">type[BaseModel] | None</span></dt><dd><p>Pydantic model for structured responses</p>
+</dd>
+<dt>respond_schema_info<span class="classifier">dict | None</span></dt><dd><p>Schema information for responses</p>
+</dd>
+<dt>request_response_format<span class="classifier">str | None</span></dt><dd><p>Formatted request response template</p>
+</dd>
+</dl>
+</section>
+<section id="id20">
+<h3>Methods<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>create(instruction=None, <a href="#id21"><span class="problematic" id="id22">*</span></a>, context=None, guidance=None, images=None, sender=None, recipient=None, request_fields=None, plain_content=None, image_detail=None, request_model=None, response_format=None, tool_schemas=None)</dt><dd><p>Construct a new Instruction</p>
+</dd>
+<dt>extend_images(images, image_detail=None)</dt><dd><p>Append images to the existing list</p>
+</dd>
+<dt>extend_context(<a href="#id23"><span class="problematic" id="id24">*</span></a>args, <a href="#id25"><span class="problematic" id="id26">**</span></a>kwargs)</dt><dd><p>Append additional context to the existing context array</p>
+</dd>
+<dt>update(<a href="#id27"><span class="problematic" id="id28">*</span></a>, guidance=None, instruction=None, context=None, request_fields=None, plain_content=None, request_model=None, response_format=None, images=None, image_detail=None, tool_schemas=None, sender=None, recipient=None)</dt><dd><p>Batch-update this Instruction</p>
+</dd>
+</dl>
+</section>
+<section id="id29">
+<h3>Notes<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h3>
+<p>The Instruction class is designed to be flexible in how it represents user commands, supporting
+everything from simple text instructions to complex requests with images, schemas, and tool references.</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-lionagi.protocols.messages.assistant_response">
+<span id="assistantresponse"></span><h2>AssistantResponse<a class="headerlink" href="#module-lionagi.protocols.messages.assistant_response" title="Link to this heading">¶</a></h2>
+<p>Defines AssistantResponse, a specialized RoledMessage for the AI’s assistant replies (usually from LLM or related).</p>
+<p><a class="reference internal" href="#lionagi.protocols.messages.assistant_response.AssistantResponse" title="lionagi.protocols.messages.assistant_response.AssistantResponse"><code class="xref py py-class docutils literal notranslate"><span class="pre">AssistantResponse</span></code></a> is the AI’s reply to a user or system message. This may store raw model data (JSON output) in <code class="docutils literal notranslate"><span class="pre">metadata[&quot;model_response&quot;]</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.assistant_response.AssistantResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.assistant_response.</span></span><span class="sig-name descname"><span class="pre">AssistantResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RoledMessage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.assistant_response.AssistantResponse" title="Link to this definition">¶</a></dt>
+<dd><p>A message representing the AI assistant’s reply, typically from a model or LLM call. If the raw model output is available, it’s placed in metadata[“model_response”].</p>
+<section id="id30">
+<h3>Attributes<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Template for rendering assistant responses, defaults to assistant_response.jinja2</p>
+</dd>
+</dl>
+</section>
+<section id="id31">
+<h3>Properties<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>response<span class="classifier">str</span></dt><dd><p>Get or set the text portion of the assistant’s response</p>
+</dd>
+<dt>model_response<span class="classifier">dict | list[dict]</span></dt><dd><p>Access the underlying model’s raw data, if available</p>
+</dd>
+</dl>
+</section>
+<section id="id32">
+<h3>Methods<a class="headerlink" href="#id32" title="Link to this heading">¶</a></h3>
+<dl>
+<dt>create(assistant_response, sender=None, recipient=None, template=None, <a href="#id33"><span class="problematic" id="id34">**</span></a>kwargs)</dt><dd><p>Build an AssistantResponse from arbitrary assistant data</p>
+<dl class="simple">
+<dt>assistant_response<span class="classifier">BaseModel | list[BaseModel] | dict | str | Any</span></dt><dd><p>A pydantic model, list, dict, or string representing an LLM or system response</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient | None</span></dt><dd><p>The ID or role denoting who sends this response</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient | None</span></dt><dd><p>The ID or role to receive it</p>
+</dd>
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Optional custom template</p>
+</dd>
+<dt><a href="#id35"><span class="problematic" id="id36">**</span></a>kwargs</dt><dd><p>Additional content key-value pairs</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>AssistantResponse</dt><dd><p>The constructed instance</p>
+</dd>
+</dl>
+</dd>
+<dt>update(assistant_response=None, sender=None, recipient=None, template=None, <a href="#id37"><span class="problematic" id="id38">**</span></a>kwargs)</dt><dd><p>Update this AssistantResponse with new data or fields</p>
+<dl class="simple">
+<dt>assistant_response<span class="classifier">BaseModel | list[BaseModel] | dict | str | Any</span></dt><dd><p>Additional or replaced assistant model output</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient | None</span></dt><dd><p>Updated sender</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient | None</span></dt><dd><p>Updated recipient</p>
+</dd>
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Optional new template</p>
+</dd>
+<dt><a href="#id39"><span class="problematic" id="id40">**</span></a>kwargs</dt><dd><p>Additional content updates for self.content</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="id41">
+<h3>Notes<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h3>
+<p>The AssistantResponse class is designed to handle various formats of AI model outputs, from simple
+strings to complex structured responses. It preserves both the human-readable response and the raw
+model output when available.</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-lionagi.protocols.messages.action_request">
+<span id="actionrequest"></span><h2>ActionRequest<a class="headerlink" href="#module-lionagi.protocols.messages.action_request" title="Link to this heading">¶</a></h2>
+<p>Defines the ActionRequest class, a specific RoledMessage for requesting a function or action call within LionAGI. It is typically accompanied by arguments and can later be answered by an ActionResponse.</p>
+<p><a class="reference internal" href="#lionagi.protocols.messages.action_request.ActionRequest" title="lionagi.protocols.messages.action_request.ActionRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code></a> is a special message for requesting a function call or action. Contains a function name and arguments.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.action_request.ActionRequest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.action_request.</span></span><span class="sig-name descname"><span class="pre">ActionRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RoledMessage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.action_request.ActionRequest" title="Link to this definition">¶</a></dt>
+<dd><p>A message that requests an action or function to be executed. It inherits from RoledMessage and includes function name, arguments, and optional linking to a subsequent ActionResponse.</p>
+<section id="id42">
+<h3>Attributes<a class="headerlink" href="#id42" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Template for rendering action requests, defaults to action_request.jinja2</p>
+</dd>
+</dl>
+</section>
+<section id="id43">
+<h3>Properties<a class="headerlink" href="#id43" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>action_response_id<span class="classifier">IDType | None</span></dt><dd><p>Get or set the ID of the corresponding action response</p>
+</dd>
+<dt>request<span class="classifier">dict[str, Any]</span></dt><dd><p>Get the entire ‘action_request’ dictionary if present</p>
+</dd>
+<dt>arguments<span class="classifier">dict[str, Any]</span></dt><dd><p>Access just the ‘arguments’ from the action request</p>
+</dd>
+<dt>function<span class="classifier">str</span></dt><dd><p>Name of the function to be invoked</p>
+</dd>
+</dl>
+</section>
+<section id="id44">
+<h3>Methods<a class="headerlink" href="#id44" title="Link to this heading">¶</a></h3>
+<dl>
+<dt>create(function=None, arguments=None, sender=None, recipient=None, template=None, <a href="#id45"><span class="problematic" id="id46">**</span></a>kwargs)</dt><dd><p>Build a new ActionRequest</p>
+<dl class="simple">
+<dt>function<span class="classifier">str | Callable | None</span></dt><dd><p>The function or callable name</p>
+</dd>
+<dt>arguments<span class="classifier">dict | None</span></dt><dd><p>Arguments for that function call</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient | None</span></dt><dd><p>The sender identifier or role</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient | None</span></dt><dd><p>The recipient identifier or role</p>
+</dd>
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Optional custom template</p>
+</dd>
+<dt><a href="#id47"><span class="problematic" id="id48">**</span></a>kwargs</dt><dd><p>Extra key-value pairs to merge into the content</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ActionRequest</dt><dd><p>A newly constructed instance</p>
+</dd>
+</dl>
+</dd>
+<dt>update(function=None, arguments=None, sender=None, recipient=None, action_response=None, template=None, <a href="#id49"><span class="problematic" id="id50">**</span></a>kwargs)</dt><dd><p>Update this request with new function, arguments, or link to an action response</p>
+<dl class="simple">
+<dt>function<span class="classifier">str</span></dt><dd><p>New function name, if changing</p>
+</dd>
+<dt>arguments<span class="classifier">dict</span></dt><dd><p>New arguments dictionary, if changing</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient</span></dt><dd><p>New sender</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient</span></dt><dd><p>New recipient</p>
+</dd>
+<dt>action_response<span class="classifier">ActionResponse</span></dt><dd><p>If provided, this request is flagged as responded</p>
+</dd>
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Optional new template</p>
+</dd>
+<dt><a href="#id51"><span class="problematic" id="id52">**</span></a>kwargs</dt><dd><p>Additional fields to store in content</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ValueError</dt><dd><p>If the request is already responded to</p>
+</dd>
+</dl>
+</dd>
+<dt>is_responded()</dt><dd><p>Check if there’s a linked action response</p>
+<dl class="simple">
+<dt>bool</dt><dd><p>True if an action response ID is present</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="id53">
+<h3>Notes<a class="headerlink" href="#id53" title="Link to this heading">¶</a></h3>
+<p>The ActionRequest class is designed to represent function or action calls within the system.
+It maintains a link to its corresponding ActionResponse once the action is completed.</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-lionagi.protocols.messages.action_response">
+<span id="actionresponse"></span><h2>ActionResponse<a class="headerlink" href="#module-lionagi.protocols.messages.action_response" title="Link to this heading">¶</a></h2>
+<p>Defines ActionResponse, an RoledMessage that answers an ActionRequest with output from a function call or action.</p>
+<p>Pairs with an <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequest</span></code>, providing the <strong>output</strong> of that requested function. The original request ID is also tracked.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.action_response.ActionResponse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.action_response.</span></span><span class="sig-name descname"><span class="pre">ActionResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">RoledMessage</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.action_response.ActionResponse" title="Link to this definition">¶</a></dt>
+<dd><p>A message fulfilling an ActionRequest. It stores the function name, the arguments used, and the output produced by the function.</p>
+<section id="id54">
+<h3>Attributes<a class="headerlink" href="#id54" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Template for rendering action responses, defaults to action_response.jinja2</p>
+</dd>
+</dl>
+</section>
+<section id="id55">
+<h3>Properties<a class="headerlink" href="#id55" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>function<span class="classifier">str</span></dt><dd><p>Name of the function that was executed</p>
+</dd>
+<dt>arguments<span class="classifier">dict[str, Any]</span></dt><dd><p>Arguments used for the executed function</p>
+</dd>
+<dt>output<span class="classifier">Any</span></dt><dd><p>The result or returned data from the function call</p>
+</dd>
+<dt>response<span class="classifier">dict[str, Any]</span></dt><dd><p>A helper to get the entire ‘action_response’ dictionary</p>
+</dd>
+<dt>action_request_id<span class="classifier">IDType</span></dt><dd><p>The ID of the original action request</p>
+</dd>
+</dl>
+</section>
+<section id="id56">
+<h3>Methods<a class="headerlink" href="#id56" title="Link to this heading">¶</a></h3>
+<dl>
+<dt>create(action_request, output=None, response_model=None, sender=None, recipient=None)</dt><dd><p>Build an ActionResponse from a matching ActionRequest and output</p>
+<dl class="simple">
+<dt>action_request<span class="classifier">ActionRequest</span></dt><dd><p>The original request being fulfilled</p>
+</dd>
+<dt>output<span class="classifier">Any, optional</span></dt><dd><p>The function output or result</p>
+</dd>
+<dt>response_model<span class="classifier">Any, optional</span></dt><dd><p>If present and has .output, this is used instead of output</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient, optional</span></dt><dd><p>The role or ID of the sender (defaults to the request’s recipient)</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient, optional</span></dt><dd><p>The role or ID of the recipient (defaults to the request’s sender)</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>ActionResponse</dt><dd><p>A new instance referencing the ActionRequest</p>
+</dd>
+</dl>
+</dd>
+<dt>update(action_request=None, output=None, response_model=None, sender=None, recipient=None, template=None, <a href="#id57"><span class="problematic" id="id58">**</span></a>kwargs)</dt><dd><p>Update this response with a new request reference or new output</p>
+<dl class="simple">
+<dt>action_request<span class="classifier">ActionRequest</span></dt><dd><p>The updated request</p>
+</dd>
+<dt>output<span class="classifier">Any</span></dt><dd><p>The new function output data</p>
+</dd>
+<dt>response_model<span class="classifier">Any</span></dt><dd><p>If present, uses response_model.output</p>
+</dd>
+<dt>sender<span class="classifier">SenderRecipient</span></dt><dd><p>New sender ID or role</p>
+</dd>
+<dt>recipient<span class="classifier">SenderRecipient</span></dt><dd><p>New recipient ID or role</p>
+</dd>
+<dt>template<span class="classifier">Template | str | None</span></dt><dd><p>Optional new template</p>
+</dd>
+<dt><a href="#id59"><span class="problematic" id="id60">**</span></a>kwargs</dt><dd><p>Additional fields to store in content</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="id61">
+<h3>Notes<a class="headerlink" href="#id61" title="Link to this heading">¶</a></h3>
+<p>The ActionResponse class is designed to pair with ActionRequest messages, providing a structured way
+to return function call results while maintaining the link to the original request.</p>
+</section>
+</dd></dl>
+
+</section>
+<section id="module-lionagi.protocols.messages.manager">
+<span id="messagemanager"></span><h2>MessageManager<a class="headerlink" href="#module-lionagi.protocols.messages.manager" title="Link to this heading">¶</a></h2>
+<p>Implements the MessageManager class, a manager for collecting or manipulating sequences of RoledMessage objects, including system, instructions, or action requests/responses.</p>
+<p>A manager for collecting messages in order, offering utility methods to add system instructions, user instructions, or assistant responses, and to fetch them (e.g. “last instruction”). Also includes <strong>action</strong> request/response handling.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.messages.manager.MessageManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.messages.manager.</span></span><span class="sig-name descname"><span class="pre">MessageManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Manager</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.messages.manager.MessageManager" title="Link to this definition">¶</a></dt>
+<dd><p>A manager maintaining an ordered list of RoledMessage items. Capable of setting or replacing a system message, adding instructions, assistant responses, or actions, and retrieving them conveniently.</p>
+<section id="id62">
+<h3>Properties<a class="headerlink" href="#id62" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>progression<span class="classifier">Progression</span></dt><dd><p>Access to the underlying progression of messages</p>
+</dd>
+<dt>last_response<span class="classifier">AssistantResponse | None</span></dt><dd><p>Retrieve the most recent AssistantResponse</p>
+</dd>
+<dt>last_instruction<span class="classifier">Instruction | None</span></dt><dd><p>Retrieve the most recent Instruction</p>
+</dd>
+<dt>assistant_responses<span class="classifier">Pile[AssistantResponse]</span></dt><dd><p>All AssistantResponse messages in the manager</p>
+</dd>
+<dt>actions<span class="classifier">Pile[ActionRequest | ActionResponse]</span></dt><dd><p>All action messages in the manager</p>
+</dd>
+<dt>action_requests<span class="classifier">Pile[ActionRequest]</span></dt><dd><p>All ActionRequest messages in the manager</p>
+</dd>
+<dt>action_responses<span class="classifier">Pile[ActionResponse]</span></dt><dd><p>All ActionResponse messages in the manager</p>
+</dd>
+<dt>instructions<span class="classifier">Pile[Instruction]</span></dt><dd><p>All Instruction messages in the manager</p>
+</dd>
+</dl>
+</section>
+<section id="id63">
+<h3>Methods<a class="headerlink" href="#id63" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>set_system(system)</dt><dd><p>Replace or set the system message. If one existed, remove it.</p>
+</dd>
+<dt>aclear_messages()</dt><dd><p>Async clear all messages except system.</p>
+</dd>
+<dt>a_add_message(<a href="#id64"><span class="problematic" id="id65">**</span></a>kwargs)</dt><dd><p>Add a message asynchronously with a manager-level lock.</p>
+</dd>
+<dt>create_instruction(<a href="#id66"><span class="problematic" id="id67">*</span></a>, instruction=None, context=None, guidance=None, images=None, request_fields=None, plain_content=None, image_detail=None, request_model=None, response_format=None, tool_schemas=None, sender=None, recipient=None)</dt><dd><p>Construct or update an Instruction message with advanced parameters.</p>
+</dd>
+<dt>create_assistant_response(<a href="#id68"><span class="problematic" id="id69">*</span></a>, sender=None, recipient=None, assistant_response=None, template=None, template_context=None)</dt><dd><p>Build or update an AssistantResponse.</p>
+</dd>
+<dt>create_action_request(<a href="#id70"><span class="problematic" id="id71">*</span></a>, sender=None, recipient=None, function=None, arguments=None, action_request=None, template=None, template_context=None)</dt><dd><p>Build or update an ActionRequest.</p>
+</dd>
+<dt>create_action_response(<a href="#id72"><span class="problematic" id="id73">*</span></a>, action_request, action_output=None, action_response=None, sender=None, recipient=None)</dt><dd><p>Create or update an ActionResponse, referencing a prior ActionRequest.</p>
+</dd>
+<dt>create_system(<a href="#id74"><span class="problematic" id="id75">*</span></a>, system=None, system_datetime=None, sender=None, recipient=None, template=None, template_context=None)</dt><dd><p>Create or update a System message.</p>
+</dd>
+<dt>add_message(<a href="#id76"><span class="problematic" id="id77">**</span></a>kwargs)</dt><dd><p>The central method to add a new message of various types.</p>
+</dd>
+<dt>clear_messages()</dt><dd><p>Remove all messages except the system message if it exists.</p>
+</dd>
+<dt>remove_last_instruction_tool_schemas()</dt><dd><p>Convenience method to strip ‘tool_schemas’ from the most recent Instruction.</p>
+</dd>
+<dt>concat_recent_action_responses_to_instruction(instruction)</dt><dd><p>Example method to merge the content of recent ActionResponses into an instruction’s context.</p>
+</dd>
+<dt>to_chat_msgs(progression=None)</dt><dd><p>Convert a subset (or all) of messages into a chat representation array.</p>
+</dd>
+</dl>
+</section>
+<section id="id78">
+<h3>Parameters<a class="headerlink" href="#id78" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>messages<span class="classifier">list[RoledMessage] | None</span></dt><dd><p>Initial list of messages to manage</p>
+</dd>
+<dt>progression<span class="classifier">Progression | None</span></dt><dd><p>Optional custom progression to use</p>
+</dd>
+<dt>system<span class="classifier">System | None</span></dt><dd><p>Optional system message to start with</p>
+</dd>
+</dl>
+</section>
+<section id="id79">
+<h3>Notes<a class="headerlink" href="#id79" title="Link to this heading">¶</a></h3>
+<p>The MessageManager class provides a central point for managing all types of messages in a conversation,
+including system messages, instructions, responses, and action requests/responses. It maintains message
+order and provides convenient access methods.</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="example-usage">
 <h2>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h2>
@@ -448,14 +1007,43 @@ and to fetch them (e.g. “last instruction”). Also includes
 <li><a class="reference internal" href="#">Messages Subsystem</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#contents">Contents</a></li>
-<li><a class="reference internal" href="#base-types">Base Types</a></li>
-<li><a class="reference internal" href="#roledmessage">RoledMessage</a></li>
-<li><a class="reference internal" href="#system">System</a></li>
-<li><a class="reference internal" href="#instruction">Instruction</a></li>
-<li><a class="reference internal" href="#assistantresponse">AssistantResponse</a></li>
-<li><a class="reference internal" href="#actionrequest">ActionRequest</a></li>
-<li><a class="reference internal" href="#actionresponse">ActionResponse</a></li>
-<li><a class="reference internal" href="#messagemanager">MessageManager</a></li>
+<li><a class="reference internal" href="#base-types">Base Types</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.base.MessageRole"><code class="docutils literal notranslate"><span class="pre">MessageRole</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.messages.base.MessageFlag"><code class="docutils literal notranslate"><span class="pre">MessageFlag</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.messages.base.MessageField"><code class="docutils literal notranslate"><span class="pre">MessageField</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.messages.base.SenderRecipient"><code class="docutils literal notranslate"><span class="pre">SenderRecipient</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.messages.base.MESSAGE_FIELDS"><code class="docutils literal notranslate"><span class="pre">MESSAGE_FIELDS</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.messages.base.validate_sender_recipient"><code class="docutils literal notranslate"><span class="pre">validate_sender_recipient()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#roledmessage">RoledMessage</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.message.RoledMessage"><code class="docutils literal notranslate"><span class="pre">RoledMessage</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-lionagi.protocols.messages.system">System</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.system.System"><code class="docutils literal notranslate"><span class="pre">System</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-lionagi.protocols.messages.instruction">Instruction</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.instruction.Instruction"><code class="docutils literal notranslate"><span class="pre">Instruction</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-lionagi.protocols.messages.assistant_response">AssistantResponse</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.assistant_response.AssistantResponse"><code class="docutils literal notranslate"><span class="pre">AssistantResponse</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-lionagi.protocols.messages.action_request">ActionRequest</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.action_request.ActionRequest"><code class="docutils literal notranslate"><span class="pre">ActionRequest</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-lionagi.protocols.messages.action_response">ActionResponse</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.action_response.ActionResponse"><code class="docutils literal notranslate"><span class="pre">ActionResponse</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-lionagi.protocols.messages.manager">MessageManager</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.messages.manager.MessageManager"><code class="docutils literal notranslate"><span class="pre">MessageManager</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#example-usage">Example Usage</a></li>
 <li><a class="reference internal" href="#file-locations">File Locations</a></li>
 </ul>

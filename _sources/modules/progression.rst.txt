@@ -38,19 +38,17 @@ Progression
 
    Validators & Serializers
    ------------------------
-   .. method:: _validate_ordering(value: Any) -> list[IDType]
-      :classmethod:
-      :private:
+.. method:: _validate_ordering(value: Any) -> list[IDType]
+   :classmethod:
 
-      Ensures the given value is a valid list of IDs, flattening nested structures 
-      via :func:`~lionagi.protocols.generic.element.validate_order`. Raises 
-      :exc:`ValueError` if items are invalid.
+   Private class method that ensures the given value is a valid list of IDs, flattening nested structures 
+   via :func:`~lionagi.protocols.generic.element.validate_order`. Raises 
+   :exc:`ValueError` if items are invalid.
 
-   .. method:: _serialize_order(value: list[IDType]) -> list[str]
-      :private:
+.. method:: _serialize_order(value: list[IDType]) -> list[str]
 
-      Serializes each :class:`IDType` in the list into its UUID string 
-      representation.
+   Private instance method that serializes each :class:`IDType` in the list into its UUID string 
+   representation.
 
    Basic Methods
    -------------

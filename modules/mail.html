@@ -297,10 +297,10 @@ across multiple sources that implement <code class="xref py py-class docutils li
 include:</p>
 <ul class="simple">
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Exchange</span></code>: Coordinates mail flow among sources in a buffer-based approach.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Mail</span></code>: The fundamental message unit, containing a <code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code>.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code>: Local storage for inbound and outbound mail at a single source.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">MailManager</span></code>: An alternative (often higher-level) manager for mail distribution.</p></li>
-<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code> / <code class="xref py py-class docutils literal notranslate"><span class="pre">PackageCategory</span></code>: Wraps the content or payload with a categorized type.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Mail</span></code>: The fundamental message unit, containing a <a class="reference internal" href="#lionagi.protocols.mail.Package" title="lionagi.protocols.mail.Package"><code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#lionagi.protocols.mail.Mailbox" title="lionagi.protocols.mail.Mailbox"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code></a>: Local storage for inbound and outbound mail at a single source.</p></li>
+<li><p><a class="reference internal" href="#lionagi.protocols.mail.MailManager" title="lionagi.protocols.mail.MailManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">MailManager</span></code></a>: An alternative (often higher-level) manager for mail distribution.</p></li>
+<li><p><a class="reference internal" href="#lionagi.protocols.mail.Package" title="lionagi.protocols.mail.Package"><code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code></a> / <a class="reference internal" href="#lionagi.protocols.mail.PackageCategory" title="lionagi.protocols.mail.PackageCategory"><code class="xref py py-class docutils literal notranslate"><span class="pre">PackageCategory</span></code></a>: Wraps the content or payload with a categorized type.</p></li>
 </ul>
 </section>
 <section id="contents">
@@ -308,18 +308,256 @@ include:</p>
 </section>
 <section id="exchange">
 <h2>Exchange<a class="headerlink" href="#exchange" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.mail.exchange.Exchange">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.exchange.</span></span><span class="sig-name descname"><span class="pre">Exchange</span></span><a class="headerlink" href="#lionagi.protocols.mail.exchange.Exchange" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a></p>
+<p>Manages mail exchange operations among a set of sources that are Communicatable. Each source has an associated Mailbox to store inbound and outbound mail.</p>
+<p>The Exchange uses an internal buffer for collecting mail from each sender’s mailbox and delivering messages to the correct recipient’s mailbox.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>sources<span class="classifier">Pile[Communicatable]</span></dt><dd><p>The communicatable sources participating in the exchange</p>
+</dd>
+<dt>buffer<span class="classifier">dict[IDType, list[Mail]]</span></dt><dd><p>A temporary holding area for mail messages before they reach their recipient’s mailbox</p>
+</dd>
+<dt>mailboxes<span class="classifier">dict[IDType, Mailbox]</span></dt><dd><p>Maps each source’s ID to its Mailbox</p>
+</dd>
+<dt>_execute_stop<span class="classifier">bool</span></dt><dd><p>A flag indicating whether to stop the asynchronous execution loop</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>add_source(sources)</dt><dd><p>Register new communicatable sources for mail exchange</p>
+</dd>
+<dt>delete_source(sources)</dt><dd><p>Remove specified sources from the exchange, clearing any pending mail</p>
+</dd>
+<dt>create_mail(sender, recipient, category, item, request_source=None)</dt><dd><p>Helper method to create a new Mail instance</p>
+</dd>
+<dt>collect(sender)</dt><dd><p>Collect all outbound mail from a specific sender, moving it to the exchange buffer</p>
+</dd>
+<dt>deliver(recipient)</dt><dd><p>Deliver all mail in the buffer addressed to a specific recipient</p>
+</dd>
+<dt>collect_all()</dt><dd><p>Collect mail from every source in this exchange</p>
+</dd>
+<dt>deliver_all()</dt><dd><p>Deliver mail to every source in this exchange</p>
+</dd>
+<dt>execute(refresh_time=1)</dt><dd><p>Continuously collect and deliver mail in an asynchronous loop</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>sources<span class="classifier">ID[Communicatable].ItemSeq, optional</span></dt><dd><p>One or more communicatable sources to manage. If provided, they are immediately added.</p>
+</dd>
+</dl>
+<p>The Exchange class orchestrates mail flows among sources that implement Communicatable.
+It collects pending outgoing mail from each source and delivers them to the appropriate
+recipients using an internal buffer system.</p>
+</div></blockquote>
+</dd></dl>
+
 </section>
 <section id="mail">
 <h2>Mail<a class="headerlink" href="#mail" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.mail.mail.Mail">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.mail.</span></span><span class="sig-name descname"><span class="pre">Mail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sendable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.mail.mail.Mail" title="Link to this definition">¶</a></dt>
+<dd><p>A single mail message that can be sent between communicatable entities. It includes a sender, recipient, and a package that describes the mail’s content.</p>
+<blockquote>
+<div><p>Encapsulates a single unit of mail with a sender, recipient, and a <code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code>. As a subclass of <a class="reference internal" href="element_id.html#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>, it is also observable and can be tracked or logged.</p>
+<dl class="simple">
+<dt>sender<span class="classifier">IDType</span></dt><dd><p>The ID representing the mail sender</p>
+</dd>
+<dt>recipient<span class="classifier">IDType</span></dt><dd><p>The ID representing the mail recipient</p>
+</dd>
+<dt>package<span class="classifier">Package</span></dt><dd><p>The package (category + payload) contained in this mail</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>category<span class="classifier">PackageCategory</span></dt><dd><p>Shortcut for retrieving the category from the underlying package</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>_validate_sender_recipient(value)</dt><dd><p>Validate that the sender and recipient fields are correct IDTypes</p>
+</dd>
+</dl>
+<p>The Mail class is a Sendable element representing a single piece of mail, carrying a Package between a sender and recipient. It provides validation for sender and recipient IDs and easy access to the package’s category.</p>
+</div></blockquote>
+</dd></dl>
+
 </section>
 <section id="mailbox">
 <h2>Mailbox<a class="headerlink" href="#mailbox" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.mail.Mailbox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.</span></span><span class="sig-name descname"><span class="pre">Mailbox</span></span><a class="headerlink" href="#lionagi.protocols.mail.Mailbox" title="Link to this definition">¶</a></dt>
+<dd><p>A mailbox that accumulates inbound and outbound mail for a single communicatable source.</p>
+<p>A mailbox stores inbound and outbound mail for a <strong>single</strong> source. Inbound mail is grouped by sender, and outbound mail is queued in a progression for dispatch.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt><a href="#id8"><span class="problematic" id="id9">pile_</span></a><span class="classifier">Pile[Mail]</span></dt><dd><p>A concurrency-safe collection storing all mail items</p>
+</dd>
+<dt>pending_ins<span class="classifier">dict[IDType, Progression]</span></dt><dd><p>Maps each sender’s ID to a progression of inbound mail</p>
+</dd>
+<dt>pending_outs<span class="classifier">Progression</span></dt><dd><p>A progression of mail items waiting to be sent (outbound)</p>
+</dd>
+</dl>
+</section>
+<section id="properties">
+<h3>Properties<a class="headerlink" href="#properties" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>senders<span class="classifier">list[str]</span></dt><dd><p>List of sender IDs that have inbound mail in this mailbox</p>
+</dd>
+</dl>
+</section>
+<section id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>append_in(item)</dt><dd><p>Add a mail item to the inbound queue for the item’s sender</p>
+</dd>
+<dt>append_out(item)</dt><dd><p>Add a mail item to the outbound (pending_outs) queue</p>
+</dd>
+<dt>exclude(item)</dt><dd><p>Remove a mail item from all internal references (inbound, outbound, and pile)</p>
+</dd>
+<dt>__contains__(item)</dt><dd><p>Check if a mail item is currently in this mailbox</p>
+</dd>
+<dt>__bool__()</dt><dd><p>Indicates if the mailbox contains any mail</p>
+</dd>
+<dt>__len__()</dt><dd><p>Number of mail items in this mailbox</p>
+</dd>
+</dl>
+</section>
+<section id="notes">
+<h3>Notes<a class="headerlink" href="#notes" title="Link to this heading">¶</a></h3>
+<p>The Mailbox class implements a simple mailbox system for each Communicatable entity.
+It holds inbound and outbound mail, stored internally in a Pile for thread-safe access.</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="mailmanager">
 <h2>MailManager<a class="headerlink" href="#mailmanager" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.mail.MailManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.</span></span><span class="sig-name descname"><span class="pre">MailManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Manager</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.mail.MailManager" title="Link to this definition">¶</a></dt>
+<dd><p>A manager for mail operations across various observable sources within LionAGI. Unlike Exchange, this class can manage the state of multiple sources in a more general or higher-level context, storing mail queues in a dictionary rather than individual buffers.</p>
+<p>Provides a manager-level approach to mail distribution, storing mail in a dictionary keyed by recipient and sender. It can “collect” from each source and “send” to each recipient, optionally running in an asynchronous loop.</p>
+<section id="id2">
+<h3>Attributes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>sources<span class="classifier">Pile[Observable]</span></dt><dd><p>A concurrency-safe collection of known sources</p>
+</dd>
+<dt>mails<span class="classifier">dict[str, dict[str, deque]]</span></dt><dd><p>A nested mapping of recipient -&gt; sender -&gt; queue of mail</p>
+</dd>
+<dt>execute_stop<span class="classifier">bool</span></dt><dd><p>Controls the asynchronous execution loop; set to True to exit</p>
+</dd>
+</dl>
+</section>
+<section id="id3">
+<h3>Methods<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>add_sources(sources)</dt><dd><p>Register new sources in the MailManager</p>
+</dd>
+<dt>delete_source(source_id)</dt><dd><p>Remove a source from the manager, discarding any associated mail</p>
+</dd>
+<dt>create_mail(sender, recipient, category, package, request_source=None)</dt><dd><p>Factory method to generate a Mail object</p>
+</dd>
+<dt>collect(sender)</dt><dd><p>Collect outbound mail from a single source</p>
+</dd>
+<dt>send(recipient)</dt><dd><p>Send any pending mail to a specified recipient</p>
+</dd>
+<dt>collect_all()</dt><dd><p>Collect outbound mail from all known sources</p>
+</dd>
+<dt>send_all()</dt><dd><p>Send mail to all known recipients who have pending items</p>
+</dd>
+<dt>execute(refresh_time=1)</dt><dd><p>Continuously collect and send mail in an asynchronous loop</p>
+</dd>
+</dl>
+</section>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>sources<span class="classifier">ID.Item | ID.ItemSeq, optional</span></dt><dd><p>Initial source(s) to manage. Each source must be an Observable.</p>
+</dd>
+</dl>
+</section>
+<section id="id4">
+<h3>Notes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<p>The MailManager class coordinates mail operations across multiple sources in a more abstract or high-level manner compared to Exchange. It stores mail queues in a dictionary rather than individual buffers, making it suitable for managing the state of multiple sources in a more general context.</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="package-and-packagecategory">
 <h2>Package and PackageCategory<a class="headerlink" href="#package-and-packagecategory" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.mail.PackageCategory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.</span></span><span class="sig-name descname"><span class="pre">PackageCategory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Enum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.mail.PackageCategory" title="Link to this definition">¶</a></dt>
+<dd><p>Enumeration of common package categories in LionAGI.</p>
+<p>An enumeration that describes various categories (e.g., “message,” “tool,” “signal”) associated with the <a class="reference internal" href="#lionagi.protocols.mail.Package" title="lionagi.protocols.mail.Package"><code class="xref py py-class docutils literal notranslate"><span class="pre">Package</span></code></a>.</p>
+<section id="members">
+<h3>Members<a class="headerlink" href="#members" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>MESSAGE<span class="classifier">str</span></dt><dd><p>General message content</p>
+</dd>
+<dt>TOOL<span class="classifier">str</span></dt><dd><p>A tool or action to be invoked</p>
+</dd>
+<dt>IMODEL<span class="classifier">str</span></dt><dd><p>Some internal model reference</p>
+</dd>
+<dt>NODE<span class="classifier">str</span></dt><dd><p>A node in a graph</p>
+</dd>
+<dt>NODE_LIST<span class="classifier">str</span></dt><dd><p>A list of nodes</p>
+</dd>
+<dt>NODE_ID<span class="classifier">str</span></dt><dd><p>A node ID</p>
+</dd>
+<dt>START<span class="classifier">str</span></dt><dd><p>A ‘start’ signal</p>
+</dd>
+<dt>END<span class="classifier">str</span></dt><dd><p>An ‘end’ signal</p>
+</dd>
+<dt>CONDITION<span class="classifier">str</span></dt><dd><p>A condition or gating logic</p>
+</dd>
+<dt>SIGNAL<span class="classifier">str</span></dt><dd><p>A more generic signal or marker</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols.mail.Package">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols.mail.</span></span><span class="sig-name descname"><span class="pre">Package</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Observable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols.mail.Package" title="Link to this definition">¶</a></dt>
+<dd><p>A self-contained package that can be attached to Mail items. Includes a unique ID, creation timestamp, category, payload item, and an optional request source for context.</p>
+<p>Holds the main payload data and classification for each mail. Optionally includes a reference to the request origin.</p>
+<section id="id5">
+<h3>Attributes<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>category<span class="classifier">PackageCategory</span></dt><dd><p>The classification or type of package</p>
+</dd>
+<dt>item<span class="classifier">Any</span></dt><dd><p>The main payload or data of this package</p>
+</dd>
+<dt>request_source<span class="classifier">ID[Communicatable] | None</span></dt><dd><p>An optional reference indicating the origin or context for this package</p>
+</dd>
+<dt>id<span class="classifier">IDType</span></dt><dd><p>A unique identifier for this package</p>
+</dd>
+<dt>created_at<span class="classifier">float</span></dt><dd><p>Timestamp indicating when this package was created</p>
+</dd>
+</dl>
+</section>
+<section id="id6">
+<h3>Parameters<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>category<span class="classifier">PackageCategory</span></dt><dd><p>The classification or type of package</p>
+</dd>
+<dt>item<span class="classifier">Any</span></dt><dd><p>The main payload or data of this package</p>
+</dd>
+<dt>request_source<span class="classifier">ID[Communicatable], optional</span></dt><dd><p>An optional reference indicating the origin or context for this package</p>
+</dd>
+</dl>
+</section>
+<section id="id7">
+<h3>Notes<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<p>The Package class is designed to be a self-contained unit that can be attached to Mail items.
+It uses slots for memory efficiency and includes validation for the package category.</p>
+</section>
+</dd></dl>
+
 <section id="usage-example">
 <h3>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading">¶</a></h3>
 <p>Below is a simple usage scenario demonstrating these components:</p>
@@ -437,11 +675,25 @@ include:</p>
 <li><a class="reference internal" href="#">Mail System</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#contents">Contents</a></li>
-<li><a class="reference internal" href="#exchange">Exchange</a></li>
-<li><a class="reference internal" href="#mail">Mail</a></li>
-<li><a class="reference internal" href="#mailbox">Mailbox</a></li>
-<li><a class="reference internal" href="#mailmanager">MailManager</a></li>
+<li><a class="reference internal" href="#exchange">Exchange</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.mail.exchange.Exchange"><code class="docutils literal notranslate"><span class="pre">Exchange</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mail">Mail</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.mail.mail.Mail"><code class="docutils literal notranslate"><span class="pre">Mail</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mailbox">Mailbox</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.mail.Mailbox"><code class="docutils literal notranslate"><span class="pre">Mailbox</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mailmanager">MailManager</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.mail.MailManager"><code class="docutils literal notranslate"><span class="pre">MailManager</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#package-and-packagecategory">Package and PackageCategory</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.mail.PackageCategory"><code class="docutils literal notranslate"><span class="pre">PackageCategory</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.protocols.mail.Package"><code class="docutils literal notranslate"><span class="pre">Package</span></code></a></li>
 <li><a class="reference internal" href="#usage-example">Usage Example</a></li>
 </ul>
 </li>

@@ -316,6 +316,21 @@ an “observer” in LionAGI.</p>
 </section>
 <section id="manager">
 <h2>Manager<a class="headerlink" href="#manager" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Manager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Manager</span></span><a class="headerlink" href="#lionagi.protocols._concepts.Manager" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols._concepts.Observer" title="lionagi.protocols._concepts.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a></p>
+<p>A “manager” is a specialized observer that administers or orchestrates certain objects
+in the system. Managers typically handle creation, updates, or deletions of resources.
+They may also provide concurrency-safe or stateful operations to coordinate these objects.</p>
+<section id="id1">
+<h3>Notes<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>The exact management logic is determined by subclasses. For example, a <cite>LogManager</cite>
+might store and manage log entries, while other managers might oversee different
+resource types.</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="relational">
 <h2>Relational<a class="headerlink" href="#relational" title="Link to this heading">¶</a></h2>
@@ -325,8 +340,8 @@ an “observer” in LionAGI.</p>
 <dd><p>Represents a <strong>graph-connectable</strong> object. In LionAGI, classes implementing <code class="docutils literal notranslate"><span class="pre">Relational</span></code>
 can appear as nodes in a graph-like structure. They may store relationships (edges)
 to neighbors or track references to other <code class="docutils literal notranslate"><span class="pre">Relational</span></code> elements.</p>
-<section id="id1">
-<h3>Notes<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Notes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <p>This abstract base class does not prescribe how to store or access neighbors, but
 indicates that the implementing class can integrate into a graph data model.</p>
 </section>
@@ -342,8 +357,8 @@ indicates that the implementing class can integrate into a graph data model.</p>
 that the concrete subclass define sender/recipient information (e.g., in an event
 or queue-based system). Typical usage includes multi-agent architectures where
 messages must be routed between participants.</p>
-<section id="id2">
-<h3>Notes<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Notes<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <p>“Sendable” implies the presence of a <strong>sender</strong> and <strong>recipient</strong> attribute (or
 equivalent). This class does not define actual methods for sending messages, as
 it merely establishes the conceptual requirement.</p>
@@ -359,8 +374,8 @@ it merely establishes the conceptual requirement.</p>
 <dd><p>Denotes that an entity must possess an <strong>id</strong> field, often a UUID or similar unique identifier.
 Many core LionAGI classes inherit from <code class="docutils literal notranslate"><span class="pre">Observable</span></code> to ensure they can be referenced,
 logged, and tracked by a universal ID. This simplifies indexing or lookups across the system.</p>
-<section id="id3">
-<h3>Notes<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Notes<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Subclasses must provide a concrete implementation or storage for <code class="docutils literal notranslate"><span class="pre">id</span></code>.</p></li>
 <li><p>Typically used with concurrency-safe collections or logging frameworks.</p></li>
@@ -371,6 +386,34 @@ logged, and tracked by a universal ID. This simplifies indexing or lookups acros
 </section>
 <section id="communicatable">
 <h2>Communicatable<a class="headerlink" href="#communicatable" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Communicatable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.protocols._concepts.</span></span><span class="sig-name descname"><span class="pre">Communicatable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Observable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Communicatable" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <a class="reference internal" href="#lionagi.protocols._concepts.Observable" title="lionagi.protocols._concepts.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a></p>
+<p>A more specialized form of <strong>observable</strong> object that also supports
+mailbox-based messaging. This means the subclass must define:</p>
+<ul class="simple">
+<li><p>A mailbox or channel to receive messages.</p></li>
+<li><p>A <a class="reference internal" href="#lionagi.protocols._concepts.Communicatable.send" title="lionagi.protocols._concepts.Communicatable.send"><code class="xref py py-meth docutils literal notranslate"><span class="pre">send()</span></code></a> method for dispatching messages.</p></li>
+</ul>
+<section id="methods">
+<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.protocols._concepts.Communicatable.send">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Communicatable.send" title="Link to this definition">¶</a></dt>
+<dd><p>Abstract method to send a message. Subclasses should implement the necessary
+logic to route or deliver the message (e.g., placing it on a queue or
+invoking a handler).</p>
+</dd></dl>
+
+</section>
+<section id="id5">
+<h3>Notes<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<p>By inheriting from <a class="reference internal" href="#lionagi.protocols._concepts.Observable" title="lionagi.protocols._concepts.Observable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observable</span></code></a>, a communicatable entity also guarantees
+it has a unique ID. This is crucial for addressing messages.</p>
+</section>
+</dd></dl>
+
 </section>
 <section id="condition">
 <h2>Condition<a class="headerlink" href="#condition" title="Link to this heading">¶</a></h2>
@@ -380,8 +423,8 @@ logged, and tracked by a universal ID. This simplifies indexing or lookups acros
 <dd><p>Defines an <strong>async</strong> interface for condition checks. Subclasses must implement
 an <code class="docutils literal notranslate"><span class="pre">apply</span></code> method returning a boolean indicating whether a given condition
 is satisfied.</p>
-<section id="methods">
-<h3>Methods<a class="headerlink" href="#methods" title="Link to this heading">¶</a></h3>
+<section id="id6">
+<h3>Methods<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <dl class="py method">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Condition.apply">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#lionagi.protocols._concepts.Condition.apply" title="Link to this definition">¶</a></dt>
@@ -412,8 +455,8 @@ must provide at least two methods:</p>
 </ul>
 <p>These methods add or remove elements from the collection, respectively. The details
 (e.g., concurrency, strict typing, ordering) are left to the subclass.</p>
-<section id="id4">
-<h3>Methods<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="id7">
+<h3>Methods<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <dl class="py method">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Collective.include">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Collective.include" title="Link to this definition">¶</a></dt>
@@ -427,9 +470,9 @@ must provide at least two methods:</p>
 </dd></dl>
 
 </section>
-<section id="id5">
-<h3>Notes<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
-<p>Implementations such as <code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code> provide
+<section id="id8">
+<h3>Notes<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
+<p>Implementations such as <a class="reference internal" href="pile.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> provide
 concurrency-safe storage and type enforcement on top of this base.</p>
 </section>
 </dd></dl>
@@ -443,8 +486,8 @@ concurrency-safe storage and type enforcement on top of this base.</p>
 <dd><p>Similar to <a class="reference internal" href="#lionagi.protocols._concepts.Collective" title="lionagi.protocols._concepts.Collective"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collective</span></code></a>, but emphasizes a <strong>strict sequence</strong> of elements.
 This means order matters, and subclasses must define how items are inserted or
 removed while preserving that sequence.</p>
-<section id="id6">
-<h3>Methods<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<section id="id9">
+<h3>Methods<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <dl class="py method">
 <dt class="sig sig-object py" id="lionagi.protocols._concepts.Ordering.include">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">include</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.protocols._concepts.Ordering.include" title="Link to this definition">¶</a></dt>
@@ -460,8 +503,8 @@ the subclass.</p>
 </dd></dl>
 
 </section>
-<section id="id7">
-<h3>Notes<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<section id="id10">
+<h3>Notes<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
 <p>A prime example is <a class="reference internal" href="progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a>,
 which keeps a strictly ordered list of IDs or elements.</p>
 </section>
@@ -539,7 +582,10 @@ which keeps a strictly ordered list of IDs or elements.</p>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Observer"><code class="docutils literal notranslate"><span class="pre">Observer</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#manager">Manager</a></li>
+<li><a class="reference internal" href="#manager">Manager</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Manager"><code class="docutils literal notranslate"><span class="pre">Manager</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#relational">Relational</a><ul>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Relational"><code class="docutils literal notranslate"><span class="pre">Relational</span></code></a></li>
 </ul>
@@ -552,7 +598,13 @@ which keeps a strictly ordered list of IDs or elements.</p>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Observable"><code class="docutils literal notranslate"><span class="pre">Observable</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#communicatable">Communicatable</a></li>
+<li><a class="reference internal" href="#communicatable">Communicatable</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Communicatable"><code class="docutils literal notranslate"><span class="pre">Communicatable</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Communicatable.send"><code class="docutils literal notranslate"><span class="pre">Communicatable.send()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a class="reference internal" href="#condition">Condition</a><ul>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a><ul>
 <li><a class="reference internal" href="#lionagi.protocols._concepts.Condition.apply"><code class="docutils literal notranslate"><span class="pre">Condition.apply()</span></code></a></li>

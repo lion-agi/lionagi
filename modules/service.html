@@ -298,7 +298,13 @@ system helps unify how LionAGI communicates with various model providers
 configuration, caching, and concurrency constraints.</p>
 <section id="endpointconfig-endpoint">
 <h2>1. EndpointConfig &amp; EndPoint<a class="headerlink" href="#endpointconfig-endpoint" title="Link to this heading">¶</a></h2>
-<p id="module-lionagi.service.endpoints.base">Describes the essential attributes of an API endpoint:</p>
+<dl class="py class" id="module-lionagi.service.endpoints.base">
+<dt class="sig sig-object py" id="lionagi.service.endpoints.base.EndpointConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.endpoints.base.</span></span><span class="sig-name descname"><span class="pre">EndpointConfig</span></span><a class="headerlink" href="#lionagi.service.endpoints.base.EndpointConfig" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+</dd></dl>
+
+<p>Describes the essential attributes of an API endpoint:</p>
 <ul class="simple">
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">provider</span></code> (str|None): The backend provider name (e.g., “openai”).</p></li>
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">base_url</span></code> (str|None): Base URL for requests.</p></li>
@@ -357,12 +363,20 @@ token count or the token IDs themselves.</p></li>
 </section>
 <section id="module-0">
 <span id="apicalling-event"></span><h2>3. APICalling (Event)<a class="headerlink" href="#module-0" title="Link to this heading">¶</a></h2>
-<p>Stores:
-- <code class="xref py py-attr docutils literal notranslate"><span class="pre">payload</span></code> (dict): Data to send in the request.
-- <code class="xref py py-attr docutils literal notranslate"><span class="pre">headers</span></code> (dict): Additional HTTP headers.
-- <code class="xref py py-attr docutils literal notranslate"><span class="pre">endpoint</span></code> (<code class="xref py py-class docutils literal notranslate"><span class="pre">EndPoint</span></code>): The endpoint to call.
-- <code class="xref py py-attr docutils literal notranslate"><span class="pre">is_cached</span></code> (bool): Whether this call uses caching.
-- <code class="xref py py-attr docutils literal notranslate"><span class="pre">should_invoke_endpoint</span></code> (bool): If False, no actual invocation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.service.endpoints.base.APICalling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.endpoints.base.</span></span><span class="sig-name descname"><span class="pre">APICalling</span></span><a class="headerlink" href="#lionagi.service.endpoints.base.APICalling" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></p>
+<p>An event class representing a single API call. Stores:</p>
+</dd></dl>
+
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">payload</span></code> (dict): Data to send in the request.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">headers</span></code> (dict): Additional HTTP headers.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">endpoint</span></code> (<code class="xref py py-class docutils literal notranslate"><span class="pre">EndPoint</span></code>): The endpoint to call.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_cached</span></code> (bool): Whether this call uses caching.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">should_invoke_endpoint</span></code> (bool): If False, no actual invocation.</p></li>
+</ul>
 <p>Implements:</p>
 <ul class="simple">
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke()</span></code> (async):
@@ -394,6 +408,10 @@ and possibly different base URLs or roles.</p>
 </section>
 <section id="module-lionagi.service.endpoints.rate_limited_processor">
 <span id="rate-limited-execution"></span><h2>5. Rate-Limited Execution<a class="headerlink" href="#module-lionagi.service.endpoints.rate_limited_processor" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.service.endpoints.rate_limited_processor.RateLimitedAPIProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.endpoints.rate_limited_processor.</span></span><span class="sig-name descname"><span class="pre">RateLimitedAPIProcessor</span></span><a class="headerlink" href="#lionagi.service.endpoints.rate_limited_processor.RateLimitedAPIProcessor" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code></p>
 <p>A concurrency-limiting, rate-limiting processor dedicated
 to handling <code class="xref py py-class docutils literal notranslate"><span class="pre">APICalling</span></code> events. Supports:</p>
 <ul class="simple">
@@ -401,11 +419,19 @@ to handling <code class="xref py py-class docutils literal notranslate"><span cl
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">limit_tokens</span></code> (#tokens per interval).</p></li>
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">interval</span></code> (seconds) for refreshing or replenishing capacity.</p></li>
 </ul>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.service.endpoints.rate_limited_processor.RateLimitedAPIExecutor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.endpoints.rate_limited_processor.</span></span><span class="sig-name descname"><span class="pre">RateLimitedAPIExecutor</span></span><a class="headerlink" href="#lionagi.service.endpoints.rate_limited_processor.RateLimitedAPIExecutor" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></p>
 <p>Builds on the above <strong>Processor</strong>. For an iModel, it manages
 the queued or concurrent calls.
 <strong>Example</strong>:
 One can define a queue of max capacity 100, refreshing every 60s,
 limiting requests or tokens as needed.</p>
+</dd></dl>
+
 </section>
 <section id="module-lionagi.service.imodel">
 <span id="imodel"></span><h2>6. iModel<a class="headerlink" href="#module-lionagi.service.imodel" title="Link to this heading">¶</a></h2>
@@ -548,17 +574,27 @@ throttling or over-limit errors.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">API Service System</a><ul>
-<li><a class="reference internal" href="#endpointconfig-endpoint">1. EndpointConfig &amp; EndPoint</a></li>
+<li><a class="reference internal" href="#endpointconfig-endpoint">1. EndpointConfig &amp; EndPoint</a><ul>
+<li><a class="reference internal" href="#lionagi.service.endpoints.base.EndpointConfig"><code class="docutils literal notranslate"><span class="pre">EndpointConfig</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-lionagi.service.token_calculator">2. TokenCalculator</a><ul>
 <li><a class="reference internal" href="#lionagi.service.token_calculator.TokenCalculator"><code class="docutils literal notranslate"><span class="pre">TokenCalculator</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-0">3. APICalling (Event)</a></li>
+<li><a class="reference internal" href="#module-0">3. APICalling (Event)</a><ul>
+<li><a class="reference internal" href="#lionagi.service.endpoints.base.APICalling"><code class="docutils literal notranslate"><span class="pre">APICalling</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#chatcompletionendpoint-subclasses">4. ChatCompletionEndPoint &amp; Subclasses</a><ul>
 <li><a class="reference internal" href="#lionagi.service.endpoints.chat_completion.ChatCompletionEndPoint"><code class="docutils literal notranslate"><span class="pre">ChatCompletionEndPoint</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#module-lionagi.service.endpoints.rate_limited_processor">5. Rate-Limited Execution</a></li>
+<li><a class="reference internal" href="#module-lionagi.service.endpoints.rate_limited_processor">5. Rate-Limited Execution</a><ul>
+<li><a class="reference internal" href="#lionagi.service.endpoints.rate_limited_processor.RateLimitedAPIProcessor"><code class="docutils literal notranslate"><span class="pre">RateLimitedAPIProcessor</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.service.endpoints.rate_limited_processor.RateLimitedAPIExecutor"><code class="docutils literal notranslate"><span class="pre">RateLimitedAPIExecutor</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-lionagi.service.imodel">6. iModel</a><ul>
 <li><a class="reference internal" href="#lionagi.service.imodel.iModel"><code class="docutils literal notranslate"><span class="pre">iModel</span></code></a></li>
 </ul>

@@ -313,9 +313,10 @@ have been processed and generating a final “report.”</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="lionagi.form.base.BaseForm">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.base.</span></span><span class="sig-name descname"><span class="pre">BaseForm</span></span><a class="headerlink" href="#lionagi.form.base.BaseForm" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">OperableModel</span></code></p>
 <p>A minimal form that tracks:</p>
+</dd></dl>
+
 <ul class="simple">
 <li><p><strong>Assignment</strong>: The objective or mapping from inputs to outputs.</p></li>
 <li><p><strong>Output fields</strong>: The subset of fields to present as results.</p></li>
@@ -352,9 +353,10 @@ Gather the output fields as a dictionary, optionally ignoring invalid fields.</p
 <dl class="py class" id="module-lionagi.form.form">
 <dt class="sig sig-object py" id="lionagi.form.form.Form">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.form.</span></span><span class="sig-name descname"><span class="pre">Form</span></span><a class="headerlink" href="#lionagi.form.form.Form" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseForm</span></code></p>
 <p>This class distinguishes three sets of fields:</p>
+</dd></dl>
+
 <ol class="arabic simple">
 <li><p><strong>input_fields</strong> (provided by user or environment).</p></li>
 <li><p><strong>request_fields</strong> (which an “intelligent process” should fill).</p></li>
@@ -406,9 +408,10 @@ assignment or fields.</p></li>
 <dl class="py class" id="module-lionagi.form.report">
 <dt class="sig sig-object py" id="lionagi.form.report.Report">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.form.report.</span></span><span class="sig-name descname"><span class="pre">Report</span></span><a class="headerlink" href="#lionagi.form.report.Report" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code></p>
 <p>Designed to collect <strong>multiple tasks</strong> (forms) into one object:</p>
+</dd></dl>
+
 <ul class="simple">
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">completed_tasks</span></code>: A pile of <code class="xref py py-class docutils literal notranslate"><span class="pre">Form</span></code> instances that are done.</p></li>
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_completed_form(form,</span> <span class="pre">update_results=False)()</span></code>:

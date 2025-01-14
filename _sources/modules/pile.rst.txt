@@ -21,11 +21,8 @@ Pile
 ----
 .. class:: Pile(Element, Collective[E], Generic[E])
    :module: lionagi.protocols.generic.pile
-   :show-inheritance:
 
-   **Inherits from**:
-   :class:`~lionagi.protocols.generic.element.Element`,
-   :class:`~lionagi.protocols._concepts.Collective`
+   **Inherits from**: :class:`~lionagi.protocols.generic.element.Element`, :class:`~lionagi.protocols._concepts.Collective`
 
    A **concurrent**, **ordered** collection that manages items along with 
    their IDs, preserves insertion order via an internal :class:`Progression`, 

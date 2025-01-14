@@ -299,12 +299,16 @@ or response types on the fly, allowing a dynamic approach to typed
 exchanges.</p>
 <section id="operative-operative-py">
 <h2>1. Operative (<code class="docutils literal notranslate"><span class="pre">operative.py</span></code>)<a class="headerlink" href="#operative-operative-py" title="Link to this heading">¶</a></h2>
-<p id="module-lionagi.operatives.operative"><strong>Purpose</strong>:
-- Serves as a flexible container describing how a system should</p>
-<blockquote>
-<div><p>handle request data (input) and produce response data (output).</p>
-</div></blockquote>
+<dl class="py class" id="module-lionagi.operatives.operative">
+<dt class="sig sig-object py" id="lionagi.operatives.operative.Operative">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.operatives.operative.</span></span><span class="sig-name descname"><span class="pre">Operative</span></span><a class="headerlink" href="#lionagi.operatives.operative.Operative" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">SchemaModel</span></code></p>
+<p><strong>Purpose</strong>:</p>
+</dd></dl>
+
 <ul class="simple">
+<li><p>Serves as a flexible container describing how a system should
+handle request data (input) and produce response data (output).</p></li>
 <li><p>References two sets of <code class="xref py py-class docutils literal notranslate"><span class="pre">ModelParams</span></code>: one for the request
 (<code class="xref py py-attr docutils literal notranslate"><span class="pre">request_params</span></code>) and one for the response (<code class="xref py py-attr docutils literal notranslate"><span class="pre">response_params</span></code>).</p></li>
 <li><p>Dynamically generates Pydantic model classes for these sets of parameters.</p></li>
@@ -362,6 +366,10 @@ reliably.</p>
 </section>
 <section id="module-0">
 <span id="step-operative-py"></span><h2>2. Step (<code class="docutils literal notranslate"><span class="pre">operative.py</span></code>)<a class="headerlink" href="#module-0" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.operatives.operative.StepModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.operatives.operative.</span></span><span class="sig-name descname"><span class="pre">StepModel</span></span><a class="headerlink" href="#lionagi.operatives.operative.StepModel" title="Link to this definition">¶</a></dt>
+<dd><p><strong>Inherits from</strong>: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>An <strong>example</strong> Pydantic model that demonstrates how a single “operational
 step” might look:</p>
 <ul class="simple">
@@ -373,6 +381,8 @@ requests or replies associated with the step.</p></li>
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">action_required</span></code>: Boolean indicating if the step must
 involve a tool call.</p></li>
 </ul>
+</dd></dl>
+
 <p><strong>Example</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.operative</span><span class="w"> </span><span class="kn">import</span> <span class="n">StepModel</span>
 
@@ -392,10 +402,10 @@ involve a tool call.</p></li>
 <dd></dd></dl>
 
 <p>A <strong>utility</strong> class with static methods to help you build or update
-<code class="xref py py-class docutils literal notranslate"><span class="pre">Operative</span></code> objects in a single-step context. For instance:</p>
+<a class="reference internal" href="#lionagi.operatives.operative.Operative" title="lionagi.operatives.operative.Operative"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operative</span></code></a> objects in a single-step context. For instance:</p>
 <ul class="simple">
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">request_operative(...)()</span></code>
-Creates an <code class="xref py py-class docutils literal notranslate"><span class="pre">Operative</span></code> geared towards request-handling
+Creates an <a class="reference internal" href="#lionagi.operatives.operative.Operative" title="lionagi.operatives.operative.Operative"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operative</span></code></a> geared towards request-handling
 (optionally adding fields like reason or actions).</p></li>
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">respond_operative(...)()</span></code>
 Once you have an operative with a known request format, this helps
@@ -436,7 +446,7 @@ or validation.</p></li>
 <li><p><strong>StepModel</strong> exemplifies a single-step data structure, showing how
 instructions, reason, and action requests combine in a single chunk.</p></li>
 <li><p><strong>Step</strong> offers a convenience set of methods for creating or updating
-an <code class="xref py py-class docutils literal notranslate"><span class="pre">Operative</span></code>, bridging the gap between typed Pydantic models
+an <a class="reference internal" href="#lionagi.operatives.operative.Operative" title="lionagi.operatives.operative.Operative"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operative</span></code></a>, bridging the gap between typed Pydantic models
 and real LionAGI usage, including potential tool calls (action requests).</p></li>
 </ul>
 <p>When building multi-step flows or orchestrating larger tasks, you can
@@ -501,8 +511,14 @@ validation, and a streamlined approach to request/response handling.</p>
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Operative &amp; Step</a><ul>
-<li><a class="reference internal" href="#operative-operative-py">1. Operative (<code class="docutils literal notranslate"><span class="pre">operative.py</span></code>)</a></li>
-<li><a class="reference internal" href="#module-0">2. Step (<code class="docutils literal notranslate"><span class="pre">operative.py</span></code>)</a></li>
+<li><a class="reference internal" href="#operative-operative-py">1. Operative (<code class="docutils literal notranslate"><span class="pre">operative.py</span></code>)</a><ul>
+<li><a class="reference internal" href="#lionagi.operatives.operative.Operative"><code class="docutils literal notranslate"><span class="pre">Operative</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-0">2. Step (<code class="docutils literal notranslate"><span class="pre">operative.py</span></code>)</a><ul>
+<li><a class="reference internal" href="#lionagi.operatives.operative.StepModel"><code class="docutils literal notranslate"><span class="pre">StepModel</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#summary">Summary</a></li>
 </ul>
 </li>
