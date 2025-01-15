@@ -4,10 +4,10 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import Self
 
 import pandas as pd
 from pydantic import Field, JsonValue, model_validator
+from typing_extensions import Self
 
 from lionagi.operatives.types import ActionManager, Tool
 from lionagi.protocols.mail.exchange import Exchange

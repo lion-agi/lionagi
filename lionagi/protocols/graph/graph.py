@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import deque
-from typing import Any, Literal, Self
+from typing import Any, Literal
 
 from pydantic import Field, model_validator
+from typing_extensions import Self
 
 from lionagi._errors import ItemExistsError, RelationError
 from lionagi.protocols._concepts import Relational

@@ -4,7 +4,6 @@
 
 import inspect
 from collections.abc import Callable
-from typing import Self
 
 from pydantic import (
     BaseModel,
@@ -15,6 +14,7 @@ from pydantic import (
     model_validator,
 )
 from pydantic.fields import FieldInfo
+from typing_extensions import Self
 
 from lionagi.libs.validate.common_field_validators import (
     validate_boolean_field,

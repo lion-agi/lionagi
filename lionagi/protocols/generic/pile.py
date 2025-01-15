@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import threading
 from collections import deque
 from collections.abc import (
@@ -17,12 +16,12 @@ from collections.abc import (
 )
 from functools import wraps
 from pathlib import Path
-from typing import Any, ClassVar, Generic, Self, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 
 import pandas as pd
 from pydantic import Field, field_serializer
 from pydantic.fields import FieldInfo
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from lionagi._errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, is_same_dtype, to_list

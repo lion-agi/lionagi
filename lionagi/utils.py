@@ -33,7 +33,6 @@ from pathlib import Path
 from typing import (
     Any,
     Literal,
-    Self,
     TypedDict,
     TypeVar,
     get_args,
@@ -43,6 +42,7 @@ from typing import (
 
 from pydantic import BaseModel, model_validator
 from pydantic_core import PydanticUndefinedType
+from typing_extensions import Self
 
 from .settings import Settings
 
