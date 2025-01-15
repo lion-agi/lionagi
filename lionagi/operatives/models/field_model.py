@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
-from typing import Any, Self
+from typing import Any
+from typing_extensions import Self
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo

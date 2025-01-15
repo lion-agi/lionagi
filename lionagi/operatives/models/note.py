@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import ItemsView, Iterator, ValuesView
-from typing import Any, TypeAlias, override
+from typing import Any, TypeAlias
+
+from typing_extensions import override
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 

@@ -4,7 +4,7 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import Self
+from typing_extensions import Self
 
 import pandas as pd
 from pydantic import Field, JsonValue, model_validator

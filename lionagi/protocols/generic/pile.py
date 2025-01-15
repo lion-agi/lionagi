@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import asyncio
-import json
+from typing_extensions import Self
 import threading
 from collections import deque
 from collections.abc import (
@@ -17,7 +17,7 @@ from collections.abc import (
 )
 from functools import wraps
 from pathlib import Path
-from typing import Any, ClassVar, Generic, Self, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 
 import pandas as pd
 from pydantic import Field, field_serializer

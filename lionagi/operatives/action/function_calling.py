@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-from typing import Any, Self
+from typing import Any
+from typing_extensions import Self
 
 from pydantic import Field, model_validator
 

@@ -2,154 +2,153 @@
 
 ## Chapter 1: Building Your First AI Assistant
 
-LionAGI helps you build AI-powered applications quickly and reliably. In this chapter, you'll create a research assistant that:
-- Researches topics thoroughly
-- Saves findings to files
-- Handles conversations naturally
-- Manages errors gracefully
+LionAGI helps you build AI-powered applications quickly and reliably. In this chapter, you'll create a **research assistant** that:
+
+- Researches topics thoroughly  
+- Saves findings to files  
+- Handles conversations naturally  
+- Manages errors gracefully  
+
+---
 
 ### Prerequisites
-- Python 3.10 or higher
-- Basic Python knowledge
-- OpenAI API key
+- Python 3.10 or higher  
+- Basic Python knowledge  
+- OpenAI API key  
 
-## Setup
+---
 
-### Installation
+## 1. Setup
+
+### 1.1 Installation
+
 ```bash
-# Create environment
+# Create a virtual environment
 python -m venv env
-source env/bin/activate  # or `env\Scripts\activate` on Windows
+source env/bin/activate  # On Windows: env\Scripts\activate
 
-# Install LionAGI and helpers
-pip install lionagi python-dotenv
+# Install LionAGI and dotenv
+pip install lionagi
 ```
+1.2 API Setup
 
-### API Setup
 ```python
 import os
 from dotenv import load_dotenv
 
 # Load API key from .env file
-# Create .env with: OPENAI_API_KEY=your-key
+# Create a .env file containing:
+# OPENAI_API_KEY=your-key
 load_dotenv()
 
-# Or set directly (not recommended for production)
+# Alternatively, set directly (not recommended for production):
 os.environ["OPENAI_API_KEY"] = "your-api-key"
 ```
 
-## Building a Research Assistant
+2. Building a Basic Assistant
 
-### Basic Assistant
+The Basic Assistant shows how to query GPT-based models with LionAGI. We’ll ask a few questions about AI Safety as an example.
 ```python
-from lionagi import Branch, Model, types
+from lionagi import Branch, iModel
+from IPython.display import display, Markdown
 
-async def research_topic(
-    topic: str,
-    questions: list[str]
-) -> types.Response:
-    """Research a topic with specific questions."""
-    # Create research assistant
-    assistant = Branch(
-        name="Researcher",
-        system="""You are a research assistant.
-        Provide clear, accurate information.
-        Support claims with evidence."""
-    )
-    
-    # Configure model
-    model = Model(
-        provider="openai",
-        model="gpt-3.5-turbo",  # or "gpt-4" for more depth
-        temperature=0.7  # balance accuracy & creativity
-    )
-    assistant.add_model(model)
-    
-    # Research topic
-    context = f"Research topic: {topic}"
-    responses = []
-    
-    for question in questions:
-        response = await assistant.chat(
-            f"{context}\nQuestion: {question}"
-        )
-        responses.append({
-            "question": question,
-            "answer": response
-        })
-    
-    return responses
+# 1. Configure the AI model
+ai_model = iModel(
+    provider="openai",
+    model="gpt-4o-mini",  # Example model identifier
+    temperature=0.7,      # Balances accuracy & creativity
+    invoke_with_endpoint=False,
+)
 
-# Usage
-import asyncio
-import json
+# 2. Create the 'Researcher' assistant branch
+assistant = Branch(
+    name="Researcher",
+    system="""You are a research assistant.
+    Provide clear, accurate information.
+    Support claims with concise evidence.""",
+    chat_model=ai_model,
+)
 
-async def main():
-    # Research AI safety
-    topic = "AI Safety"
-    questions = [
-        "What are the main concerns?",
-        "What solutions exist?",
-        "What are future challenges?"
-    ]
-    
-    # Get findings
-    findings = await research_topic(topic, questions)
-    
-    # Save results
-    with open("ai_safety_research.json", "w") as f:
-        json.dump(findings, f, indent=2)
-    
-    # Print findings
-    for finding in findings:
-        print(f"\nQ: {finding['question']}")
-        print(f"A: {finding['answer']}")
+# 3. Define the topic and questions
+topic = "AI Safety"
+questions = [
+    "What are the main concerns?",
+    "What solutions exist?",
+    "What are future challenges?",
+]
 
-asyncio.run(main())
+# 4. Conduct the research
+context = f"Research topic: {topic}"
+responses = []
+
+for question in questions:
+    # Prompt the assistant with context and question
+    response = await assistant.chat(f"{context}\nQuestion: {question}")
+    
+    # Display the response in a Jupyter Notebook (if using IPython)
+    display(Markdown(response))
+    
+    # Store the response
+    responses.append({"question": question, "answer": response})
 ```
+Explanation
+	1.	iModel configures how we interact with OpenAI. We specify the model name and temperature.
+	2.	Branch sets up a conversational context (the system prompt).
+	3.	assistant.chat() sends queries (prompts) to GPT.
+	4.	We collect results in responses, which you can later print or save.
 
-### Advanced Assistant
+3. Building an Advanced Assistant
+
+Now let’s expand on the basic approach. The Advanced Assistant adds:
+	•	Persistent storage for research (JSON files)
+	•	Error handling (API key issues, rate limits)
+	•	Summaries of research topics
+	•	Retrieval of previously saved topics
 ```python
-from lionagi import Branch, Model, types
+from lionagi import Branch, iModel
 from datetime import datetime
 from pathlib import Path
 import json
+from IPython.display import display, Markdown
 
 class ResearchAssistant:
     """Advanced research assistant with persistence."""
     def __init__(
         self,
         name: str = "Researcher",
-        model: str = "gpt-3.5-turbo",
+        model: str = "gpt-4o",
         save_dir: str = "research"
     ):
-        # Create assistant
+        # 1. Configure the AI model
+        ai_model = iModel(
+            provider="openai",
+            model=model,
+            temperature=0.7
+        )
+        
+        # 2. Create the assistant branch
         self.assistant = Branch(
             name=name,
             system="""You are a research assistant.
             Provide clear, accurate information.
             Support claims with evidence.
-            Ask for clarification if needed."""
+            Ask for clarification if needed.""",
+            chat_model=ai_model
         )
         
-        # Configure model
-        self.model = Model(
-            provider="openai",
-            model=model,
-            temperature=0.7
-        )
-        self.assistant.add_model(self.model)
-        
-        # Setup storage
+        # 3. Setup storage
         self.save_dir = Path(save_dir)
         self.save_dir.mkdir(exist_ok=True)
         
-        # Track research
-        self.topics: dict[str, list[dict]] = {}
+        # 4. Track research in memory
+        self.topics: dict[str, dict] = {}
         self._load_history()
     
     def _load_history(self):
-        """Load previous research."""
+        """
+        Loads previous research from JSON files in the save_dir.
+        Each file is expected to be named after the topic, e.g. "ai_safety.json".
+        """
         for file in self.save_dir.glob("*.json"):
             with open(file) as f:
                 research = json.load(f)
@@ -160,9 +159,11 @@ class ResearchAssistant:
         topic: str,
         questions: list[str]
     ) -> dict[str, str]:
-        """Research a topic thoroughly."""
+        """
+        Researches a topic thoroughly by asking multiple questions.
+        Returns a dictionary of {question -> answer}.
+        """
         try:
-            # Get answers
             answers = {}
             for question in questions:
                 response = await self.assistant.chat(
@@ -170,7 +171,7 @@ class ResearchAssistant:
                 )
                 answers[question] = response
             
-            # Save research
+            # Save research to a JSON file
             research = {
                 "topic": topic,
                 "date": datetime.now().isoformat(),
@@ -178,12 +179,11 @@ class ResearchAssistant:
                 "answers": answers
             }
             
-            # Save to file
-            file_path = self.save_dir / f"{topic.lower()}.json"
+            file_path = self.save_dir / f"{topic.lower().replace(' ', '_')}.json"
             with open(file_path, "w") as f:
                 json.dump(research, f, indent=2)
             
-            # Update tracking
+            # Update in-memory tracking
             self.topics[topic] = research
             
             return answers
@@ -191,13 +191,9 @@ class ResearchAssistant:
         except Exception as e:
             # Handle common errors
             if "API key" in str(e):
-                raise ValueError(
-                    "Invalid API key. Please check your configuration."
-                )
+                raise ValueError("Invalid API key. Please check your configuration.")
             elif "Rate limit" in str(e):
-                raise ValueError(
-                    "Rate limit exceeded. Please try again later."
-                )
+                raise ValueError("Rate limit exceeded. Please try again later.")
             else:
                 raise e
     
@@ -206,7 +202,10 @@ class ResearchAssistant:
         topic: str,
         style: str = "technical"
     ) -> str:
-        """Get research summary in style."""
+        """
+        Generates a summary of the answers for a researched topic in a specific style.
+        Returns the summary string, or an error if the topic was not found.
+        """
         if topic not in self.topics:
             return f"No research found for: {topic}"
         
@@ -214,7 +213,6 @@ class ResearchAssistant:
         questions = research["questions"]
         answers = research["answers"]
         
-        # Generate summary
         prompt = f"""
         Summarize research on {topic}.
         Style: {style}
@@ -228,27 +226,29 @@ class ResearchAssistant:
             return f"Error generating summary: {str(e)}"
     
     def get_topics(self) -> list[str]:
-        """Get researched topics."""
+        """Returns a list of all topics researched so far."""
         return list(self.topics.keys())
     
     def get_research(
         self,
         topic: str
     ) -> dict | None:
-        """Get research for topic."""
+        """Returns the full research details for a given topic, or None if not found."""
         return self.topics.get(topic)
-
-# Usage
+```
+Usage Example
+```python
 async def research_project():
-    """Run research project."""
-    # Create assistant
+    """Demonstrates how to use the advanced ResearchAssistant."""
+    
+    # 1. Create an instance of ResearchAssistant
     assistant = ResearchAssistant(
         name="AI Researcher",
-        model="gpt-4",  # Use GPT-4 for depth
+        model="gpt-4o",
         save_dir="ai_research"
     )
     
-    # Research topics
+    # 2. Define topics and questions
     topics = {
         "AI Safety": [
             "What are the main concerns?",
@@ -262,80 +262,78 @@ async def research_project():
         ]
     }
     
-    # Research each topic
+    # 3. Research each topic
     for topic, questions in topics.items():
         print(f"\nResearching: {topic}")
         
         try:
-            # Get answers
-            answers = await assistant.research_topic(
-                topic,
-                questions
-            )
+            # Gather answers
+            answers = await assistant.research_topic(topic, questions)
             
-            # Get summary
-            summary = await assistant.get_summary(
-                topic,
-                style="technical"
-            )
+            # Generate and print a summary
+            summary = await assistant.get_summary(topic, style="technical")
             
             print("\nFindings:")
             for q, a in answers.items():
-                print(f"\nQ: {q}")
-                print(f"A: {a}")
+                display(Markdown(f"**Q**: {q}"))
+                display(Markdown(f"**A**: {a}"))
             
-            print(f"\nSummary: {summary}")
+            print(f"\nSummary:\n{summary}")
         
         except Exception as e:
             print(f"Error researching {topic}: {str(e)}")
             continue
     
-    # Show all research
+    # 4. Show all researched topics
     print("\nAll Topics:", assistant.get_topics())
 
-# Run project
-asyncio.run(research_project())
+# If you’re running in an environment that supports async,
+# you can execute:
+# await research_project()
 ```
 
-## Best Practices
+Explanation
+	1.	ResearchAssistant Class: Encapsulates functions to query GPT, track and load previous research, and generate summaries.
+	2.	_load_history(): Loads prior research from JSON files in the save_dir.
+	3.	research_topic(): Prompts GPT with each question, saves answers to a local JSON file, and updates an internal topics dictionary.
+	4.	get_summary(): Builds a customized summary prompt and returns GPT’s response.
+	5.	Error Handling: Uses Python exceptions to catch and respond to common issues (invalid key, rate limits).
 
-1. **Assistant Design**
-   - Set clear system message
-   - Configure model appropriately
-   - Handle errors gracefully
-   - Save results persistently
+4. Best Practices
+	1.	Assistant Design
+	•	Provide a clear system message (role, instructions, style).
+	•	Configure model parameters (model, temperature) carefully.
+	•	Gracefully handle common errors (API key problems, rate limits).
+	2.	Code Structure
+	•	Use type hints for clarity (e.g., -> dict[str, str]).
+	•	Keep code modular and documented.
+	•	Follow PEP 8 style guidelines.
+	3.	User Experience
+	•	Persist research results so users can revisit them.
+	•	Offer summaries or highlights.
+	•	Provide progress/error notifications to guide the user.
 
-2. **Code Structure**
-   - Use type hints
-   - Handle exceptions
-   - Document functions
-   - Follow PEP 8
+5. Quick Reference
 
-3. **User Experience**
-   - Save research results
-   - Provide summaries
-   - Handle errors nicely
-   - Show progress
-
-## Quick Reference
+A minimal snippet for reference:
 ```python
-from lionagi import Branch, Model, types
-
-# Create assistant
-assistant = Branch(
-    name="Assistant",
-    system="You are a helpful assistant."
-)
+from lionagi import Branch, iModel
 
 # Configure model
-model = Model(
+ai_model = iModel(
     provider="openai",
     model="gpt-3.5-turbo",
     temperature=0.7
 )
-assistant.add_model(model)
 
-# Chat safely
+# Create an assistant
+assistant = Branch(
+    name="Assistant",
+    system="You are a helpful assistant.",
+    chat_model=ai_model
+)
+
+# Safe chat
 try:
     response = await assistant.chat("Hello!")
     print(response)
@@ -343,12 +341,14 @@ except Exception as e:
     print(f"Error: {str(e)}")
 ```
 
-## Next Steps
+6. Next Steps
 
-You've learned:
-- How to create an AI assistant
-- How to research topics thoroughly
-- How to save and manage results
-- How to handle errors properly
+You have now learned:
+	•	How to create a Basic AI Assistant
+	•	How to research topics, save results, and manage errors
+	•	How to retrieve and summarize past research
 
-In [Chapter 2](ch2_concepts.md), we'll explore LionAGI's core concepts and architecture.
+In Chapter 2, we’ll explore LionAGI’s core concepts and dive deeper into its architecture. You’ll learn how to handle more complex conversation flows, manipulate prompts dynamically, and use advanced features like multiple branches or streaming responses.
+
+Happy coding and researching!
+

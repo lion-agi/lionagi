@@ -150,13 +150,8 @@ async def chat(
 
     kwargs["messages"] = [i.chat_msg for i in messages]
     imodel = imodel or branch.chat_model
-
-    api_call = None
-    if kwargs.get("stream", None) is True:
-        api_call = await imodel.stream(**kwargs)
-    else:
-        api_call = await imodel.invoke(**kwargs)
-
+    
+    api_call = await imodel.invoke(**kwargs)
     branch._log_manager.log(Log.create(api_call))
 
     if return_ins_res_message:

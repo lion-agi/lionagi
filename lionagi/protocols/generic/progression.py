@@ -4,12 +4,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic, Self, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import Field, field_serializer, field_validator
 
 from lionagi._errors import ItemNotFoundError
-
+from typing_extensions import Self
 from .._concepts import Ordering
 from .element import ID, Element, IDError, IDType, validate_order
 

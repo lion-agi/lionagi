@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import deque
-from typing import Any, Literal, Self
+from typing import Any, Literal
+from typing_extensions import Self
 
 from pydantic import Field, model_validator
 
