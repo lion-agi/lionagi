@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.operations import types as op
-from lionagi.operatives import types as ops_types
-from lionagi.protocols import types as types
-from lionagi.service.imodel import iModel
-from lionagi.session.session import Branch, Session
-from lionagi.version import __version__
+from . import _types as types
+from .operations import types as op
+from .operatives import types as ops_types  # deprecated
+from .service.imodel import iModel
+from .session.session import Branch, Session
+from .version import __version__
 
 LiteiModel = iModel
 
