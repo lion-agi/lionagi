@@ -71,7 +71,7 @@ class SequentialConcurrentChunkExecutor(StrategyExecutor):
             )
 
         branch = self.session.split(self.branch)
-        res = await branch._instruct(ins_, **self.params.execute_kwargs)
+        res = await branch.instruct(ins_, **self.params.execute_kwargs)
         return InstructResponse(instruct=ins_, response=res)
 
     async def _execute_chunk(

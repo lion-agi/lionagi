@@ -20,7 +20,7 @@ class SequentialExecutor(StrategyExecutor):
         for idx, item in enumerate(instructs, start=1):
             if self.params.verbose:
                 print(f"\nExecuting step {idx}/{len(instructs)}")
-            out = await self.execute_branch._instruct(
+            out = await self.execute_branch.instruct(
                 item, **self.params.execute_kwargs
             )
             ress.append(InstructResponse(instruct=item, response=out))

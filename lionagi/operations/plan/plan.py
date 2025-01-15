@@ -249,7 +249,7 @@ async def plan(
                         )
                         print(f"Instruction: {snippet}")
 
-                    step_response = await execute_branch._instruct(
+                    step_response = await execute_branch.instruct(
                         plan_step, **(execution_kwargs or {})
                     )
                     seq_results.append(
@@ -277,7 +277,7 @@ async def plan(
                         print(f"\n------ Executing step (concurrently) ------")
                         print(f"Instruction: {snippet}")
                     local_branch = session.split(execute_branch)
-                    resp = await local_branch._instruct(
+                    resp = await local_branch.instruct(
                         plan_step, **(execution_kwargs or {})
                     )
                     return InstructResponse(instruct=plan_step, response=resp)
@@ -309,7 +309,7 @@ async def plan(
 
                     async def _execute(plan_step: Instruct):
                         local_branch = session.split(execute_branch)
-                        resp = await local_branch._instruct(
+                        resp = await local_branch.instruct(
                             plan_step, **(execution_kwargs or {})
                         )
                         return InstructResponse(
@@ -355,7 +355,7 @@ async def plan(
                             print(
                                 f"\n--- Executing step (sequential in chunk) ---\nInstruction: {snippet}"
                             )
-                        resp = await local_branch._instruct(
+                        resp = await local_branch.instruct(
                             plan_step, **(execution_kwargs or {})
                         )
                         chunk_result.append(

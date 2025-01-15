@@ -68,7 +68,7 @@ class ConcurrentSequentialChunkExecutor(StrategyExecutor):
                 else f"\n-----Executing Instruct {idx}-----\n{msg_}"
             )
 
-        res = await self.branch._instruct(ins_, **self.params.execute_kwargs)
+        res = await self.branch.instruct(ins_, **self.params.execute_kwargs)
         return InstructResponse(instruct=ins_, response=res)
 
     async def _execute_chunk(
