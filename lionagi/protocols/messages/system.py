@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Any, NoReturn
 
 from pydantic import JsonValue
-from typing_extensions import override, Self
+from typing_extensions import Self, override
 
 from .base import SenderRecipient
 from .message import MessageRole, RoledMessage, Template, jinja_env

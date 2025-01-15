@@ -12,8 +12,8 @@ import inspect
 from collections.abc import Callable
 from typing import Any, TypeAlias
 
-from typing_extensions import Self
 from pydantic import Field, field_validator, model_validator
+from typing_extensions import Self
 
 from lionagi.libs.schema.function_to_schema import function_to_schema
 from lionagi.libs.validate.common_field_validators import validate_callable

@@ -39,9 +39,10 @@ from typing import (
     get_origin,
     overload,
 )
-from typing_extensions import Self
+
 from pydantic import BaseModel, model_validator
 from pydantic_core import PydanticUndefinedType
+from typing_extensions import Self
 
 from .settings import Settings
 

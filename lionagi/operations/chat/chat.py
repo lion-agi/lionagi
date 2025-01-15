@@ -150,7 +150,7 @@ async def chat(
 
     kwargs["messages"] = [i.chat_msg for i in messages]
     imodel = imodel or branch.chat_model
-    
+
     api_call = await imodel.invoke(**kwargs)
     branch._log_manager.log(Log.create(api_call))
 

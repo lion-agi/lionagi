@@ -5,9 +5,8 @@
 from collections.abc import ItemsView, Iterator, ValuesView
 from typing import Any, TypeAlias
 
-from typing_extensions import override
-
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from typing_extensions import override
 
 from lionagi.libs.nested.flatten import flatten
 from lionagi.libs.nested.nget import nget

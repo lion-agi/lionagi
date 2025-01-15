@@ -4,9 +4,9 @@
 
 from collections import deque
 from typing import Any, Literal
-from typing_extensions import Self
 
 from pydantic import Field, model_validator
+from typing_extensions import Self
 
 from lionagi._errors import ItemExistsError, RelationError
 from lionagi.protocols._concepts import Relational

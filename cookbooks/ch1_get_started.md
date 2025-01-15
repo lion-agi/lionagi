@@ -351,4 +351,3 @@ You have now learned:
 In Chapter 2, we’ll explore LionAGI’s core concepts and dive deeper into its architecture. You’ll learn how to handle more complex conversation flows, manipulate prompts dynamically, and use advanced features like multiple branches or streaming responses.
 
 Happy coding and researching!
-

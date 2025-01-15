@@ -4,9 +4,9 @@
 
 import asyncio
 from typing import Any
-from typing_extensions import Self
 
 from pydantic import Field, model_validator
+from typing_extensions import Self
 
 from lionagi.protocols.generic.event import Event, EventStatus
 from lionagi.utils import is_coro_func

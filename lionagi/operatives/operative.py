@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing_extensions import Self
-
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
+from typing_extensions import Self
 
 from lionagi.libs.validate.fuzzy_match_keys import fuzzy_match_keys
 from lionagi.operatives.models.schema_model import SchemaModel

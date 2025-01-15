@@ -7,7 +7,7 @@ from typing import Any, TypeVar
 from pydantic import ConfigDict, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
-from typing_extensions import override, Self
+from typing_extensions import Self, override
 
 from lionagi.utils import UNDEFINED, HashableModel, is_same_dtype
 

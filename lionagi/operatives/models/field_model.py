@@ -4,10 +4,10 @@
 
 from collections.abc import Callable
 from typing import Any
-from typing_extensions import Self
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
+from typing_extensions import Self
 
 from lionagi.libs.validate.common_field_validators import (
     validate_callable,

@@ -5,7 +5,7 @@
 import asyncio
 import logging
 
-from typing_extensions import override, Self
+from typing_extensions import Self, override
 
 from lionagi.protocols.generic.processor import Executor, Processor
 

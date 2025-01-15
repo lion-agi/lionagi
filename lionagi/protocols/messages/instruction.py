@@ -8,9 +8,9 @@ sent to the system. Supports optional context, images, and schema requests.
 """
 
 from typing import Any, Literal
-from typing_extensions import override
 
 from pydantic import BaseModel, JsonValue, field_serializer
+from typing_extensions import override
 
 from lionagi.utils import UNDEFINED, breakdown_pydantic_annotation, copy
 
