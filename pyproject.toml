@@ -1,7 +1,7 @@
 [project]
 name = "lionagi"
-version = "0.7.3"
-description = "An AGentic Intelligence Operating System."
+version = "0.7.4"
+description = "An Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
 ]
@@ -42,6 +42,8 @@ dev = [
     "sphinx-autobuild>=2024.10.3",
     "sphinx>=8.1.3",
     "furo>=2024.8.6",
+    "ipython>=8.31.0",
+    "ipykernel>=6.29.5",
 ]
 
 [tool.black]
