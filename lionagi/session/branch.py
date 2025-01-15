@@ -611,6 +611,24 @@ class Branch(Element, Communicatable, Relational):
         # Remove placeholders (UNDEFINED) so we don't incorrectly assign them
         return cls(**{k: v for k, v in params.items() if v is not UNDEFINED})
 
+    def dump_logs(self, clear: bool = True, persist_path=None):
+        """
+        Dumps the log to a file or clears it.
+
+        Args:
+            clear (bool, optional):
+                If `True`, clears the log after dumping.
+            persist_path (str, optional):
+                The file path to save the log to.
+        """
+        self._log_manager.dump(clear=clear, persist_path=persist_path)
+
+    async def adump_logs(self, clear: bool = True, persist_path=None):
+        """
+        Asynchronously dumps the log to a file or clears it.
+        """
+        await self._log_manager.adump(clear=clear, persist_path=persist_path)
+
     # -------------------------------------------------------------------------
     # Asynchronous Operations (chat, parse, operate, etc.)
     # -------------------------------------------------------------------------
