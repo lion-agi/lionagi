@@ -112,7 +112,7 @@ async def ReAct(
         if extensions:
             extensions -= 1
 
-    # Step 3: Produce final answer by calling branch._instruct with an answer prompt
+    # Step 3: Produce final answer by calling branch.instruct with an answer prompt
     answer_prompt = ReActAnalysis.ANSWER_PROMPT.format(
         instruction=instruct_dict["instruction"]
     )

@@ -75,7 +75,7 @@ async def run_instruct(
         if verbose:
             snippet = (
                 child_ins.guidance[:100] + "..."
-                if len(child_ins.guidance) > 100
+                if len(child_ins.guidance or "") > 100
                 else child_ins.guidance
             )
             print(f"\n-----Running instruction-----\n{snippet}")
@@ -181,7 +181,7 @@ async def brainstorm(
         if verbose:
             snippet = (
                 ins_.guidance[:100] + "..."
-                if len(ins_.guidance) > 100
+                if len(ins_.guidance or "") > 100
                 else ins_.guidance
             )
             print(f"\n-----Running instruction-----\n{snippet}")
@@ -255,12 +255,12 @@ async def brainstorm(
                         if verbose:
                             snippet = (
                                 ins_.guidance[:100] + "..."
-                                if len(ins_.guidance) > 100
+                                if len(ins_.guidance or "") > 100
                                 else ins_.guidance
                             )
                             print(f"\n-----Exploring Idea-----\n{snippet}")
                         new_branch = session.split(branch)
-                        resp = await new_branch._instruct(
+                        resp = await new_branch.instruct(
                             ins_, **(explore_kwargs or {})
                         )
                         return InstructResponse(instruct=ins_, response=resp)
@@ -303,11 +303,11 @@ async def brainstorm(
                         if verbose:
                             snippet = (
                                 i.guidance[:100] + "..."
-                                if len(i.guidance) > 100
+                                if len(i.guidance or "") > 100
                                 else i.guidance
                             )
                             print(f"\n-----Exploring Idea-----\n{snippet}")
-                        seq_res = await branch._instruct(
+                        seq_res = await branch.instruct(
                             i, **(explore_kwargs or {})
                         )
                         explore_results.append(
@@ -337,7 +337,7 @@ async def brainstorm(
 
                         async def _explore(ins_: Instruct):
                             child_branch = session.split(base_branch)
-                            child_resp = await child_branch._instruct(
+                            child_resp = await child_branch.instruct(
                                 ins_, **(explore_kwargs or {})
                             )
                             return InstructResponse(
@@ -393,14 +393,14 @@ async def brainstorm(
                             if verbose:
                                 snippet = (
                                     ins_.guidance[:100] + "..."
-                                    if len(ins_.guidance) > 100
+                                    if len(ins_.guidance or "") > 100
                                     else ins_.guidance
                                 )
                                 print(
                                     f"\n-----Exploring Idea (sequential in chunk)-----\n{snippet}"
                                 )
 
-                            seq_resp = await local_branch._instruct(
+                            seq_resp = await local_branch.instruct(
                                 ins_, **(explore_kwargs or {})
                             )
                             chunk_results.append(
