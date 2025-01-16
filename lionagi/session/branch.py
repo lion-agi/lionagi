@@ -47,7 +47,7 @@ from lionagi.protocols.types import (
 )
 from lionagi.service.types import iModel, iModelManager
 from lionagi.settings import Settings
-from lionagi.utils import UNDEFINED, alcall, copy
+from lionagi.utils import UNDEFINED, alcall, bcall, copy
 
 if TYPE_CHECKING:
     # Forward references for type checking (e.g., in operations or extended modules)
@@ -1103,6 +1103,8 @@ class Branch(Element, Communicatable, Relational):
         self,
         action_request: list | ActionRequest | BaseModel | dict,
         *,
+        strategy: Literal["concurrent", "sequential", "batch"] = "concurrent",
+        batch_size: int = None,
         suppress_errors: bool = True,
         sanitize_input: bool = False,
         unique_input: bool = False,
@@ -1119,7 +1121,7 @@ class Branch(Element, Communicatable, Relational):
         dropna: bool = True,
         unique_output: bool = False,
         flatten_tuple_set: bool = False,
-    ) -> list[ActionResponse] | ActionResponse | Any:
+    ) -> list[ActionResponse]:
         """
         Public, potentially batched, asynchronous interface to run one or multiple action requests.
 
@@ -1164,10 +1166,95 @@ class Branch(Element, Communicatable, Relational):
             Any:
                 The result or results from the invoked tool(s).
         """
-        params = locals()
-        params.pop("self")
-        params.pop("action_request")
-        return await alcall(action_request, self._act, **params)
+        if batch_size and not strategy == "batch":
+            raise ValueError(
+                "Batch size is only applicable for 'batch' strategy."
+            )
+
+        match strategy:
+            case "concurrent":
+                return await self._concurrent_act(
+                    action_request,
+                    suppress_errors=suppress_errors,
+                    sanitize_input=sanitize_input,
+                    unique_input=unique_input,
+                    num_retries=num_retries,
+                    initial_delay=initial_delay,
+                    retry_delay=retry_delay,
+                    backoff_factor=backoff_factor,
+                    retry_default=retry_default,
+                    retry_timeout=retry_timeout,
+                    retry_timing=retry_timing,
+                    max_concurrent=max_concurrent,
+                    throttle_period=throttle_period,
+                    flatten=flatten,
+                    dropna=dropna,
+                    unique_output=unique_output,
+                    flatten_tuple_set=flatten_tuple_set,
+                )
+            case "sequential":
+                return await self._sequential_act(
+                    action_request,
+                    suppress_errors=suppress_errors,
+                )
+            case "batch":
+                return await self._batch_act(
+                    action_request,
+                    batch_size=batch_size or 1,
+                    max_concurrent=max_concurrent,
+                    suppress_errors=suppress_errors,
+                    sanitize_input=sanitize_input,
+                    unique_input=unique_input,
+                    num_retries=num_retries,
+                    initial_delay=initial_delay,
+                    retry_delay=retry_delay,
+                    backoff_factor=backoff_factor,
+                    retry_default=retry_default,
+                    retry_timeout=retry_timeout,
+                    retry_timing=retry_timing,
+                    throttle_period=throttle_period,
+                    flatten=flatten,
+                    dropna=dropna,
+                    unique_output=unique_output,
+                    flatten_tuple_set=flatten_tuple_set,
+                )
+
+    async def _concurrent_act(
+        self,
+        action_request: ActionRequest | BaseModel | dict,
+        **kwargs,
+    ) -> list:
+        return await alcall(action_request, self._act, **kwargs)
+
+    async def _sequential_act(
+        self,
+        action_request: ActionRequest | BaseModel | dict,
+        suppress_errors: bool = True,
+    ) -> list:
+        action_request = (
+            action_request
+            if isinstance(action_request, list)
+            else [action_request]
+        )
+        results = []
+        for req in action_request:
+            results.append(
+                await self._act(req, suppress_errors=suppress_errors)
+            )
+        return results
+
+    async def _batch_act(
+        self,
+        action_request: list[ActionRequest | BaseModel | dict],
+        batch_size: int = None,
+        **kwargs,
+    ) -> list:
+        result = []
+        async for i in await bcall(
+            action_request, self._act, batch_size=batch_size, **kwargs
+        ):
+            result.extend(i)
+        return result
 
     async def translate(
         self,
