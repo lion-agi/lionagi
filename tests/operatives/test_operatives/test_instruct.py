@@ -123,8 +123,8 @@ class TestOperationInstructModel:
         """Test OperationInstruct model default values."""
         model = Instruct()
         assert model.instruction is None
-        assert model.reason is False
-        assert model.actions is False
+        assert model.reason is None
+        assert model.actions is None
 
     def test_with_instruct(self):
         """Test OperationInstruct model with Instruct object."""
