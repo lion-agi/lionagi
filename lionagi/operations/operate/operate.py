@@ -47,6 +47,9 @@ async def operate(
     actions: bool = False,
     reason: bool = False,
     action_kwargs: dict = None,
+    action_strategy: Literal[
+        "sequential", "concurrent", "batch"
+    ] = "concurrent",
     field_models: list[FieldModel] = None,
     exclude_fields: list | dict | None = None,
     request_params: ModelParams = None,
@@ -97,6 +100,8 @@ async def operate(
         instruct.reason = True
     if actions:
         instruct.actions = True
+        if action_strategy:
+            instruct.action_strategy = action_strategy
 
     # 1) Create or update the Operative
     operative = Step.request_operative(
@@ -178,9 +183,15 @@ async def operate(
         getattr(response_model, "action_required", None) is True
         and getattr(response_model, "action_requests", None) is not None
     ):
+        action_kwargs = action_kwargs or {}
+        action_kwargs["strategy"] = (
+            instruct.action_strategy
+            if instruct.action_strategy
+            else action_kwargs.get("strategy", "concurrent")
+        )
+
         action_response_models = await branch.act(
-            response_model.action_requests,
-            **(action_kwargs or {}),
+            response_model.action_requests, **action_kwargs
         )
         # Possibly refine the operative with the tool outputs
         operative = Step.respond_operative(

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""deprecated"""
+
 instruction_field_description = (
     "A clear, actionable task definition. Specify:\n"
     "1) The primary goal or objective\n"

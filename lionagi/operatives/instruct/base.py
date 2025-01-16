@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""deprecated"""
+
 from pydantic import JsonValue
 
 from lionagi.libs.validate.common_field_validators import (

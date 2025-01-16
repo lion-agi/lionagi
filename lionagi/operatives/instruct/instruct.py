@@ -2,26 +2,23 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
-from pydantic import JsonValue, field_validator
+from pydantic import Field, JsonValue, field_validator
 
-from lionagi.utils import HashableModel
+from lionagi.libs.validate.common_field_validators import (
+    validate_boolean_field,
+    validate_nullable_jsonvalue_field,
+)
+from lionagi.utils import HashableModel, to_num
 
 from ..models.field_model import FieldModel
-from .base import (
-    ACTIONS_FIELD,
-    CONTEXT_FIELD,
-    GUIDANCE_FIELD,
-    INSTRUCTION_FIELD,
-    REASON_FIELD,
-)
 
 __all__ = (
     "Instruct",
     "InstructResponse",
     "INSTRUCT_FIELD",
-    "LIST_INSTRUCT_FIELD_MODEL",
+    "LIST_INSTRUCT_FIELD",
 )
 
 
@@ -40,50 +37,101 @@ class Instruct(HashableModel):
         "operative",
         "reason",
         "actions",
+        "action_strategy",
+        "batch_size",
         "request_params",
         "response_params",
     ]
-    instruction: JsonValue | None = INSTRUCTION_FIELD.field_info
-    guidance: JsonValue | None = GUIDANCE_FIELD.field_info
-    context: JsonValue | None = CONTEXT_FIELD.field_info
-    reason: bool = REASON_FIELD.field_info
-    actions: bool = ACTIONS_FIELD.field_info
+    instruction: JsonValue | None = Field(
+        None,
+        title="Primary Instruction",
+        description=(
+            "A clear, actionable task definition. Specify:\n"
+            "1) The primary goal or objective\n"
+            "2) Key success criteria or constraints\n"
+            "\n"
+            "Guidelines:\n"
+            "- Start with a direct action verb (e.g., 'Analyze', 'Generate', 'Create')\n"
+            "- Include scope, boundaries, or constraints\n"
+            "- Provide success criteria if relevant\n"
+            "- For complex tasks, break them into logical steps"
+        ),
+    )
+    guidance: JsonValue | None = Field(
+        None,
+        title="Guidance",
+        description=(
+            "Strategic direction and constraints for executing the task. "
+            "Include:\n"
+            "1) Preferred methods or frameworks\n"
+            "2) Quality benchmarks (e.g., speed, clarity)\n"
+            "3) Resource or environmental constraints\n"
+            "4) Relevant compliance or standards\n"
+            "Use None if no special guidance."
+        ),
+    )
+    context: JsonValue | None = Field(
+        None,
+        description=(
+            "Background information and current-state data needed for the task. "
+            "Should be:\n"
+            "1) Directly relevant\n"
+            "2) Sufficient to perform the task\n"
+            "3) Free of extraneous detail\n"
+            "Include environment, prior outcomes, system states, or dependencies. "
+            "Use None if no additional context is needed."
+        ),
+    )
+    reason: bool | None = Field(
+        None,
+        description=(
+            "Include a thoughtful explanation of decisions, trade-offs, "
+            "and insights. Encourage deeper introspection on why certain "
+            "choices were made, potential alternatives, and how confidence "
+            "was shaped. If not needed, set to None."
+        ),
+    )
+    actions: bool | None = Field(
+        None,
+        description=(
+            "Controls execution mode. "
+            "True: Execute specified actions. "
+            "False: Analysis/recommendations only. "
+            "None: Contextual execution."
+        ),
+    )
+    action_strategy: Literal["batch", "sequential", "concurrent"] | None = (
+        Field(
+            None,
+            description="Action strategy to use for executing actions. Default "
+            "is 'concurrent'. Only provide for if actions are enabled.",
+        )
+    )
+    batch_size: int | None = Field(
+        None,
+        description="Batch size for executing actions. Only provide for 'batch' strategy.",
+    )
 
-    @field_validator("instruction", **INSTRUCTION_FIELD.validator_kwargs)
+    @field_validator("instruction", "guidance", "context", mode="before")
     def _validate_instruction(cls, v):
-        """Field validator for the 'instruction' field.
+        return validate_nullable_jsonvalue_field(cls, v)
 
-        Args:
-            v: The value to validate.
-
-        Returns:
-            JsonValue | None: The validated instruction value.
-        """
-        return INSTRUCTION_FIELD.validator(cls, v)
-
-    @field_validator("reason", **REASON_FIELD.validator_kwargs)
+    @field_validator("reason", "actions", mode="before")
     def _validate_reason(cls, v):
-        """Field validator for the 'reason' field.
+        return validate_boolean_field(cls, v)
 
-        Args:
-            v: The value to validate.
+    @field_validator("action_strategy", mode="before")
+    def _validate_action_strategy(cls, v):
+        if v not in ["batch", "sequential", "concurrent"]:
+            return "concurrent"
+        return v
 
-        Returns:
-            bool | None: The validated boolean value.
-        """
-        return REASON_FIELD.validator(cls, v)
-
-    @field_validator("actions", **ACTIONS_FIELD.validator_kwargs)
-    def _validate_actions(cls, v):
-        """Field validator for the 'actions' field.
-
-        Args:
-            v: The value to validate.
-
-        Returns:
-            bool | None: The validated boolean value.
-        """
-        return ACTIONS_FIELD.validator(cls, v)
+    @field_validator("batch_size", mode="before")
+    def _validate_batch_size(cls, v):
+        try:
+            return to_num(v, num_type=int)
+        except Exception:
+            return None
 
 
 INSTRUCT_FIELD = FieldModel(
