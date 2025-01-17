@@ -13,6 +13,7 @@ async def interpret(
     text: str,
     domain: str | None = None,
     style: str | None = None,
+    sample_writing: str | None = None,
     **kwargs,
 ) -> str:
     instruction = (
@@ -25,14 +26,17 @@ async def interpret(
         f"Desired style: {style or 'concise'}. "
         "You can add or clarify context if needed."
     )
+    if sample_writing:
+        guidance += f" Sample writing: {sample_writing}"
+
     context = [f"User input: {text}"]
 
     # Default temperature if none provided
     kwargs["temperature"] = kwargs.get("temperature", 0.1)
+    kwargs["guidance"] = guidance + "\n" + kwargs.get("guidance", "")
 
     refined_prompt = await branch.chat(
         instruction=instruction,
-        guidance=guidance,
         context=context,
         **kwargs,
     )

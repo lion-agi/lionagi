@@ -387,10 +387,16 @@ async def translate_to_synthlang(
     calculator = TokenCalculator()
 
     len_tokens = calculator.tokenize(text, return_tokens=False)
-    out = await branch.communicate(
+
+    kwargs["guidance"] = (
+        "Following SynthLang, translate the provided text into SynthLang syntax. "
+        "Shrink the token size by 60-85%. Return only the translated text.\n\n"
+        + kwargs.get("guidance", "")
+    )
+
+    out = await branch.chat(
         instruction=f"Converts the given text into SynthLang's hyper-efficient format.",
         context="Text to convert:\n\n" + text,
-        guidance=f"Following SynthLang, translate the provided text into SynthLang syntax. Shrink the token size by 60-85%. Return only the translated text.",
         **kwargs,
     )
     if sys1:
