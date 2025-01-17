@@ -18,6 +18,22 @@ from lionagi.settings import Settings
 from .token_calculator import TokenCalculator
 
 
+class EndpointOptions(BaseModel):
+
+    def to_dict(self) -> dict[str, Any]:
+        return self.model_dump(exclude_none=True, exclude_unset=True)
+
+
+class EndpointRequest(BaseModel):
+
+    options: EndpointOptions | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        dict_ = self.model_dump()
+        dict_.update(dict_.pop("options", {}))
+        return dict_
+
+
 class EndpointConfig(BaseModel):
     """Represents configuration data for an API endpoint.
 
@@ -52,6 +68,8 @@ class EndpointConfig(BaseModel):
         allowed_roles (list[str] | None):
             If set, only these roles are allowed in message or conversation
             data.
+        config_model (BaseModel | None):
+            The pydantic model for validating request data, if any.
     """
 
     model_config = ConfigDict(
@@ -75,6 +93,7 @@ class EndpointConfig(BaseModel):
     requires_tokens: bool = False
     api_version: str | None = None
     allowed_roles: list[str] | None = None
+    request_model: EndpointRequest | None = None
 
 
 class EndPoint(ABC):
@@ -185,6 +204,11 @@ class EndPoint(ABC):
         """bool: Indicates if this endpoint uses role-based messages."""
         return self.allowed_roles is not None
 
+    @property
+    def request_model(self) -> BaseModel | None:
+        """BaseModel | None: A Pydantic model for validating request data."""
+        return self.config.request_model
+
     def create_payload(self, **kwargs) -> dict:
         """Generates a request payload (and headers) for this endpoint.
 
@@ -200,11 +224,25 @@ class EndPoint(ABC):
                 - "is_cached": Whether the request is to be cached.
         """
         payload = {}
+
+        if self.request_model:
+            payload = {"options": {}}
+            for k, v in kwargs.items():
+                if k in self.required_kwargs:
+                    payload[k] = v
+                elif k in self.optional_kwargs:
+                    payload["options"][k] = v
+            request_model: EndpointRequest = self.request_model(**payload)
+            payload = request_model.to_dict()
+
+        else:
+            for k, v in kwargs.items():
+                if k in self.acceptable_kwargs:
+                    payload[k] = v
+
         is_cached = kwargs.get("is_cached", False)
         headers = kwargs.get("headers", {})
-        for k, v in kwargs.items():
-            if k in self.acceptable_kwargs:
-                payload[k] = v
+
         if "api_key" in kwargs:
             headers["Authorization"] = f"Bearer {kwargs['api_key']}"
         return {

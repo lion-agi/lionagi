@@ -104,6 +104,8 @@ class iModel:
                     api_key = "GROQ_API_KEY"
                 case "exa":
                     api_key = "EXA_API_KEY"
+                case "ollama":
+                    api_key = "na"
 
         if os.getenv(api_key, None) is not None:
             self.api_key_scheme = api_key
