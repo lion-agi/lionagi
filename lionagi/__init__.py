@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from pydantic import BaseModel, Field
+
 from . import _types as types
 from .operations import types as op
 from .operatives import types as ops_types  # deprecated
@@ -20,4 +22,6 @@ __all__ = (
     "ops_types",
     "op",
     "__version__",
+    "BaseModel",
+    "Field",
 )

@@ -102,6 +102,8 @@ class iModel:
                     api_key = "PERPLEXITY_API_KEY"
                 case "groq":
                     api_key = "GROQ_API_KEY"
+                case "exa":
+                    api_key = "EXA_API_KEY"
 
         if os.getenv(api_key, None) is not None:
             self.api_key_scheme = api_key
@@ -198,7 +200,9 @@ class iModel:
         except Exception as e:
             raise ValueError(f"Failed to stream API call: {e}")
 
-    async def invoke(self, **kwargs) -> APICalling | None:
+    async def invoke(
+        self, api_call: APICalling = None, **kwargs
+    ) -> APICalling | None:
         """Invokes a rate-limited API call with the given arguments.
 
         Args:
@@ -215,8 +219,9 @@ class iModel:
                 If the call fails or if an error occurs during invocation.
         """
         try:
-            kwargs.pop("stream", None)
-            api_call = self.create_api_calling(**kwargs)
+            if api_call is None:
+                kwargs.pop("stream", None)
+                api_call = self.create_api_calling(**kwargs)
             if (
                 self.executor.processor is None
                 or self.executor.processor.is_stopped()
@@ -251,6 +256,15 @@ class iModel:
             messages; False otherwise.
         """
         return self.endpoint.sequential_exchange
+
+    @property
+    def model_name(self) -> str:
+        """str: The name of the model used by the endpoint.
+
+        Returns:
+            The model name if available; otherwise, an empty string.
+        """
+        return self.kwargs.get("model", "")
 
     def to_dict(self):
         kwargs = self.kwargs
