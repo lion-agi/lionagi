@@ -2357,7 +2357,10 @@ def breakdown_pydantic_annotation(
 
 
 def _is_pydantic_model(x: Any) -> bool:
-    return isclass(x) and issubclass(x, BaseModel)
+    try:
+        return isclass(x) and issubclass(x, BaseModel)
+    except TypeError:
+        return False
 
 
 def run_package_manager_command(
