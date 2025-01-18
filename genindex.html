@@ -219,7 +219,7 @@
 <li class="toctree-l2"><a class="reference internal" href="modules/concepts.html">Abstract Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/element_id.html">Element, IDType, and ID</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/event.html">Event, EventStatus, and Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modules/form.html">Form &amp; Report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules/form.html">Form &amp; Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/graph.html">Node, Edge, and Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/instruct.html">Instruct System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="modules/log.html">Log, LogManager, and Config</a></li>
@@ -446,14 +446,16 @@
 </li>
         <li><a href="modules/adapter.html#lionagi.protocols.adapters.adapter.AdapterRegistry">AdapterRegistry (class in lionagi.protocols.adapters.adapter)</a>
 </li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.report.Report.add_completed_form">add_completed_form() (lionagi.operatives.forms.report.Report method)</a>
+</li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.add_edge">add_edge() (lionagi.protocols.graph.graph.Graph method)</a>
 </li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.add_node">add_node() (lionagi.protocols.graph.graph.Graph method)</a>
 </li>
-        <li><a href="modules/log.html#lionagi.protocols.generic.log.LogManager.adump">adump() (lionagi.protocols.generic.log.LogManager method)</a>
-</li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/log.html#lionagi.protocols.generic.log.LogManager.adump">adump() (lionagi.protocols.generic.log.LogManager method)</a>
+</li>
         <li><a href="modules/pile.html#lionagi.protocols.generic.pile.Pile.aexclude">aexclude() (lionagi.protocols.generic.pile.Pile method)</a>
 </li>
         <li><a href="modules/pile.html#lionagi.protocols.generic.pile.Pile.aget">aget() (lionagi.protocols.generic.pile.Pile method)</a>
@@ -502,7 +504,7 @@
   <h2>B</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
     <td style="width: 33%; vertical-align: top;"><ul>
-        <li><a href="modules/form.html#lionagi.form.base.BaseForm">BaseForm (class in lionagi.form.base)</a>
+        <li><a href="modules/form.html#lionagi.operatives.forms.base.BaseForm">BaseForm (class in lionagi.operatives.forms.base)</a>
 </li>
         <li><a href="modules/utils.html#lionagi.utils.bcall">bcall() (in module lionagi.utils)</a>
 </li>
@@ -534,6 +536,8 @@
         <li><a href="modules/branch_operations.html#Branch.chat">chat() (Branch method)</a>
 </li>
         <li><a href="modules/service.html#lionagi.service.endpoints.chat_completion.ChatCompletionEndPoint">ChatCompletionEndPoint (class in lionagi.service.endpoints.chat_completion)</a>
+</li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.base.BaseForm.check_completeness">check_completeness() (lionagi.operatives.forms.base.BaseForm method)</a>
 </li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.edge.Edge.check_condition">check_condition() (lionagi.protocols.graph.edge.Edge method)</a>
 </li>
@@ -667,15 +671,21 @@
     <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/lib_file.html#lionagi.libs.file.dir_process.file_to_chunks">file_to_chunks() (in module lionagi.libs.file.dir_process)</a>
 </li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.form.Form.fill_fields">fill_fields() (lionagi.operatives.forms.form.Form method)</a>
+</li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.find_node_edge">find_node_edge() (lionagi.protocols.graph.graph.Graph method)</a>
 </li>
         <li><a href="modules/utils.html#lionagi.utils.fix_json_string">fix_json_string() (in module lionagi.utils)</a>
 </li>
         <li><a href="modules/lib_nested.html#lionagi.libs.nested.flatten.flatten">flatten() (in module lionagi.libs.nested.flatten)</a>
 </li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.flow.FlowDefinition">FlowDefinition (class in lionagi.operatives.forms.flow)</a>
+</li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.flow.FlowStep">FlowStep (class in lionagi.operatives.forms.flow)</a>
+</li>
         <li><a href="modules/utils.html#lionagi.utils.force_async">force_async() (in module lionagi.utils)</a>
 </li>
-        <li><a href="modules/form.html#lionagi.form.form.Form">Form (class in lionagi.form.form)</a>
+        <li><a href="modules/form.html#lionagi.operatives.forms.form.Form">Form (class in lionagi.operatives.forms.form)</a>
 </li>
         <li><a href="modules/processor.html#lionagi.protocols.generic.processor.Executor.forward">forward() (lionagi.protocols.generic.processor.Executor method)</a>
 </li>
@@ -752,11 +762,17 @@
 </li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.get_heads">get_heads() (lionagi.protocols.graph.graph.Graph method)</a>
 </li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/element_id.html#lionagi.protocols.generic.element.ID.get_id">get_id() (lionagi.protocols.generic.element.ID static method)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.get_predecessors">get_predecessors() (lionagi.protocols.graph.graph.Graph method)</a>
+</li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.flow.FlowDefinition.get_produced_fields">get_produced_fields() (lionagi.operatives.forms.flow.FlowDefinition method)</a>
+</li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.flow.FlowDefinition.get_required_fields">get_required_fields() (lionagi.operatives.forms.flow.FlowDefinition method)</a>
+</li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.base.BaseForm.get_results">get_results() (lionagi.operatives.forms.base.BaseForm method)</a>
 </li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.get_successors">get_successors() (lionagi.protocols.graph.graph.Graph method)</a>
 </li>
@@ -810,10 +826,10 @@
           <li><a href="modules/pile.html#lionagi.protocols.generic.pile.Pile.insert">(lionagi.protocols.generic.pile.Pile method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/lib_package.html#lionagi.libs.package.import_check.install_import">install_import() (in module lionagi.libs.package.import_check)</a>
 </li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="modules/branch_operations.html#Branch.instruct">instruct() (Branch method)</a>
 </li>
         <li><a href="modules/message.html#lionagi.protocols.messages.instruction.Instruction">Instruction (class in lionagi.protocols.messages.instruction)</a>
@@ -827,6 +843,8 @@
 </li>
         </ul></li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.is_acyclic">is_acyclic() (lionagi.protocols.graph.graph.Graph method)</a>
+</li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.base.BaseForm.is_completed">is_completed() (lionagi.operatives.forms.base.BaseForm method)</a>
 </li>
         <li><a href="modules/pile.html#lionagi.protocols.generic.pile.Pile.is_empty">is_empty() (lionagi.protocols.generic.pile.Pile method)</a>
 </li>
@@ -886,27 +904,6 @@
 </li>
         <li><a href="modules/lib_validate.html#lionagi.libs.validate.string_similarity.levenshtein_similarity">levenshtein_similarity() (in module lionagi.libs.validate.string_similarity)</a>
 </li>
-        <li>
-    lionagi.form.base
-
-        <ul>
-          <li><a href="modules/form.html#module-lionagi.form.base">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.form.form
-
-        <ul>
-          <li><a href="modules/form.html#module-lionagi.form.form">module</a>
-</li>
-        </ul></li>
-        <li>
-    lionagi.form.report
-
-        <ul>
-          <li><a href="modules/form.html#module-lionagi.form.report">module</a>
-</li>
-        </ul></li>
         <li>
     lionagi.libs.file.chunk
 
@@ -1090,6 +1087,34 @@
 </li>
         </ul></li>
         <li>
+    lionagi.operatives.forms.base
+
+        <ul>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.base">module</a>
+</li>
+        </ul></li>
+        <li>
+    lionagi.operatives.forms.flow
+
+        <ul>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.flow">module</a>
+</li>
+        </ul></li>
+        <li>
+    lionagi.operatives.forms.form
+
+        <ul>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.form">module</a>
+</li>
+        </ul></li>
+        <li>
+    lionagi.operatives.forms.report
+
+        <ul>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.report">module</a>
+</li>
+        </ul></li>
+        <li>
     lionagi.operatives.instruct.base
 
         <ul>
@@ -1124,6 +1149,8 @@
           <li><a href="modules/models.html#module-lionagi.operatives.model.field_model">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     lionagi.operatives.model.hashable_model
 
@@ -1131,8 +1158,6 @@
           <li><a href="modules/models.html#module-lionagi.operatives.model.hashable_model">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     lionagi.operatives.model.model_params
 
@@ -1409,12 +1434,6 @@
     module
 
         <ul>
-          <li><a href="modules/form.html#module-lionagi.form.base">lionagi.form.base</a>
-</li>
-          <li><a href="modules/form.html#module-lionagi.form.form">lionagi.form.form</a>
-</li>
-          <li><a href="modules/form.html#module-lionagi.form.report">lionagi.form.report</a>
-</li>
           <li><a href="modules/lib_file.html#module-lionagi.libs.file.chunk">lionagi.libs.file.chunk</a>
 </li>
           <li><a href="modules/lib_file.html#module-lionagi.libs.file.dir_process">lionagi.libs.file.dir_process</a>
@@ -1466,6 +1485,14 @@
           <li><a href="modules/lib_validate.html#module-lionagi.libs.validate.string_similarity">lionagi.libs.validate.string_similarity</a>
 </li>
           <li><a href="modules/lib_validate.html#module-lionagi.libs.validate.validate_boolean">lionagi.libs.validate.validate_boolean</a>
+</li>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.base">lionagi.operatives.forms.base</a>
+</li>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.flow">lionagi.operatives.forms.flow</a>
+</li>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.form">lionagi.operatives.forms.form</a>
+</li>
+          <li><a href="modules/form.html#module-lionagi.operatives.forms.report">lionagi.operatives.forms.report</a>
 </li>
           <li><a href="modules/instruct.html#module-lionagi.operatives.instruct.base">lionagi.operatives.instruct.base</a>
 </li>
@@ -1615,10 +1642,12 @@
           <li><a href="modules/action.html#parse_action_request">built-in function</a>
 </li>
         </ul></li>
-        <li><a href="modules/pile.html#lionagi.protocols.generic.pile.Pile">Pile (class in lionagi.protocols.generic.pile)</a>
+        <li><a href="modules/form.html#lionagi.operatives.forms.flow.FlowDefinition.parse_flow_string">parse_flow_string() (lionagi.operatives.forms.flow.FlowDefinition method)</a>
 </li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="modules/pile.html#lionagi.protocols.generic.pile.Pile">Pile (class in lionagi.protocols.generic.pile)</a>
+</li>
         <li><a href="modules/pile.html#lionagi.protocols.generic.pile.pile">pile() (in module lionagi.protocols.generic.pile)</a>
 </li>
         <li><a href="modules/progression.html#lionagi.protocols.generic.progression.pop">pop() (in module lionagi.protocols.generic.progression)</a>
@@ -1675,7 +1704,7 @@
 </li>
         <li><a href="modules/graph.html#lionagi.protocols.graph.graph.Graph.remove_node">remove_node() (lionagi.protocols.graph.graph.Graph method)</a>
 </li>
-        <li><a href="modules/form.html#lionagi.form.report.Report">Report (class in lionagi.form.report)</a>
+        <li><a href="modules/form.html#lionagi.operatives.forms.report.Report">Report (class in lionagi.operatives.forms.report)</a>
 </li>
         <li><a href="modules/processor.html#lionagi.protocols.generic.processor.Processor.request_permission">request_permission() (lionagi.protocols.generic.processor.Processor method)</a>
 </li>
@@ -1753,6 +1782,8 @@
           <li><a href="modules/element_id.html#lionagi.protocols.generic.element.Element.to_dict">(lionagi.protocols.generic.element.Element method)</a>
 </li>
         </ul></li>
+        <li><a href="modules/form.html#lionagi.operatives.forms.form.Form.to_instructions">to_instructions() (lionagi.operatives.forms.form.Form method)</a>
+</li>
         <li><a href="modules/utils.html#lionagi.utils.to_json">to_json() (in module lionagi.utils)</a>
 </li>
         <li><a href="modules/pile.html#lionagi.protocols.generic.pile.Pile.to_json_file">to_json_file() (lionagi.protocols.generic.pile.Pile method)</a>
