@@ -2,7 +2,7 @@
 
 ## Chapter 2: Building a Customer Service Bot
 
-In [Chapter 1](ch1_get_started.md), we built a **research assistant** primarily using the `branch.chat()` method. 
+In [Chapter 1](ch01_get_started.md), we built a **research assistant** primarily using the `branch.chat()` method. 
 
 That approach was **single-turn**: each call to `chat()` did **not** add messages to the conversation history. Now, we’ll explore **LionAGI’s** architecture and focus on **multi-turn** usage with `branch.communicate()`, which **does** store messages for continuous dialogue.
 
