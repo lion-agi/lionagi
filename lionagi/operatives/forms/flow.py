@@ -28,7 +28,7 @@ class FlowDefinition(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    steps: List[FlowStep] = Field(default_factory=list)
+    steps: list[FlowStep] = Field(default_factory=list)
 
     def parse_flow_string(self, flow_str: str):
         """

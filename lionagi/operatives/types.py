@@ -10,6 +10,7 @@ from .action.request_response_model import (
 )
 from .action.tool import FuncTool, FuncToolRef, Tool, ToolRef
 from .forms.base import BaseForm
+from .forms.flow import FlowDefinition, FlowStep
 from .forms.form import Form
 from .forms.report import Report
 from .instruct.base import (
@@ -66,4 +67,6 @@ __all__ = (
     "FuncTool",
     "FuncToolRef",
     "FunctionCalling",
+    "FlowDefinition",
+    "FlowStep",
 )
