@@ -1,193 +1,329 @@
 ======================================
-Form & Report
+Form & Flow
 ======================================
 
-This module provides **form-based data structures** for tasks that involve
-collecting inputs, producing outputs, and managing intermediate fields. A form
-can be seen as a specialized, dynamic Pydantic model (extending LionAGI's
-:class:`OperableModel`) that captures:
+The forms module provides a flexible system for handling structured data transformations
+through forms and multi-step flows. It consists of four core components:
 
-- **Required** fields (input vs. request)
-- **Optional** or dynamically added fields
-- **Validation** (check if inputs are complete)
-- **Task assignment** logic (mapping input fields to requested outputs)
-
-Three core classes are provided:
-
-1. :class:`BaseForm` - Foundation for form handling (output fields, checks).
-2. :class:`Form` - Builds on :class:`BaseForm` for typical “input -> output”
-   tasks. Automates assignment parsing and input/request field distinction.
-3. :class:`Report` - Aggregates multiple completed forms, storing tasks that
-   have been processed and generating a final “report.”
-
+1. :class:`BaseForm` - Foundation for form handling
+2. :class:`Form` - Enhanced form with input/output field distinction
+3. :class:`FlowDefinition` - Multi-step transformation pipeline
+4. :class:`Report` - Aggregator for completed forms
 
 -----------
-1. BaseForm
+Base Form
 -----------
 
-.. module:: lionagi.form.base
-   :synopsis: Core functionality for form handling.
+.. module:: lionagi.operatives.forms.base
+   :synopsis: Core form functionality.
 
 .. class:: BaseForm
-   :module: lionagi.form.base
 
-   **Inherits from**: :class:`OperableModel`
+   **Inherits from**: :class:`lionagi.protocols.generic.element.Element`
 
-   A minimal form that tracks:
+   A minimal form class that tracks output fields and validates completeness.
+   Uses Pydantic v2 with ``ConfigDict(extra="allow", arbitrary_types_allowed=True)``.
 
-- **Assignment**: The objective or mapping from inputs to outputs.
-- **Output fields**: The subset of fields to present as results.
-- **has_processed**: Whether the form was fully validated/used.
-- **none_as_valid_value**: If True, treating `None` as a valid field.
+   **Attributes**:
 
-**Key Methods**:
+   - **assignment** (*str | None*) -- A DSL string describing the transformation
+   - **output_fields** (*list[str]*) -- Fields considered mandatory outputs
+   - **none_as_valid** (*bool*) -- If True, None is accepted as valid
+   - **has_processed** (*bool*) -- Marks if form is completed
 
-- :meth:`check_is_completed(handle_how='raise'|'return_missing')`:
-  Ensures required fields are populated; either raise an error or
-  return the missing fields list.
+   **Methods**:
 
-- :meth:`is_completed() -> bool`:
-  True if form is fully valid (no missing fields).
+   .. method:: is_completed() -> bool
 
-- :meth:`get_results(suppress=False, valid_only=False) -> dict`:
-  Gather the output fields as a dictionary, optionally ignoring invalid fields.
+      Check if all required output fields are set and valid.
+      A field is considered valid if:
+      
+      - It exists and has a value
+      - The value is not UNDEFINED
+      - If none_as_valid=False, the value is not None
 
-**Example**::
+   .. method:: check_completeness(how: Literal["raise", "return_missing"]) -> list[str]
 
-   from lionagi.form.base import BaseForm
+      Return missing required fields or raise an exception.
 
-   form = BaseForm(
-       assignment="some_field -> output_field",
-       output_fields=["output_field"]
-   )
-   # Suppose we add a new field
-   form.add_field("some_field", value="hello")
-   # Now get results
-   results = form.get_results()
-   print(results)  # => {'output_field': UNDEFINED}, since not assigned
+      Parameters:
+         - **how** -- If "raise", raises ValueError for missing fields.
+           If "return_missing", returns list of missing field names.
 
+   .. method:: get_results(valid_only: bool = False) -> dict[str, Any]
+
+      Return a dict of output fields, optionally filtering invalid values.
+
+      Parameters:
+         - **valid_only** -- If True, omit fields with None/UNDEFINED values
+           (depending on none_as_valid setting)
+
+   **Example**::
+
+      from lionagi.operatives.forms import BaseForm
+
+      form = BaseForm(
+          output_fields=["result"],
+          none_as_valid=False
+      )
+      form.result = "computation complete"
+      assert form.is_completed()
+      print(form.get_results())  # {"result": "computation complete"}
+
+      # With none_as_valid=True
+      form = BaseForm(
+          output_fields=["optional_result"],
+          none_as_valid=True
+      )
+      form.optional_result = None
+      assert form.is_completed()  # True, None is valid
+
+-----------
+Flow System
+-----------
+
+.. module:: lionagi.operatives.forms.flow
+   :synopsis: Multi-step flow handling.
+
+.. class:: FlowStep
+
+   **Inherits from**: :class:`pydantic.BaseModel`
+
+   A single transformation step in a multi-step flow.
+   Uses Pydantic v2 with ``ConfigDict(arbitrary_types_allowed=True)``.
+
+   **Attributes**:
+
+   - **name** (*str*) -- Step identifier (e.g., "step_1")
+   - **inputs** (*list[str]*) -- Required input fields for this step
+   - **outputs** (*list[str]*) -- Fields produced by this step
+   - **description** (*str | None*) -- Optional step documentation
+
+.. class:: FlowDefinition
+
+   **Inherits from**: :class:`pydantic.BaseModel`
+
+   Manages a sequence of transformation steps using a DSL.
+   Uses Pydantic v2 with ``ConfigDict(arbitrary_types_allowed=True)``.
+
+   **Attributes**:
+
+   - **steps** (*List[FlowStep]*) -- Ordered list of transformation steps
+
+   **Methods**:
+
+   .. method:: parse_flow_string(flow_str: str)
+
+      Parse a DSL string like "a,b->c; c->d" into FlowSteps.
+      Each step is named sequentially (step_1, step_2, etc.).
+      Empty segments and whitespace are handled gracefully.
+
+   .. method:: get_required_fields() -> set[str]
+
+      Return fields needed as inputs but not produced by prior steps.
+      For example, in "a->b; b,c->d", returns {"a", "c"} since:
+      
+      - "a" is needed by step 1 but not produced earlier
+      - "b" is needed by step 2 but produced by step 1
+      - "c" is needed by step 2 but not produced earlier
+
+   .. method:: get_produced_fields() -> set[str]
+
+      Return all fields produced by any step.
+      For example, in "a->b,c; c->d", returns {"b", "c", "d"}.
+
+   **Example**::
+
+      from lionagi.operatives.forms import FlowDefinition
+
+      flow = FlowDefinition()
+      
+      # Parse text processing pipeline
+      flow.parse_flow_string(
+          "text->tokens; tokens->embeddings; embeddings->clusters"
+      )
+      
+      print(flow.get_required_fields())  # {"text"}
+      print(flow.get_produced_fields())  # {"tokens", "embeddings", "clusters"}
+      
+      # Steps are named sequentially
+      for step in flow.steps:
+          print(f"{step.name}: {step.inputs} -> {step.outputs}")
 
 ------
-2. Form
+Form
 ------
 
-.. module:: lionagi.form.form
-   :synopsis: Extended form with distinct input and request fields.
+.. module:: lionagi.operatives.forms.form
+   :synopsis: Enhanced form with input/output distinction.
 
 .. class:: Form
-   :module: lionagi.form.form
 
    **Inherits from**: :class:`BaseForm`
 
-   This class distinguishes three sets of fields:
+   A form that distinguishes between input and request (output) fields.
+   Uses Pydantic v2 with ``ConfigDict(extra="allow", arbitrary_types_allowed=True)``.
 
-1. **input_fields** (provided by user or environment).
-2. **request_fields** (which an “intelligent process” should fill).
-3. **output_fields** (which are ultimately displayed or returned).
+   **Attributes**:
 
-Additionally:
+   - **flow_definition** (*Optional[FlowDefinition]*) -- For multi-step flows
+   - **guidance** (*str | None*) -- Optional processing guidance
+   - **task** (*str | None*) -- Task description
 
-- **strict_form** (bool): If True, you cannot modify input/request fields or
-  assignment after initialization.
-- :meth:`fill_input_fields(...)` and :meth:`fill_request_fields(...)`
-  let you programmatically populate these sets of fields from another form
-  or via direct keyword arguments.
+   **Validators**:
 
-**Assignment**:
+   - **parse_assignment_into_flow**: Creates FlowDefinition for multi-step assignments
+   - **compute_output_fields**: Sets output_fields based on assignment or flow
 
-By default, a string in the format ``input1, input2 -> request1, request2``
-defines which fields are “inputs” vs. “requests.” The class automatically
-parses them if you pass an ``assignment``.
+   **Methods**:
 
-**Key Methods**:
+   .. method:: fill_fields(**kwargs)
 
-- :meth:`check_is_workable()` / :meth:`is_workable()`:
-  Verify input fields are filled so the form can proceed.
+      Update form fields with provided values.
+      Useful for partial updates when you don't want to recreate the form.
 
-- :meth:`from_form(...)`:
-  Clone or derive a new :class:`Form` from an existing :class:`BaseForm`.
+   .. method:: to_instructions() -> dict[str, Any]
 
-- :meth:`create_form(...)`:
-  (In :class:`Report`) to create a new :class:`Form` with specified
-  assignment or fields.
+      Return a dictionary suitable for LLM consumption, containing:
+      
+      - assignment: The DSL string
+      - flow: FlowDefinition as dict (if multi-step)
+      - guidance: Optional processing guidance
+      - task: Optional task description
+      - required_outputs: List of required output fields
 
-**Example**::
+   **Example**::
 
-   from lionagi.form.form import Form
+      from lionagi.operatives.forms import Form
 
-   # assignment = "user_name, user_age -> recommended_action"
-   f = Form(assignment="user_name, user_age -> recommended_action")
-
-   # Now we add or fill the input fields
-   f.fill_input_fields(user_name="Alice", user_age=30)
-   # The request field is 'recommended_action'
-   # We can fill it or let the AI fill it
-
-   f.check_is_workable()     # ensures inputs exist
-   # ...
-   # Later we fill request
-   f.fill_request_fields(recommended_action="Provide discounts")
-   print(f.get_results())    # => {"recommended_action": "Provide discounts"}
-
+      # Single-step form
+      form = Form(assignment="user_input->greeting")
+      form.fill_fields(user_input="Alice")
+      
+      # Multi-step form with all produced fields as outputs
+      form = Form(
+          assignment="name,age->profile; profile->recommendation",
+          guidance="Generate personalized recommendations",
+          task="User profiling"
+      )
+      
+      # The flow is automatically parsed
+      assert form.flow_definition is not None
+      assert len(form.flow_definition.steps) == 2
+      
+      # All produced fields are outputs
+      assert set(form.output_fields) == {"profile", "recommendation"}
 
 --------
-3. Report
+Report
 --------
 
-.. module:: lionagi.form.report
-   :synopsis: Aggregates multiple completed :class:`Form` objects.
+.. module:: lionagi.operatives.forms.report
+   :synopsis: Form aggregation and tracking.
 
 .. class:: Report
-   :module: lionagi.form.report
 
-   **Inherits from**: :class:`Form`
+   **Inherits from**: :class:`BaseForm`
 
-   Designed to collect **multiple tasks** (forms) into one object:
+   Collects and manages multiple completed forms.
+   Uses Pydantic v2 with ``ConfigDict(extra="allow", arbitrary_types_allowed=True)``.
 
-- :attr:`completed_tasks`: A pile of :class:`Form` instances that are done.
-- :meth:`save_completed_form(form, update_results=False)`:
-  Store a completed form in the report. Optionally update the report's
-  fields with the form's results.
-- :meth:`create_form(...)`:
-  Helper for building new tasks (forms) from the report's perspective.
-- :meth:`from_form(...)`:
-  Alternative constructor that transforms an existing form into a report.
+   **Attributes**:
 
-**Example**::
+   - **default_form_cls** (*type[Form]*) -- Form class to use (defaults to Form)
+   - **completed_forms** (*Pile[Form]*) -- Thread-safe collection of completed forms
+   - **form_assignments** (*dict[str, str]*) -- Maps form IDs to assignments
 
-   from lionagi.form.report import Report, Form
+   **Methods**:
 
-   r = Report()
-   # Suppose we create a form
-   f = r.create_form(assignment="input1 -> output1")
-   f.fill_input_fields(input1="Hello")
+   .. method:: add_completed_form(form: Form, update_report_fields: bool = False)
 
-   # Mark the form as completed
-   # In reality you'd fill the request field as well
-   f.fill_request_fields(output1="World")
-   f.check_is_completed()
+      Add a completed form to the report.
 
-   # Save into report
-   r.save_completed_form(f, update_results=True)
-   print(r.completed_tasks.size())       # => 1
-   print(r.output1)                      # => "World" (copied from the form)
+      Parameters:
+         - **form** -- A completed Form instance
+         - **update_report_fields** -- If True, copy form's output values to report
 
+      Raises:
+         - ValueError if form is incomplete
+
+   **Example**::
+
+      from lionagi.operatives.forms import Report, Form
+
+      report = Report()
+      
+      # Create and complete forms for a multi-step process
+      form1 = Form(assignment="query->embeddings")
+      form1.fill_fields(
+          query="What's the weather?",
+          embeddings=[0.1, 0.2, 0.3]
+      )
+      
+      form2 = Form(assignment="embeddings->answer")
+      form2.fill_fields(
+          embeddings=form1.embeddings,
+          answer="Sunny with a high of 75°F"
+      )
+      
+      # Add both forms, updating report fields from the final form
+      report.add_completed_form(form1)
+      report.add_completed_form(form2, update_report_fields=True)
+      
+      print(report.answer)  # "Sunny with a high of 75°F"
 
 --------------------
-Additional Utilities
+Additional Notes
 --------------------
 
-**Parsing**:
+**DSL Format**
 
-:func:`get_input_output_fields(str_) -> (list[str], list[str])`
-Splits an assignment string of the form `input1, input2 -> request1, request2`
-into two lists (input fields, request fields).
+The forms system uses a simple DSL (Domain Specific Language) for describing
+transformations:
 
-Used internally by :class:`Form` to auto-generate `input_fields` and `request_fields`.
+- Single step: ``input1, input2 -> output``
+- Multiple steps: ``a,b->c; c->d``
+- Spaces are allowed: ``input1, input2  ->  output``
 
-```python
-from lionagi.form.utils import get_input_output_fields
+The DSL is parsed into either:
 
-inp, req = get_input_output_fields("name, age -> greeting")
-print(inp)  # ["name", "age"]
-print(req)  # ["greeting"]
+1. Simple input/output field lists for :class:`Form`
+2. A full :class:`FlowDefinition` for multi-step processes
+
+**Multi-step Flow Behavior**
+
+When using multi-step flows:
+
+1. Each step's outputs become available to later steps as inputs
+2. The form's output_fields include all produced fields by default
+3. You can override output_fields to select specific outputs
+4. Required fields are those needed as inputs but not produced by prior steps
+
+**Best Practices**
+
+1. Use :class:`BaseForm` when you only need output validation
+2. Use :class:`Form` when distinguishing inputs from outputs
+3. Use :class:`FlowDefinition` for complex multi-step transformations
+4. Use :class:`Report` to track multiple related forms
+5. Set none_as_valid=True when fields may legitimately be None
+6. Provide guidance and task descriptions for better LLM interaction
+
+**Type Safety**
+
+All form classes use Pydantic v2 for validation. You can create typed forms by
+subclassing and adding type hints::
+
+   from pydantic import Field
+   from lionagi.utils import UNDEFINED
+
+   class UserForm(Form):
+       name: str = Field(default=UNDEFINED)
+       age: int = Field(default=UNDEFINED)
+       profile: str | None = Field(default=None)
+       
+       model_config = ConfigDict(
+           extra="allow",
+           arbitrary_types_allowed=True
+       )
+
+This ensures type safety and proper validation for form fields.
