@@ -12,6 +12,7 @@ import inspect
 from collections.abc import Callable
 from typing import Any, TypeAlias
 
+from openai import BaseModel
 from pydantic import Field, field_validator, model_validator
 from typing_extensions import Self
 
@@ -47,6 +48,11 @@ class Tool(Element):
     tool_schema: dict[str, Any] | None = Field(
         default=None,
         description="Schema describing the function's parameters and structure",
+    )
+
+    request_options: type | None = Field(
+        default=None,
+        description="Optional Pydantic model for validating the function's input",
     )
 
     preprocessor: Callable[[Any], Any] | None = Field(
@@ -88,6 +94,11 @@ class Tool(Element):
     def _validate_tool_schema(self) -> Self:
         if self.tool_schema is None:
             self.tool_schema = function_to_schema(self.func_callable)
+        if self.request_options is not None:
+            schema_ = self.request_options.model_json_schema()
+            schema_.pop("title", None)
+            self.tool_schema["function"]["parameters"] = schema_
+
         return self
 
     @property

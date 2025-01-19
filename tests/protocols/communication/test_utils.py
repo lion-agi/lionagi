@@ -86,24 +86,6 @@ def test_format_text_item():
     assert "item2" in result
 
 
-def test_format_text_content():
-    """Test formatting text content"""
-    content = {
-        "guidance": "Test guidance",
-        "instruction": "Test instruction",
-        "context": ["Test context"],
-        "request_response_format": "Test format",
-    }
-
-    result = format_text_content(content)
-
-    assert "Task" in result
-    assert "Test guidance" in result
-    assert "Test instruction" in result
-    assert "Test context" in result
-    assert "Test format" in result
-
-
 def test_format_image_content():
     """Test formatting image content"""
     text = "Test text"

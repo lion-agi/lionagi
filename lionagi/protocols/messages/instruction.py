@@ -81,68 +81,121 @@ def format_text_item(item: Any) -> str:
 
 def format_text_content(content: dict) -> str:
     """
-    Convert a dictionary with keys like 'guidance', 'instruction', 'context', etc.
-    into a readable text block.
+    Convert a content dictionary into a minimal textual summary for LLM consumption.
 
-    Args:
-        content (dict): The content dictionary.
-
-    Returns:
-        str: A textual summary.
+    Emphasizes brevity and clarity:
+      - Skips empty or None fields.
+      - Bullet-points for lists.
+      - Key-value pairs for dicts.
+      - Minimal headings for known fields (guidance, instruction, etc.).
     """
-    if "plain_content" in content and isinstance(
-        content["plain_content"], str
-    ):
+
+    if isinstance(content.get("plain_content"), str):
         return content["plain_content"]
 
-    msg = "\n---\n # Task\n"
-
-    for k in [
+    lines = []
+    # We only want minimal headings for certain known fields:
+    known_field_order = [
         "guidance",
         "instruction",
         "context",
         "tool_schemas",
         "respond_schema_info",
         "request_response_format",
-    ]:
-        if k in content:
-            v = content[k]
+    ]
 
-            if k == "tool_schemas":
-                if "tools" in v:
-                    v = v["tools"]
+    # Render known fields in that order
+    for field in known_field_order:
+        if field in content:
+            val = content[field]
+            if _is_not_empty(val):
+                if field == "request_response_format":
+                    field = "response format"
+                elif field == "respond_schema_info":
+                    field = "response schema info"
+                lines.append(f"\n## {field.upper()}:\n")
+                rendered = _render_value(val)
+                # Indent or bullet the rendered result if multiline
+                # We'll keep it minimal: each line is prefixed with "  ".
+                lines.extend(
+                    f"  {line}"
+                    for line in rendered.split("\n")
+                    if line.strip()
+                )
 
-                if isinstance(v, list):
-                    z = []
-                    for idx, z_ in enumerate(v):
-                        if isinstance(z_, dict) and "function" in z_:
-                            z.append({f"Tool {idx+1}": z_["function"]})
-                    v = z
+    # Join all lines into a single string
+    return "\n".join(lines).strip()
 
-            if k == "request_response_format":
-                k = "response format"
 
-            if v not in [None, [], {}, UNDEFINED]:
-                if isinstance(v, list):
-                    msg += f"## - **{k}**\n"
-                    for i in v:
-                        if (
-                            len(format_text_item(v).replace("\n", "").strip())
-                            > 0
-                        ):
-                            msg += format_text_item(i).strip()
-                    msg += "\n"
-                else:
-                    if len(format_text_item(v).replace("\n", "").strip()) > 0:
-                        msg += (
-                            f"## - **{k}**\n{format_text_item(v).strip()}\n\n"
-                        )
-
-    if not msg.endswith("\n\n"):
-        msg += "\n\n---\n"
+def _render_value(val) -> str:
+    """
+    Render an arbitrary value (scalar, list, dict) in minimal form:
+    - Lists become bullet points.
+    - Dicts become key-value lines.
+    - Strings returned directly.
+    """
+    if isinstance(val, dict):
+        return _render_dict(val)
+    elif isinstance(val, list):
+        return _render_list(val)
     else:
-        msg += "---\n"
-    return msg
+        return str(val).strip()
+
+
+def _render_dict(dct: dict) -> str:
+    """
+    Minimal bullet list for dictionary items:
+      key: rendered subvalue
+    """
+    lines = []
+    for k, v in dct.items():
+        if not _is_not_empty(v):
+            continue
+        subrendered = _render_value(v)
+        # Indent subrendered if multiline
+        sublines = subrendered.split("\n")
+        if len(sublines) == 1:
+            if sublines[0].startswith("- "):
+                lines.append(f"- {k}: {sublines[0][2:]}")
+            else:
+                lines.append(f"- {k}: {sublines[0]}")
+        else:
+            lines.append(f"- {k}:")
+            for s in sublines:
+                lines.append(f"  {s}")
+    return "\n".join(lines)
+
+
+def _render_list(lst: list) -> str:
+    """
+    Each item in the list gets a bullet. Nested structures are recursed.
+    """
+    lines = []
+    for idx, item in enumerate(lst, 1):
+        sub = _render_value(item)
+        sublines = sub.split("\n")
+        if len(sublines) == 1:
+            if sublines[0].startswith("- "):
+                lines.append(f"- {sublines[0][2:]}")
+            else:
+                lines.append(f"- {sublines[0]}")
+        else:
+            lines.append("-")
+            lines.extend(f"  {s}" for s in sublines)
+    return "\n".join(lines)
+
+
+def _is_not_empty(x) -> bool:
+    """
+    Returns True if x is neither None, nor empty string/list/dict.
+    """
+    if x is None:
+        return False
+    if isinstance(x, (list, dict)) and not x:
+        return False
+    if isinstance(x, str) and not x.strip():
+        return False
+    return True
 
 
 def format_image_content(

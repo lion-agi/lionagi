@@ -10,19 +10,19 @@ from pydantic import BaseModel, Field
 class ReActAnalysis(BaseModel):
 
     FIRST_EXT_PROMPT: ClassVar[str] = (
-        "You are provided with another round to perform reason action to provide an accurate final answer. you have max another {extensions} rounds, set extension_needed to False if you are done and ready to provide final answer."
+        "You are provided with additional rounds to perform reason action to provide an accurate final answer. you have max another {extensions} rounds. Pleasen continue."
     )
 
     CONTINUE_EXT_PROMPT: ClassVar[str] = (
-        "You are provided with another round, you have max another {extensions} rounds"
+        "You are provided with another round, you have max another {extensions} rounds. Please continue."
     )
 
     ANSWER_PROMPT: ClassVar[str] = (
-        "given above reason and actions, please provide final answer to the original user request {instruction}"
+        "given above reason and actions, please provide final answer to the original user request:\n\n {instruction}"
     )
 
     analysis: str
     extension_needed: bool = Field(
         False,
-        description="Set to True if more steps are needed to provide an accurate answer. If True, additional rounds are allowed.",
+        description="Set to True if more steps are needed to provide an accurate answer. If True, additional rounds are allowed. Typically should be set to true if more actions should be taken or planned to be taken. If false, will proceed to provide final answer next.",
     )

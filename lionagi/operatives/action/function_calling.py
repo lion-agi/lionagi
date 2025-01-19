@@ -5,7 +5,7 @@
 import asyncio
 from typing import Any
 
-from pydantic import Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing_extensions import Self
 
 from lionagi.protocols.generic.event import Event, EventStatus
@@ -27,12 +27,22 @@ class FunctionCalling(Event):
         exclude=True,
     )
 
-    arguments: dict[str, Any] = Field(
+    arguments: dict[str, Any] | BaseModel = Field(
         ..., description="Dictionary of arguments to pass to the function"
     )
 
+    @field_validator("arguments", mode="before")
+    def _validate_argument(cls, value):
+        if isinstance(value, BaseModel):
+            return value.model_dump(exclude_unset=True)
+        return value
+
     @model_validator(mode="after")
     def _validate_strict_tool(self) -> Self:
+        if self.func_tool.request_options:
+            args: BaseModel = self.func_tool.request_options(**self.arguments)
+            self.arguments = args.model_dump(exclude_unset=True)
+
         if self.func_tool.strict_func_call is True:
             if (
                 not set(self.arguments.keys())
