@@ -895,7 +895,7 @@ wheels = [
 
 [[package]]
 name = "lionagi"
-version = "0.7.4"
+version = "0.8.2"
 source = { editable = "." }
 dependencies = [
     { name = "aiocache" },

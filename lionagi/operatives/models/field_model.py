@@ -27,23 +27,23 @@ class FieldModel(SchemaModel):
     configuration options including type validation, default values, documentation,
     and validation rules.
 
-    Attributes:
-        name (str): Required field identifier.
-        annotation (type | Any): Field type annotation, defaults to Any.
-        default (Any): Default value for the field.
-        default_factory (Callable): Function to generate default values.
-        validator (Callable): Optional validation function.
-        validator_kwargs (dict): Parameters for validator configuration.
-        title (str): Human-readable field title.
-        description (str): Detailed field description.
-        examples (list): Example values for documentation.
-        exclude (bool): Whether to exclude from serialization.
-        deprecated (bool): Whether the field is deprecated.
-        frozen (bool): Whether the field is immutable.
-        alias (str): Alternative field name.
-        alias_priority (int): Priority for alias resolution.
+    Args:
+        name: Required field identifier.
+        annotation: Field type annotation. Defaults to Any.
+        default: Default value for the field.
+        default_factory: Function to generate default values.
+        validator: Optional validation function.
+        validator_kwargs: Parameters for validator configuration.
+        title: Human-readable field title.
+        description: Detailed field description.
+        examples: Example values for documentation.
+        exclude: Whether to exclude from serialization.
+        deprecated: Whether the field is deprecated.
+        frozen: Whether the field is immutable.
+        alias: Alternative field name.
+        alias_priority: Priority for alias resolution.
 
-    Example:
+    Examples:
         >>> field = FieldModel(
         ...     name="age",
         ...     annotation=int,
@@ -129,7 +129,14 @@ class FieldModel(SchemaModel):
 
     @field_validator("validator_kwargs", mode="before")
     def _validate_validator_kwargs(cls, value):
-        """Validate validator kwargs."""
+        """Validate validator kwargs.
+
+        Args:
+            value: Validator kwargs to validate.
+
+        Returns:
+            Validated kwargs dictionary.
+        """
         return validate_dict_kwargs_params(cls, value)
 
     @field_validator("validator", mode="before")
@@ -140,7 +147,7 @@ class FieldModel(SchemaModel):
             value: Validator function to check.
 
         Returns:
-            Callable | Any: Validated validator function.
+            Validated validator function.
 
         Raises:
             ValueError: If validator is not callable.
@@ -151,8 +158,11 @@ class FieldModel(SchemaModel):
     def field_info(self) -> FieldInfo:
         """Generate Pydantic FieldInfo from current configuration.
 
+        Converts the current field configuration into a Pydantic FieldInfo object,
+        handling annotation defaults and field attributes.
+
         Returns:
-            FieldInfo: Configured field information object.
+            Configured Pydantic FieldInfo object.
         """
         annotation = (
             self.annotation if self.annotation is not UNDEFINED else Any
@@ -165,8 +175,12 @@ class FieldModel(SchemaModel):
     def field_validator(self) -> dict[str, Callable] | None:
         """Create field validator configuration.
 
+        Generates a validator configuration dictionary if a validator function
+        is defined, otherwise returns None.
+
         Returns:
-            dict[str, Callable] | None: Validator configuration if defined.
+            Dictionary mapping validator name to validator function if defined,
+            None otherwise.
         """
         if self.validator is UNDEFINED:
             return None
@@ -181,8 +195,11 @@ class FieldModel(SchemaModel):
     def _validate_defaults(self) -> Self:
         """Ensure default value configuration is valid.
 
+        Validates that default and default_factory are not both set, as this
+        would create ambiguity about which default to use.
+
         Returns:
-            Self: Validated instance.
+            The validated model instance.
 
         Raises:
             ValueError: If both default and default_factory are set.

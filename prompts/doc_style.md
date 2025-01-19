@@ -49,69 +49,67 @@ We rely on reStructuredText (reST) for Sphinx-generated documentation. Some sect
 	•	Class Docs: Each class should have a docstring describing its purpose, attributes, and how it typically interacts with other classes.
 	•	Function/Method Docs: Each should explain the parameters, return values, raised exceptions, and usage examples where relevant.
 
-To keep these consistent, see the NumPy/Pandas Style docstring recommendations below.
+To keep these consistent, we use Google style docstrings for functions and classes.
 
 4. Docstring Conventions
 
 4.1. High-Level Python Docstring Standards
 	•	Adhere to PEP 257 (Python Docstring Conventions).
-	•	Triple quotes (”””) for docstring blocks, with a one-line summary followed by a blank line, then more detail if needed.
+	•	Triple quotes (""") for docstring blocks, with a one-line summary followed by a blank line, then more detail if needed.
+	•	Use Google style for function and class docstrings.
 
 Example minimal docstring:
 
 def my_function(arg1, arg2):
-    """
-    One-line summary of what my_function does.
+    """One-line summary of what my_function does.
 
     More descriptive text that covers details such as usage, side effects,
     or other clarifications. If not needed, keep docstring minimal.
+
+    Args:
+        arg1: Description of arg1
+        arg2: Description of arg2
+
+    Returns:
+        Description of return value
     """
     pass
 
-4.2. NumPy/Pandas Style Docstring Format
+4.2. Google Style Docstring Format
 
-For public APIs, especially data structures or utilities akin to pandas/NumPy, we recommend the NumPy docstring style. The key sections are:
+For all functions and classes, we use Google style docstrings. The key sections are:
 	1.	Short Summary
 	2.	Extended Summary (optional)
-	3.	Parameters
+	3.	Args
 	4.	Returns or Yields
 	5.	Raises
-	6.	See Also (optional)
+	6.	Note (optional)
 	7.	Examples (optional)
 
 Example:
 
 def compute_stats(data, axis=0):
-    """
-    Compute descriptive statistics for the input data.
+    """Compute descriptive statistics for the input data.
 
     This function calculates mean, standard deviation, and optionally 
     other metrics across the specified axis.
 
-    Parameters
-    ----------
-    data : array-like
-        Input dataset.
-    axis : int, default=0
-        Axis along which the statistics are computed.
+    Args:
+        data: Input dataset.
+        axis: Axis along which the statistics are computed. Defaults to 0.
 
-    Returns
-    -------
-    stats : dict
+    Returns:
         Dictionary containing keys 'mean' and 'std', each mapped to floats 
         or arrays of floats (depending on input shape).
 
-    Raises
-    ------
-    ValueError
-        If `data` cannot be converted to a numeric array.
+    Raises:
+        ValueError: If `data` cannot be converted to a numeric array.
     
-    Examples
-    --------
-    >>> import numpy as np
-    >>> arr = np.array([[1, 2], [3, 4]])
-    >>> compute_stats(arr, axis=1)
-    {'mean': array([1.5, 3.5]), 'std': array([0.5, 0.5])}
+    Examples:
+        >>> import numpy as np
+        >>> arr = np.array([[1, 2], [3, 4]])
+        >>> compute_stats(arr, axis=1)
+        {'mean': array([1.5, 3.5]), 'std': array([0.5, 0.5])}
     """
     pass
 
