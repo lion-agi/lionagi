@@ -4,7 +4,13 @@
 
 from typing import Any, TypeVar
 
-from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 from typing_extensions import Self, override
@@ -12,6 +18,7 @@ from typing_extensions import Self, override
 from lionagi.utils import UNDEFINED, HashableModel, is_same_dtype
 
 from .field_model import FieldModel
+from .model_params import ModelParams
 
 FieldName = TypeVar("FieldName", bound=str)
 
@@ -476,3 +483,101 @@ class OperableModel(HashableModel):
             raise AttributeError(
                 f"field {field_name} has no attribute {attr}",
             )
+
+    def new_model(
+        self,
+        name: str | None = None,
+        use_fields: set[str] | None = None,  # default is all_fields
+        base_type: type[BaseModel] | None = None,  # default is BaseModel
+        exclude_fields: list = None,
+        inherit_base: bool = True,
+        config_dict: ConfigDict | dict | None = None,
+        doc: str | None = None,
+        frozen: bool = False,
+        update_forward_refs: bool = True,
+    ) -> type[BaseModel]:
+        """
+        Create a new Pydantic model type from the current model's fields.
+
+        Generates a new model class using the specified fields and configuration.
+        The new model can inherit from a base type and include a subset of fields
+        from the current model.
+
+        Parameters
+        ----------
+        name : str | None, optional
+            Name for the new model class. If None, a default name will be generated.
+        use_fields : set[str] | None, optional
+            Set of field names to include in the new model. If None, includes all fields.
+        base_type : type[BaseModel] | None, optional
+            Base model class to inherit from. Defaults to BaseModel if None.
+        exclude_fields : list, optional
+            List of field names to exclude from the new model.
+        inherit_base : bool, default=True
+            Whether to inherit fields from the base_type.
+        config_dict : ConfigDict | dict | None, optional
+            Pydantic model configuration for the new model.
+        doc : str | None, optional
+            Docstring for the new model class.
+        frozen : bool, default=False
+            If True, creates an immutable model where fields cannot be modified after creation.
+
+        Returns
+        -------
+        type[BaseModel]
+            A new Pydantic model class with the specified configuration.
+
+        Raises
+        ------
+        ValueError
+            If use_fields contains invalid field names.
+
+        Examples
+        --------
+        >>> model = OperableModel()
+        >>> model.add_field("name", value="test", annotation=str)
+        >>> model.add_field("age", value=25, annotation=int)
+        >>> NewModel = model.new_model(
+        ...     name="UserModel",
+        ...     use_fields={"name", "age"},
+        ...     frozen=True
+        ... )
+        >>> user = NewModel(name="Alice", age=30)
+        """
+
+        use_fields = (
+            set(use_fields) if use_fields else set(self.all_fields.keys())
+        )
+        if not use_fields.issubset(self.all_fields.keys()):
+            raise ValueError("Invalid field names in use_fields")
+
+        field_models = []
+        parameter_fields = {}
+
+        for field_name in use_fields:
+            if field_name in self.extra_field_models:
+                field_models.append(self.extra_field_models[field_name])
+            elif field_name in self.all_fields:
+                parameter_fields[field_name] = self.all_fields[field_name]
+
+        model_params = ModelParams(
+            name=name,
+            parameter_fields=parameter_fields,
+            base_type=base_type,
+            field_models=field_models,
+            exclude_fields=exclude_fields,
+            inherit_base=inherit_base,
+            config_dict=config_dict,
+            doc=doc,
+            frozen=frozen,
+        )
+        model_cls = model_params.create_new_model()
+
+        # Update forward references if requested
+        if update_forward_refs:
+            try:
+                model_cls.model_rebuild()
+            except Exception:
+                pass  # Ignore rebuild errors for forward refs that can't be resolved yet
+
+        return model_cls
