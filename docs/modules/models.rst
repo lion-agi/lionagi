@@ -18,7 +18,7 @@ Below is an overview of the major components in this subsystem.
 ----------------------------
 1. FieldModel (``field_model.py``)
 ----------------------------
-.. module:: lionagi.operatives.model.field_model
+.. module:: lionagi.operatives.models.field_model
    :synopsis: Structured definition of Pydantic fields.
 
 .. class:: FieldModel
@@ -35,7 +35,7 @@ A configurable **field definition** that captures:
 
 **Usage**::
 
-   from lionagi.operatives.model.field_model import FieldModel
+   from lionagi.operatives.models.field_model import FieldModel
 
    field = FieldModel(
        name="age",
@@ -50,7 +50,7 @@ A configurable **field definition** that captures:
 ----------------------------
 2. ModelParams (``model_params.py``)
 ----------------------------
-.. module:: lionagi.operatives.model.model_params
+.. module:: lionagi.operatives.models.model_params
    :synopsis: Dynamically create new Pydantic models.
 
 .. class:: ModelParams
@@ -72,8 +72,8 @@ Finally, call :meth:`create_new_model()` to get a brand-new Pydantic class
 **Example**::
 
    from pydantic import BaseModel
-   from lionagi.operatives.model.model_params import ModelParams
-   from lionagi.operatives.model.field_model import FieldModel
+   from lionagi.operatives.models.model_params import ModelParams
+   from lionagi.operatives.models.field_model import FieldModel
 
    params = ModelParams(
        name="DynamicUser",
@@ -92,7 +92,7 @@ Finally, call :meth:`create_new_model()` to get a brand-new Pydantic class
 ---------------------------
 3. OperableModel (``operable_model.py``)
 ---------------------------
-.. module:: lionagi.operatives.model.operable_model
+.. module:: lionagi.operatives.models.operable_model
    :synopsis: Extends Pydantic for dynamic field management.
 
 .. class:: OperableModel
@@ -112,7 +112,7 @@ structure remains valid with Pydantic's type checks and serialization logic.
 
 **Example**::
 
-   from lionagi.operatives.model.operable_model import OperableModel
+   from lionagi.operatives.models.operable_model import OperableModel
 
    class User(OperableModel):
        name: str = "default_name"
@@ -128,7 +128,7 @@ structure remains valid with Pydantic's type checks and serialization logic.
 --------------------------
 4. Note (``note.py``)
 --------------------------
-.. module:: lionagi.operatives.model.note
+.. module:: lionagi.operatives.models.note
    :synopsis: A flexible container for nested data.
 
 .. class:: Note
@@ -146,7 +146,7 @@ manually in your code.
 
 **Example**::
 
-   from lionagi.operatives.model.note import Note
+   from lionagi.operatives.models.note import Note
 
    note = Note(user={"name": "John", "settings": {"theme": "dark"}})
    name = note.get(["user", "name"])  # "John"
@@ -172,7 +172,7 @@ to **forbid** extra fields by default and use enum values. Provides a
 -------------------------
 6. HashableModel (``hashable_model.py``)
 -------------------------
-.. module:: lionagi.operatives.model.hashable_model
+.. module:: lionagi.utils
    :synopsis: Adds hashing to Pydantic models.
 
 .. class:: HashableModel
@@ -187,7 +187,7 @@ they are not inherently hashable.
 
 **Example**::
 
-   from lionagi.operatives.model.hashable_model import HashableModel
+   from lionagi.utils import HashableModel
 
    class MyConfig(HashableModel):
        alpha: float
