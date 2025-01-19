@@ -85,6 +85,7 @@ def test_format_text_item():
     assert "item1" in result
     assert "item2" in result
 
+
 def test_format_image_content():
     """Test formatting image content"""
     text = "Test text"
