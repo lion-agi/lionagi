@@ -21,34 +21,33 @@ IndiceType: TypeAlias = str | list[str | int]
 class Note(BaseModel):
     """Container for managing nested dictionary data structures.
 
-    Provides:
-    - Deep nested data access
-    - Dictionary-like interface
-    - Flattening capabilities
-    - Update operations
+    A flexible container that provides deep nested data access, dictionary-like
+    interface, flattening capabilities, and update operations for managing
+    complex nested data structures.
 
-    Example:
-        ```python
-        note = Note(
-            user={
-                "name": "John",
-                "settings": {
-                    "theme": "dark"
-                }
-            }
-        )
-
-        # Access nested data
-        name = note.get(["user", "name"])
-        theme = note["user"]["settings"]["theme"]
-
-        # Update nested structure
-        note.update(["user", "settings"], {"language": "en"})
-        ```
+    Args:
+        **kwargs: Key-value pairs for initial content.
 
     Attributes:
-        content: Nested dictionary structure
-        model_config: Configuration allowing arbitrary types
+        content: Nested dictionary structure.
+        model_config: Configuration allowing arbitrary types.
+
+    Examples:
+        >>> note = Note(
+        ...     user={
+        ...         "name": "John",
+        ...         "settings": {
+        ...             "theme": "dark"
+        ...         }
+        ...     }
+        ... )
+        >>>
+        >>> # Access nested data
+        >>> name = note.get(["user", "name"])
+        >>> theme = note["user"]["settings"]["theme"]
+        >>>
+        >>> # Update nested structure
+        >>> note.update(["user", "settings"], {"language": "en"})
     """
 
     content: dict[str, Any] = Field(
@@ -65,7 +64,8 @@ class Note(BaseModel):
         """Initialize Note with dictionary data.
 
         Args:
-            **kwargs: Key-value pairs for initial content
+            **kwargs: Key-value pairs that will form the initial nested
+                dictionary structure.
         """
         super().__init__()
         self.content = kwargs
@@ -103,15 +103,22 @@ class Note(BaseModel):
     ) -> Any:
         """Remove and return item from nested structure.
 
+        Removes and returns the value at the specified path in the nested
+        structure. If the path doesn't exist and no default is provided,
+        raises KeyError.
+
         Args:
-            indices: Path to item
-            default: Value to return if not found
+            indices: Path to the item to remove, can be a string for top-level
+                keys or a list for nested access.
+            default: Value to return if the path is not found. If not provided
+                and path is not found, raises KeyError.
 
         Returns:
-            Removed value or default
+            The value that was removed, or the default value if provided and
+            path not found.
 
         Raises:
-            KeyError: If path not found and no default
+            KeyError: If the path is not found and no default value is provided.
         """
         indices = to_list(indices, flatten=True, dropna=True)
         return npop(self.content, indices, default)
@@ -147,15 +154,21 @@ class Note(BaseModel):
     ) -> Any:
         """Get value from nested structure at specified indices.
 
+        Retrieves the value at the specified path in the nested structure.
+        If the path doesn't exist and no default is provided, raises KeyError.
+
         Args:
-            indices: Path to value
-            default: Value to return if not found
+            indices: Path to the value, can be a string for top-level keys
+                or a list for nested access.
+            default: Value to return if the path is not found. If not provided
+                and path is not found, raises KeyError.
 
         Returns:
-            Value at path or default
+            The value at the specified path, or the default value if provided
+            and path not found.
 
         Raises:
-            KeyError: If path not found and no default
+            KeyError: If the path is not found and no default value is provided.
         """
         indices = to_list(indices, flatten=True, dropna=True)
         return nget(self.content, indices, default)
@@ -179,12 +192,18 @@ class Note(BaseModel):
     def values(self, /, flat: bool = False, **kwargs: Any) -> ValuesView:
         """Get values of the Note.
 
+        Returns either a view of top-level values or, if flat=True, a view
+        of all values in the flattened nested structure.
+
         Args:
-            flat: If True, return flattened values
-            kwargs: Additional flattening options
+            flat: If True, returns values from all levels of the nested
+                structure. If False, returns only top-level values.
+            kwargs: Additional options for flattening behavior when flat=True.
+                Common options include coerce_keys and coerce_sequence.
 
         Returns:
-            View of values, optionally flattened
+            A ValuesView object containing either top-level values or all
+            values from the flattened structure if flat=True.
         """
         if flat:
             kwargs["coerce_keys"] = kwargs.get("coerce_keys", False)
@@ -219,12 +238,21 @@ class Note(BaseModel):
     ) -> None:
         """Update nested structure at specified indices.
 
+        Updates the value at the specified path in the nested structure.
+        The behavior depends on the existing value and the update value:
+        - If path doesn't exist: creates it with value (wrapped in list if scalar)
+        - If existing is list: extends with value if list, appends if scalar
+        - If existing is dict: updates with value if dict, raises error if not
+
         Args:
-            indices: Location to update
-            value: New value to set
+            indices: Path to the location to update, can be a string for
+                top-level keys or a list for nested access.
+            value: The new value to set. Must be compatible with existing
+                value type (dict for dict, any value for list).
 
         Raises:
-            ValueError: If trying to update dict with non-dict
+            ValueError: If trying to update a dictionary with a non-dictionary
+                value.
         """
         existing = None
         if not indices:
@@ -269,19 +297,26 @@ class Note(BaseModel):
     def __contains__(self, indices: IndiceType) -> bool:
         """Check if indices exist in content.
 
+        Implements the 'in' operator for checking path existence in the nested
+        structure.
+
         Args:
-            indices: Path to check
+            indices: Path to check, can be a string for top-level keys or a
+                list for nested access.
 
         Returns:
-            True if path exists, False otherwise
+            True if the path exists in the nested structure, False otherwise.
         """
         return self.content.get(indices, UNDEFINED) is not UNDEFINED
 
     def __len__(self) -> int:
         """Get length of content.
 
+        Implements len() function to return the number of top-level keys in
+        the nested structure.
+
         Returns:
-            Number of top-level keys
+            The number of top-level keys in the content dictionary.
         """
         return len(self.content)
 
@@ -305,8 +340,12 @@ class Note(BaseModel):
     def __str__(self) -> str:
         """Get string representation of content.
 
+        Implements str() function to provide a simple string representation
+        of the Note's content. Uses the standard dictionary string format.
+
         Returns:
-            String representation of content dict
+            A string representation of the content dictionary, showing its
+            current state.
         """
         return str(self.content)
 

@@ -39,17 +39,28 @@ class ModelParams(SchemaModel):
     fields, validators, and configurations. It supports inheritance from base
     models, field exclusion, and custom validation rules.
 
-    Attributes:
-        name (str | None): Name for the generated model class.
-        parameter_fields (dict[str, FieldInfo]): Field definitions for the model.
-        base_type (type[BaseModel]): Base model class to inherit from.
-        field_models (list[FieldModel]): List of field model definitions.
-        exclude_fields (list): Fields to exclude from the final model.
-        field_descriptions (dict): Custom descriptions for fields.
-        inherit_base (bool): Whether to inherit from base_type.
-        config_dict (dict | None): Pydantic model configuration.
-        doc (str | None): Docstring for the generated model.
-        frozen (bool): Whether the model should be immutable.
+    Args:
+        name: Name for the generated model class.
+        parameter_fields: Field definitions for the model.
+        base_type: Base model class to inherit from.
+        field_models: List of field model definitions.
+        exclude_fields: Fields to exclude from the final model.
+        field_descriptions: Custom descriptions for fields.
+        inherit_base: Whether to inherit from base_type.
+        config_dict: Pydantic model configuration.
+        doc: Docstring for the generated model.
+        frozen: Whether the model should be immutable.
+
+    Examples:
+        >>> params = ModelParams(
+        ...     name="UserModel",
+        ...     field_models=[
+        ...         FieldModel(name="username", annotation=str),
+        ...         FieldModel(name="age", annotation=int, default=0)
+        ...     ],
+        ...     doc="A user model with basic attributes."
+        ... )
+        >>> UserModel = params.create_new_model()
     """
 
     name: str | None = Field(
@@ -99,9 +110,12 @@ class ModelParams(SchemaModel):
     def use_fields(self) -> dict[str, tuple[type, FieldInfo]]:
         """Get field definitions to use in new model.
 
+        Filters and combines fields from parameter_fields and field_models based on
+        the _use_keys set, preparing them for use in model creation.
+
         Returns:
-            dict[str, tuple[type, FieldInfo]]: Mapping of field names to their
-            type and field info.
+            A dictionary mapping field names to tuples of (type, FieldInfo),
+            containing only the fields that should be included in the new model.
         """
         params = {
             k: v
@@ -233,11 +247,16 @@ class ModelParams(SchemaModel):
     def validate_param_model(self) -> Self:
         """Validate complete model configuration.
 
-        This method performs final validation and setup of the model parameters,
-        including updating field definitions, validators, and descriptions.
+        Performs comprehensive validation and setup of the model parameters:
+        1. Updates parameter fields from base type if present
+        2. Merges field models into parameter fields
+        3. Manages field inclusion/exclusion via _use_keys
+        4. Sets up validators from field models
+        5. Applies field descriptions
+        6. Handles model name resolution
 
         Returns:
-            Self: The validated instance.
+            The validated model instance with all configurations applied.
         """
         if self.base_type is not None:
             self.parameter_fields.update(copy(self.base_type.model_fields))
