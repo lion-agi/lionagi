@@ -302,7 +302,7 @@ building blocks of the system, offering features like:</p>
 <p>Below is an overview of the major components in this subsystem.</p>
 <section id="fieldmodel-field-model-py">
 <h2>1. FieldModel (<code class="docutils literal notranslate"><span class="pre">field_model.py</span></code>)<a class="headerlink" href="#fieldmodel-field-model-py" title="Link to this heading">¶</a></h2>
-<p id="module-lionagi.operatives.model.field_model">A configurable <strong>field definition</strong> that captures:</p>
+<p id="module-lionagi.operatives.models.field_model">A configurable <strong>field definition</strong> that captures:</p>
 <ul class="simple">
 <li><p><strong>Name</strong> (str)</p></li>
 <li><p><strong>Annotation</strong> (type or Any)</p></li>
@@ -312,7 +312,7 @@ building blocks of the system, offering features like:</p>
 <li><p>Additional Pydantic flags (e.g. <code class="docutils literal notranslate"><span class="pre">exclude</span></code>, <code class="docutils literal notranslate"><span class="pre">deprecated</span></code>, etc.)</p></li>
 </ul>
 <p><strong>Usage</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.model.field_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldModel</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.models.field_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldModel</span>
 
 <span class="n">field</span> <span class="o">=</span> <span class="n">FieldModel</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;age&quot;</span><span class="p">,</span>
@@ -327,7 +327,7 @@ building blocks of the system, offering features like:</p>
 </section>
 <section id="modelparams-model-params-py">
 <h2>2. ModelParams (<code class="docutils literal notranslate"><span class="pre">model_params.py</span></code>)<a class="headerlink" href="#modelparams-model-params-py" title="Link to this heading">¶</a></h2>
-<p id="module-lionagi.operatives.model.model_params">Collects <strong>configuration</strong> for generating a new Pydantic model class, such as:</p>
+<p id="module-lionagi.operatives.models.model_params">Collects <strong>configuration</strong> for generating a new Pydantic model class, such as:</p>
 <ul class="simple">
 <li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">parameter_fields</span></code>: a dictionary mapping field names to
 <code class="xref py py-class docutils literal notranslate"><span class="pre">FieldInfo</span></code>.</p></li>
@@ -341,8 +341,8 @@ building blocks of the system, offering features like:</p>
 (with your specified fields, validators, docstring, etc.).</p>
 <p><strong>Example</strong>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.model.model_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelParams</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.model.field_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.models.model_params</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelParams</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.models.field_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldModel</span>
 
 <span class="n">params</span> <span class="o">=</span> <span class="n">ModelParams</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;DynamicUser&quot;</span><span class="p">,</span>
@@ -361,7 +361,7 @@ building blocks of the system, offering features like:</p>
 </section>
 <section id="operablemodel-operable-model-py">
 <h2>3. OperableModel (<code class="docutils literal notranslate"><span class="pre">operable_model.py</span></code>)<a class="headerlink" href="#operablemodel-operable-model-py" title="Link to this heading">¶</a></h2>
-<p id="module-lionagi.operatives.model.operable_model">This is a Pydantic model that allows <strong>runtime</strong> modifications to its schema,
+<p id="module-lionagi.operatives.models.operable_model">This is a Pydantic model that allows <strong>runtime</strong> modifications to its schema,
 including:</p>
 <ul class="simple">
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_field(name,</span> <span class="pre">value=...,</span> <span class="pre">annotation=...)()</span></code>: Add a new field.</p></li>
@@ -373,7 +373,7 @@ name to <code class="xref py py-class docutils literal notranslate"><span class=
 (mapping from name to <code class="xref py py-class docutils literal notranslate"><span class="pre">FieldModel</span></code>). The underlying dictionary
 structure remains valid with Pydantic’s type checks and serialization logic.</p>
 <p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.model.operable_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">OperableModel</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.models.operable_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">OperableModel</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">User</span><span class="p">(</span><span class="n">OperableModel</span><span class="p">):</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default_name&quot;</span>
@@ -387,8 +387,8 @@ structure remains valid with Pydantic’s type checks and serialization logic.</
 </pre></div>
 </div>
 </section>
-<section id="module-lionagi.operatives.model.note">
-<span id="note-note-py"></span><h2>4. Note (<code class="docutils literal notranslate"><span class="pre">note.py</span></code>)<a class="headerlink" href="#module-lionagi.operatives.model.note" title="Link to this heading">¶</a></h2>
+<section id="module-lionagi.operatives.models.note">
+<span id="note-note-py"></span><h2>4. Note (<code class="docutils literal notranslate"><span class="pre">note.py</span></code>)<a class="headerlink" href="#module-lionagi.operatives.models.note" title="Link to this heading">¶</a></h2>
 <p>A specialized object for <strong>managing nested dictionary data</strong>:</p>
 <ul class="simple">
 <li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">get(indices,</span> <span class="pre">default)()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">set(indices,</span> <span class="pre">value)()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">pop(indices)()</span></code>,
@@ -399,7 +399,7 @@ etc. for deeply nested access or updates.</p></li>
 <p>It’s a convenient alternative to constantly handling deeply nested dictionaries
 manually in your code.</p>
 <p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.model.note</span><span class="w"> </span><span class="kn">import</span> <span class="n">Note</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.models.note</span><span class="w"> </span><span class="kn">import</span> <span class="n">Note</span>
 
 <span class="n">note</span> <span class="o">=</span> <span class="n">Note</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="s2">&quot;settings&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;theme&quot;</span><span class="p">:</span> <span class="s2">&quot;dark&quot;</span><span class="p">}})</span>
 <span class="n">name</span> <span class="o">=</span> <span class="n">note</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">])</span>  <span class="c1"># &quot;John&quot;</span>
@@ -417,13 +417,13 @@ to <strong>forbid</strong> extra fields by default and use enum values. Provides
 </section>
 <section id="hashablemodel-hashable-model-py">
 <h2>6. HashableModel (<code class="docutils literal notranslate"><span class="pre">hashable_model.py</span></code>)<a class="headerlink" href="#hashablemodel-hashable-model-py" title="Link to this heading">¶</a></h2>
-<p id="module-lionagi.operatives.model.hashable_model">Enables your model to be <strong>hashable</strong>, so it can be used as keys in a
+<p id="module-lionagi.utils">Enables your model to be <strong>hashable</strong>, so it can be used as keys in a
 dictionary or placed in a set. It does this by converting all fields to
 a dictionary (via <code class="xref py py-meth docutils literal notranslate"><span class="pre">to_dict()</span></code>) and then hashing the sorted key-value pairs.</p>
 <p><strong>Note</strong>: Some fields may need to be serialized or converted to strings if
 they are not inherently hashable.</p>
 <p><strong>Example</strong>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.operatives.model.hashable_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">HashableModel</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">HashableModel</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyConfig</span><span class="p">(</span><span class="n">HashableModel</span><span class="p">):</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span>
@@ -517,7 +517,7 @@ maintain data integrity.</p>
 <li><a class="reference internal" href="#fieldmodel-field-model-py">1. FieldModel (<code class="docutils literal notranslate"><span class="pre">field_model.py</span></code>)</a></li>
 <li><a class="reference internal" href="#modelparams-model-params-py">2. ModelParams (<code class="docutils literal notranslate"><span class="pre">model_params.py</span></code>)</a></li>
 <li><a class="reference internal" href="#operablemodel-operable-model-py">3. OperableModel (<code class="docutils literal notranslate"><span class="pre">operable_model.py</span></code>)</a></li>
-<li><a class="reference internal" href="#module-lionagi.operatives.model.note">4. Note (<code class="docutils literal notranslate"><span class="pre">note.py</span></code>)</a></li>
+<li><a class="reference internal" href="#module-lionagi.operatives.models.note">4. Note (<code class="docutils literal notranslate"><span class="pre">note.py</span></code>)</a></li>
 <li><a class="reference internal" href="#schemamodel-schema-model-py">5. SchemaModel (<code class="docutils literal notranslate"><span class="pre">schema_model.py</span></code>)</a></li>
 <li><a class="reference internal" href="#hashablemodel-hashable-model-py">6. HashableModel (<code class="docutils literal notranslate"><span class="pre">hashable_model.py</span></code>)</a></li>
 <li><a class="reference internal" href="#putting-it-all-together">Putting It All Together</a></li>
