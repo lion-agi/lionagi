@@ -11,6 +11,8 @@ from lionagi.operatives.types import Instruct
 from lionagi.service.imodel import iModel
 from lionagi.utils import copy
 
+from .utils import ReActAnalysis
+
 if TYPE_CHECKING:
     from lionagi.session.branch import Branch
 
@@ -60,11 +62,9 @@ async def ReAct(
     kwargs_for_operate["actions"] = True
     kwargs_for_operate["reason"] = True
 
-    # We'll pass the refined instruct_dict plus the user's other kwargs
-    from .utils import ReActAnalysis
-
     # Step 1: Generate initial ReAct analysis
     analysis: ReActAnalysis = await branch.operate(
+        instruct=instruct_dict,
         response_format=ReActAnalysis,
         tools=tools,
         tool_schemas=tool_schemas,
@@ -83,7 +83,7 @@ async def ReAct(
     while (
         extension_allowed
         and analysis.extension_needed
-        and (extensions if extensions else 1) > 0
+        and (extensions if max_extensions else 0) > 0
     ):
         new_instruction = None
         if extensions == max_extensions:
@@ -95,17 +95,13 @@ async def ReAct(
                 extensions=extensions
             )
 
-        # Each expansion uses a fresh copy of instruct_dict + forcibly "reason" + "actions"
-        expanded_kwargs = copy(instruct_dict)
-        expanded_kwargs["instruction"] = new_instruction
-        expanded_kwargs["reason"] = True
-        expanded_kwargs["actions"] = True
-
         analysis = await branch.operate(
+            instruction=new_instruction,
             response_format=ReActAnalysis,
             tools=tools,
             tool_schemas=tool_schemas,
-            **expanded_kwargs,
+            reason=True,
+            actions=True,
         )
         analyses.append(analysis)
 
