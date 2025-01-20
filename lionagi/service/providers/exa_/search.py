@@ -1,10 +1,8 @@
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from lionagi.service.endpoints.base import EndPoint
 
-if TYPE_CHECKING:
-    from .models import ExaSearchRequest
-
+from .models import ExaSearchRequest
 
 CATEGORY_OPTIONS = Literal[
     "article",
@@ -21,6 +19,7 @@ CATEGORY_OPTIONS = Literal[
 ]
 
 SEARCH_CONFIG = {
+    "name": "search_exa",
     "provider": "exa",
     "base_url": "https://api.exa.ai",
     "endpoint": "search",
@@ -47,6 +46,7 @@ SEARCH_CONFIG = {
         "type",  # keyword, neural, auto
         "useAutoPrompt",
     },
+    "request_options": ExaSearchRequest,
 }
 
 
