@@ -5,6 +5,8 @@
 import os
 import warnings
 
+from pydantic import BaseModel
+
 from .endpoints.base import APICalling, EndPoint
 from .endpoints.match_endpoint import match_endpoint
 from .endpoints.rate_limited_processor import RateLimitedAPIExecutor
@@ -265,6 +267,15 @@ class iModel:
             The model name if available; otherwise, an empty string.
         """
         return self.kwargs.get("model", "")
+
+    @property
+    def request_options(self) -> type[BaseModel] | None:
+        """type[BaseModel] | None: The request options model for the endpoint.
+
+        Returns:
+            The request options model if available; otherwise, None.
+        """
+        return self.endpoint.request_options
 
     def to_dict(self):
         kwargs = self.kwargs

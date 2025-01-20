@@ -61,6 +61,7 @@ class EndpointConfig(BaseModel):
         use_enum_values=True,
     )
 
+    name: str | None = None
     provider: str | None = None
     base_url: str | None = None
     endpoint: str
@@ -75,6 +76,7 @@ class EndpointConfig(BaseModel):
     requires_tokens: bool = False
     api_version: str | None = None
     allowed_roles: list[str] | None = None
+    request_options: type | None = None
 
 
 class EndPoint(ABC):
@@ -99,6 +101,11 @@ class EndPoint(ABC):
         config = self.config.model_dump()
         config.update(kwargs)
         self.config = EndpointConfig(**config)
+
+    @property
+    def name(self) -> str | None:
+        """str | None: The name of the endpoint, if any."""
+        return self.config.name or self.endpoint
 
     @property
     def is_streamable(self) -> bool:
@@ -184,6 +191,10 @@ class EndPoint(ABC):
     def roled(self) -> bool:
         """bool: Indicates if this endpoint uses role-based messages."""
         return self.allowed_roles is not None
+
+    @property
+    def request_options(self) -> type | None:
+        return self.config.request_options
 
     def create_payload(self, **kwargs) -> dict:
         """Generates a request payload (and headers) for this endpoint.
