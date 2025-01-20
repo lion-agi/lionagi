@@ -45,6 +45,7 @@ from lionagi.protocols.types import (
     SenderRecipient,
     System,
 )
+from lionagi.service.endpoints.base import EndPoint
 from lionagi.service.types import iModel, iModelManager
 from lionagi.settings import Settings
 from lionagi.utils import UNDEFINED, alcall, bcall, copy
@@ -548,12 +549,38 @@ class Branch(Element, Communicatable, Relational):
 
     def connect(
         self,
-        name: str,
-        imodel: iModel,
-        request_options: type[BaseModel],
+        provider: str = None,
+        base_url: str = None,
+        endpoint: str | EndPoint = "chat",
+        endpoint_params: list[str] | None = None,
+        api_key: str = None,
+        queue_capacity: int = 100,
+        capacity_refresh_time: float = 60,
+        interval: float | None = None,
+        limit_requests: int = None,
+        limit_tokens: int = None,
+        invoke_with_endpoint: bool = False,
+        imodel: iModel = None,
+        name: str = None,
+        request_options: type[BaseModel] = None,
         description: str = None,
         update: bool = False,
     ):
+        if not imodel:
+            imodel = iModel(
+                provider=provider,
+                base_url=base_url,
+                endpoint=endpoint,
+                endpoint_params=endpoint_params,
+                api_key=api_key,
+                queue_capacity=queue_capacity,
+                capacity_refresh_time=capacity_refresh_time,
+                interval=interval,
+                limit_requests=limit_requests,
+                limit_tokens=limit_tokens,
+                invoke_with_endpoint=invoke_with_endpoint,
+            )
+
         if not update and name in self.tools:
             raise ValueError(f"Tool with name '{name}' already exists.")
 
@@ -563,13 +590,13 @@ class Branch(Element, Communicatable, Relational):
             self._log_manager.log(Log.create(api_call))
             return api_call.response
 
-        _connect.__name__ = name
+        _connect.__name__ = name or imodel.endpoint.name
         if description:
             _connect.__doc__ = description
 
         tool = Tool(
             func_callable=_connect,
-            request_options=request_options,
+            request_options=request_options or imodel.request_options,
         )
         self._action_manager.register_tools(tool, update=update)
 
@@ -1521,6 +1548,10 @@ class Branch(Element, Communicatable, Relational):
         self,
         instruct: Instruct | dict[str, Any],
         interpret: bool = False,
+        interpret_domain: str | None = None,
+        interpret_style: str | None = None,
+        interpret_sample: str | None = None,
+        interpret_kwargs: dict | None = None,
         tools: Any = None,
         tool_schemas: Any = None,
         response_format: type[BaseModel] = None,
@@ -1547,6 +1578,14 @@ class Branch(Element, Communicatable, Relational):
             interpret (bool, optional):
                 If `True`, first interprets (`branch.interpret`) the instructions to refine them
                 before proceeding. Defaults to `False`.
+            interpret_domain (str | None, optional):
+                Optional domain hint for the interpretation step.
+            interpret_style (str | None, optional):
+                Optional style hint for the interpretation step.
+            interpret_sample (str | None, optional):
+                Optional sample hint for the interpretation step.
+            interpret_kwargs (dict | None, optional):
+                Additional arguments for the interpretation step.
             tools (Any, optional):
                 Tools to be made available for the ReAct process. If omitted or `None`,
                 and if no `tool_schemas` are provided, it defaults to `True` (all tools).
@@ -1595,6 +1634,10 @@ class Branch(Element, Communicatable, Relational):
             self,
             instruct,
             interpret=interpret,
+            interpret_domain=interpret_domain,
+            interpret_style=interpret_style,
+            interpret_sample=interpret_sample,
+            interpret_kwargs=interpret_kwargs,
             tools=tools,
             tool_schemas=tool_schemas,
             response_format=response_format,

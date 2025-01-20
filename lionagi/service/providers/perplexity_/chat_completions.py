@@ -4,7 +4,10 @@
 
 from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
 
+from .models import PerplexityChatCompletionRequest
+
 CHAT_COMPLETION_CONFIG = {
+    "name": "search_perplexity",
     "provider": "perplexity",
     "base_url": "https://api.perplexity.ai",
     "endpoint": "chat/completions",
@@ -31,6 +34,7 @@ CHAT_COMPLETION_CONFIG = {
         "frequency_penalty",
     },
     "allowed_roles": ["user", "assistant"],
+    "request_options": PerplexityChatCompletionRequest,
 }
 
 
