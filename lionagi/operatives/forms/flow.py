@@ -1,5 +1,4 @@
 # forms/flow.py
-from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field
 
