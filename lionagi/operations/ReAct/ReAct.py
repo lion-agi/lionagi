@@ -21,6 +21,10 @@ async def ReAct(
     branch: "Branch",
     instruct: Instruct | dict[str, Any],
     interpret: bool = False,
+    interpret_domain: str | None = None,
+    interpret_style: str | None = None,
+    interpret_sample: str | None = None,
+    interpret_kwargs: dict | None = None,
     tools: Any = None,
     tool_schemas: Any = None,
     response_format: type[BaseModel] | BaseModel = None,
@@ -43,7 +47,11 @@ async def ReAct(
                 instruct.to_dict()
                 if isinstance(instruct, Instruct)
                 else instruct
-            )
+            ),
+            domain=interpret_domain,
+            style=interpret_style,
+            sample_writing=interpret_sample,
+            **(interpret_kwargs or {}),
         )
 
     # Convert Instruct to dict if necessary
