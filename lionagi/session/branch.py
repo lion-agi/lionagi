@@ -345,6 +345,20 @@ class Branch(Element, Communicatable, Relational):
 
         return branch_clone
 
+    def register_tools(
+        self, tools: FuncTool | list[FuncTool], update: bool = False
+    ):
+        """
+        Registers one or more tools in the ActionManager.
+
+        Args:
+            tools (FuncTool | list[FuncTool]):
+                A single tool or a list of tools to register.
+            update (bool, optional):
+                If `True`, updates existing tools with the same name.
+        """
+        self._action_manager.register_tools(tools, update=update)
+
     # -------------------------------------------------------------------------
     # Conversion / Serialization
     # -------------------------------------------------------------------------
@@ -531,6 +545,33 @@ class Branch(Element, Communicatable, Relational):
         """
         for key in self.mailbox.pending_ins:
             self.receive(key)
+
+    def connect(
+        self,
+        name: str,
+        imodel: iModel,
+        request_options: type[BaseModel],
+        description: str = None,
+        update: bool = False,
+    ):
+        if not update and name in self.tools:
+            raise ValueError(f"Tool with name '{name}' already exists.")
+
+        async def _connect(**kwargs):
+            """connect to an api endpoint"""
+            api_call = await imodel.invoke(**kwargs)
+            self._log_manager.log(Log.create(api_call))
+            return api_call.response
+
+        _connect.__name__ = name
+        if description:
+            _connect.__doc__ = description
+
+        tool = Tool(
+            func_callable=_connect,
+            request_options=request_options,
+        )
+        self._action_manager.register_tools(tool, update=update)
 
     # -------------------------------------------------------------------------
     # Dictionary Conversion

@@ -1,6 +1,6 @@
 # forms/form.py
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import ConfigDict, Field, model_validator
 from typing_extensions import Self

@@ -12,7 +12,6 @@ import inspect
 from collections.abc import Callable
 from typing import Any, TypeAlias
 
-from openai import BaseModel
 from pydantic import Field, field_validator, model_validator
 from typing_extensions import Self
 
