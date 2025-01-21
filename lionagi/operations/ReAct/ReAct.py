@@ -54,6 +54,8 @@ async def ReAct(
             sample_writing=interpret_sample,
             **(interpret_kwargs or {}),
         )
+        if verbose_analysis:
+            print(f"\nInterpreted instruction:\n{instruction_str}")
 
     # Convert Instruct to dict if necessary
     instruct_dict = (

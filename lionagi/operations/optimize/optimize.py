@@ -26,6 +26,8 @@ async def optimize(
     **kwargs,
 ) -> OptimizationResponse | T:
     """
+    **EXPERIMENTAL** !!!
+    
     High-level function to optimize a certain aspect (PROMPT, FLOW, TOOLS, etc.)
     in the given Branch. Updates the Branch if it finds a better configuration.
 
@@ -147,5 +149,5 @@ async def optimize(
 
     # 3. If user wants a structured output, cast it
     if response_format:
-        return response_format(**response.dict())
+        return response_format(**response.model_dump())
     return response
