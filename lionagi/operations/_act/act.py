@@ -18,6 +18,7 @@ async def _act(
     branch: "Branch",
     action_request: BaseModel | dict,
     suppress_errors: bool = False,
+    verbose_action: bool = False,
 ) -> "ActionResponseModel":
 
     _request = {}
@@ -35,6 +36,11 @@ async def _act(
 
     try:
         func_call = await branch._action_manager.invoke(_request)
+        if verbose_action:
+            print(
+                f"Action {_request['function']} invoked, status: {func_call.status}."
+            )
+
     except Exception as e:
         content = {
             "error": str(e),
@@ -43,6 +49,8 @@ async def _act(
             "branch": str(branch.id),
         }
         branch._log_manager.log(Log(content=content))
+        if verbose_action:
+            print(f"Action {_request['function']} failed, error: {str(e)}.")
         if suppress_errors:
             logging.error(
                 f"Error invoking action '{_request['function']}': {e}"
