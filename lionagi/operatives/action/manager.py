@@ -23,21 +23,43 @@ __all__ = ("ActionManager",)
 
 
 class ActionManager(Manager):
-    """
-    A manager that registers function-based tools and invokes them
-    when triggered by an ActionRequest. Tools can be registered
-    individually or in bulk, and each tool must have a unique name.
+    """A manager that registers and executes function-based tools.
+
+    This class maintains a registry of Tool objects (or wrapped callables) and handles
+    their invocation through ActionRequests. It provides functionality for:
+    - Individual or bulk tool registration
+    - Schema generation and validation
+    - Tool lookup and matching
+    - Asynchronous execution
+
+    Attributes:
+        registry (dict[str, Tool]): Maps function names to their Tool wrappers
+
+    Example:
+        >>> def multiply(x: int, y: int) -> int:
+        ...     return x * y
+        >>> manager = ActionManager()
+        >>> manager.register_tool(multiply)
+        >>> request = ActionRequestModel(
+        ...     function="multiply",
+        ...     arguments={"x": 3, "y": 4}
+        ... )
+        >>> result = await manager.invoke(request)
+        >>> print(result.execution.response)  # Shows 12
     """
 
     def __init__(self, *args: FuncTool, **kwargs) -> None:
-        """
-        Create an ActionManager, optionally registering initial tools.
+        """Create an ActionManager, optionally registering initial tools.
 
         Args:
-            *args (FuncTool):
-                A variable number of tools or callables.
-            **kwargs:
-                Additional named arguments that are also considered tools.
+            *args (FuncTool): Variable number of tools or callables to register
+            **kwargs: Additional named arguments treated as tools (name=callable)
+
+        Example:
+            >>> def add(x, y): return x + y
+            >>> def sub(x, y): return x - y
+            >>> manager = ActionManager(add, subtract=sub)
+            >>> # Both functions are now registered
         """
         super().__init__()
         self.registry: dict[str, Tool] = {}

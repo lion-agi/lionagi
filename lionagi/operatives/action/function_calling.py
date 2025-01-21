@@ -19,6 +19,20 @@ class FunctionCalling(Event):
 
     This class manages function calls with optional preprocessing and
     postprocessing, handling both synchronous and asynchronous functions.
+    It tracks execution status, duration, and results through its Event
+    inheritance.
+
+    Attributes:
+        func_tool (Tool): Tool instance containing the function to be called
+        arguments (dict[str, Any] | BaseModel): Arguments to pass to the function
+
+    Example:
+        >>> def multiply(x, y):
+        ...     return x * y
+        >>> tool = Tool(func_callable=multiply)
+        >>> func_call = FunctionCalling(func_tool=tool, arguments={"x": 3, "y": 4})
+        >>> await func_call.invoke()
+        >>> print(func_call.execution.response)  # Should show 12
     """
 
     func_tool: Tool = Field(
@@ -65,7 +79,18 @@ class FunctionCalling(Event):
         """Execute the function call with pre/post processing.
 
         Handles both synchronous and asynchronous functions, including optional
-        preprocessing of arguments and postprocessing of results.
+        preprocessing of arguments and postprocessing of results. Updates the
+        execution status, duration, and response/error fields.
+
+        The execution flow is:
+        1. Apply preprocessor to arguments if defined
+        2. Execute the function (sync or async)
+        3. Apply postprocessor to result if defined
+        4. Update execution status and timing
+
+        Raises:
+            Any exception from the function call is caught, logged in execution.error,
+            and the status is set to FAILED.
         """
         start = asyncio.get_event_loop().time()
 

@@ -29,13 +29,38 @@ __all__ = (
 
 
 class Tool(Element):
-    """
-    Wraps a callable function with optional:
-      - Preprocessing of arguments,
-      - Postprocessing of results,
-      - Strict or partial argument matching.
+    """Wraps a callable function with schema validation and optional processing.
 
-    `tool_schema` is auto-generated from the function signature if not provided.
+    This class provides a standardized way to wrap Python functions with:
+    - Automatic JSON schema generation from function signature
+    - Optional preprocessing of input arguments
+    - Optional postprocessing of function results
+    - Strict or partial argument validation
+    - Pydantic model validation for inputs (optional)
+
+    Attributes:
+        func_callable (Callable[..., Any]): The function to wrap
+        tool_schema (dict[str, Any] | None): Schema describing function parameters
+        request_options (type | None): Optional Pydantic model for input validation
+        preprocessor (Callable[[Any], Any] | None): Function to preprocess arguments
+        preprocessor_kwargs (dict[str, Any]): Extra args for preprocessor
+        postprocessor (Callable[[Any], Any] | None): Function to postprocess results
+        postprocessor_kwargs (dict[str, Any]): Extra args for postprocessor
+        strict_func_call (bool): Whether to enforce exact parameter matching
+
+    Example:
+        >>> def greet(name: str, greeting: str = "Hello") -> str:
+        ...     return f"{greeting}, {name}!"
+        >>> tool = Tool(func_callable=greet)
+        >>> # With preprocessing
+        >>> def preprocess(args):
+        ...     args["name"] = args["name"].title()
+        ...     return args
+        >>> tool_with_prep = Tool(
+        ...     func_callable=greet,
+        ...     preprocessor=preprocess,
+        ...     strict_func_call=True
+        ... )
     """
 
     func_callable: Callable[..., Any] = Field(
