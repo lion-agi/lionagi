@@ -48,6 +48,7 @@ from lionagi.protocols.types import (
 from lionagi.service.endpoints.base import EndPoint
 from lionagi.service.types import iModel, iModelManager
 from lionagi.settings import Settings
+from lionagi.tools.base import LionTool
 from lionagi.utils import UNDEFINED, alcall, bcall, copy
 
 if TYPE_CHECKING:
@@ -205,7 +206,9 @@ class Branch(Element, Communicatable, Relational):
         )
 
         # --- ActionManager ---
-        self._action_manager = ActionManager(tools)
+        self._action_manager = ActionManager()
+        if tools:
+            self.register_tools(tools)
 
         # --- LogManager ---
         if log_config:
@@ -346,19 +349,28 @@ class Branch(Element, Communicatable, Relational):
 
         return branch_clone
 
+    def _register_tool(self, tools: FuncTool | LionTool, update: bool = False):
+        if isinstance(tools, type) and issubclass(tools, LionTool):
+            tools = tools()
+        if isinstance(tools, LionTool):
+            tools = tools.to_tool()
+        self._action_manager.register_tool(tools, update=update)
+
     def register_tools(
-        self, tools: FuncTool | list[FuncTool], update: bool = False
+        self, tools: FuncTool | list[FuncTool] | LionTool, update: bool = False
     ):
         """
         Registers one or more tools in the ActionManager.
 
         Args:
-            tools (FuncTool | list[FuncTool]):
+            tools (FuncTool | list[FuncTool] | LionTool):
                 A single tool or a list of tools to register.
             update (bool, optional):
                 If `True`, updates existing tools with the same name.
         """
-        self._action_manager.register_tools(tools, update=update)
+        tools = [tools] if not isinstance(tools, list) else tools
+        for tool in tools:
+            self._register_tool(tool, update=update)
 
     # -------------------------------------------------------------------------
     # Conversion / Serialization
@@ -892,6 +904,11 @@ class Branch(Element, Communicatable, Relational):
         actions: bool = False,
         reason: bool = False,
         action_kwargs: dict = None,
+        action_strategy: Literal[
+            "sequential", "concurrent", "batch"
+        ] = "concurrent",
+        action_batch_size: int = None,
+        verbose_action: bool = False,
         field_models: list[FieldModel] = None,
         exclude_fields: list | dict | None = None,
         request_params: ModelParams = None,
@@ -966,6 +983,12 @@ class Branch(Element, Communicatable, Relational):
                 If `True`, signals that the LLM should provide chain-of-thought or reasoning (where applicable).
             action_kwargs (dict | None, optional):
                 Additional parameters for the `branch.act()` call if tools are invoked.
+            action_strategy (Literal["sequential","concurrent","batch"], optional):
+                The strategy for invoking tools (default: "concurrent").
+            action_batch_size (int, optional):
+                The batch size for concurrent tool invocation if `action_strategy="batch"`.
+            verbose_action (bool, optional):
+                If `True`, logs detailed information about tool invocation.
             field_models (list[FieldModel] | None, optional):
                 Field-level definitions or overrides for the model schema.
             exclude_fields (list|dict|None, optional):
@@ -1023,6 +1046,9 @@ class Branch(Element, Communicatable, Relational):
             actions=actions,
             reason=reason,
             action_kwargs=action_kwargs,
+            action_strategy=action_strategy,
+            action_batch_size=action_batch_size,
+            verbose_action=verbose_action,
             field_models=field_models,
             exclude_fields=exclude_fields,
             request_params=request_params,
@@ -1150,6 +1176,7 @@ class Branch(Element, Communicatable, Relational):
         self,
         action_request: ActionRequest | BaseModel | dict,
         suppress_errors: bool = False,
+        verbose_action: bool = False,
     ) -> ActionResponse:
         """
         Internal method to invoke a tool (action) asynchronously.
@@ -1165,13 +1192,19 @@ class Branch(Element, Communicatable, Relational):
         """
         from lionagi.operations._act.act import _act
 
-        return await _act(self, action_request, suppress_errors)
+        return await _act(
+            branch=self,
+            action_request=action_request,
+            suppress_errors=suppress_errors,
+            verbose_action=verbose_action,
+        )
 
     async def act(
         self,
         action_request: list | ActionRequest | BaseModel | dict,
         *,
         strategy: Literal["concurrent", "sequential", "batch"] = "concurrent",
+        verbose_action: bool = False,
         batch_size: int = None,
         suppress_errors: bool = True,
         sanitize_input: bool = False,
@@ -1197,6 +1230,10 @@ class Branch(Element, Communicatable, Relational):
             action_request (list|ActionRequest|BaseModel|dict):
                 A single or list of action requests, each requiring
                 `function` and `arguments`.
+            strategy (Literal["concurrent","sequential","batch"]):
+                The execution strategy to use.
+            verbose_action (bool):
+                If True, log detailed information about the action.
             suppress_errors (bool):
                 If True, log errors instead of raising exceptions.
             sanitize_input (bool):
@@ -1243,6 +1280,7 @@ class Branch(Element, Communicatable, Relational):
             case "concurrent":
                 return await self._concurrent_act(
                     action_request,
+                    verbose_action=verbose_action,
                     suppress_errors=suppress_errors,
                     sanitize_input=sanitize_input,
                     unique_input=unique_input,
@@ -1263,11 +1301,13 @@ class Branch(Element, Communicatable, Relational):
             case "sequential":
                 return await self._sequential_act(
                     action_request,
+                    verbose_action=verbose_action,
                     suppress_errors=suppress_errors,
                 )
             case "batch":
                 return await self._batch_act(
                     action_request,
+                    verbose_action=verbose_action,
                     batch_size=batch_size or 1,
                     max_concurrent=max_concurrent,
                     suppress_errors=suppress_errors,
@@ -1298,6 +1338,7 @@ class Branch(Element, Communicatable, Relational):
         self,
         action_request: ActionRequest | BaseModel | dict,
         suppress_errors: bool = True,
+        verbose_action: bool = False,
     ) -> list:
         action_request = (
             action_request
@@ -1307,7 +1348,11 @@ class Branch(Element, Communicatable, Relational):
         results = []
         for req in action_request:
             results.append(
-                await self._act(req, suppress_errors=suppress_errors)
+                await self._act(
+                    req,
+                    verbose_action=verbose_action,
+                    suppress_errors=suppress_errors,
+                )
             )
         return results
 
@@ -1560,6 +1605,7 @@ class Branch(Element, Communicatable, Relational):
         response_kwargs: dict | None = None,
         return_analysis: bool = False,
         analysis_model: iModel | None = None,
+        verbose: bool = False,
         **kwargs,
     ):
         """
@@ -1646,6 +1692,8 @@ class Branch(Element, Communicatable, Relational):
             response_kwargs=response_kwargs,
             return_analysis=return_analysis,
             analysis_model=analysis_model,
+            verbose_action=verbose,
+            verbose_analysis=verbose,
             **kwargs,
         )
 

@@ -50,6 +50,8 @@ async def operate(
     action_strategy: Literal[
         "sequential", "concurrent", "batch"
     ] = "concurrent",
+    action_batch_size: int = None,
+    verbose_action: bool = False,
     field_models: list[FieldModel] = None,
     exclude_fields: list | dict | None = None,
     request_params: ModelParams = None,
@@ -189,9 +191,13 @@ async def operate(
             if instruct.action_strategy
             else action_kwargs.get("strategy", "concurrent")
         )
+        if action_batch_size:
+            action_kwargs["batch_size"] = action_batch_size
 
         action_response_models = await branch.act(
-            response_model.action_requests, **action_kwargs
+            response_model.action_requests,
+            verbose_action=verbose_action,
+            **action_kwargs,
         )
         # Possibly refine the operative with the tool outputs
         operative = Step.respond_operative(

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
+
 from pydantic import BaseModel, Field
 
 from . import _types as types
@@ -12,6 +14,9 @@ from .session.session import Branch, Session
 from .version import __version__
 
 LiteiModel = iModel
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 __all__ = (
     "Session",
@@ -24,4 +29,5 @@ __all__ = (
     "__version__",
     "BaseModel",
     "Field",
+    "logger",
 )

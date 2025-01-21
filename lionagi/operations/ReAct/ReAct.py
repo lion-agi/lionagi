@@ -33,6 +33,7 @@ async def ReAct(
     response_kwargs: dict | None = None,
     return_analysis: bool = False,
     analysis_model: iModel | None = None,
+    verbose_analysis: bool = False,
     **kwargs,
 ):
     # If no tools or tool schemas are provided, default to "all tools"
@@ -60,10 +61,13 @@ async def ReAct(
         if isinstance(instruct, Instruct)
         else dict(instruct)
     )
-    # Overwrite the "instruction" field with the interpreted string (if any)
-    instruct_dict["instruction"] = instruction_str or instruct_dict.get(
-        "instruction"
-    )
+
+    # Overwrite "instruction" with the interpreted prompt (if any) plus a note about expansions
+    max_ext_info = f"\nIf needed, you can do up to {max_extensions or 0 if extension_allowed else 0} expansions."
+    instruct_dict["instruction"] = (
+        instruction_str
+        or (instruct_dict.get("instruction") or "")  # in case it's missing
+    ) + max_ext_info
 
     # Prepare a copy of user-provided kwargs for the first operate call
     kwargs_for_operate = copy(kwargs)
@@ -81,6 +85,12 @@ async def ReAct(
     )
     analyses = [analysis]
 
+    # If verbose, show round #1 analysis
+    if verbose_analysis:
+        print(
+            f"ReAct Round #1 Analysis:\n {analysis.model_dump_json(indent=2)}",
+        )
+
     # Validate and clamp max_extensions if needed
     if max_extensions and max_extensions > 5:
         logging.warning("max_extensions should not exceed 5; defaulting to 5.")
@@ -88,6 +98,8 @@ async def ReAct(
 
     # Step 2: Possibly loop through expansions if extension_needed
     extensions = max_extensions
+    round_count = 1
+
     while (
         extension_allowed
         and analysis.extension_needed
@@ -103,16 +115,28 @@ async def ReAct(
                 extensions=extensions
             )
 
+        operate_kwargs = copy(kwargs)
+        operate_kwargs["actions"] = True
+        operate_kwargs["reason"] = True
+        operate_kwargs["response_format"] = ReActAnalysis
+        operate_kwargs["action_strategy"] = analysis.action_strategy
+        if analysis.action_batch_size:
+            operate_kwargs["action_batch_size"] = analysis.action_batch_size
+
         analysis = await branch.operate(
             instruction=new_instruction,
-            response_format=ReActAnalysis,
             tools=tools,
             tool_schemas=tool_schemas,
-            reason=True,
-            actions=True,
+            **operate_kwargs,
         )
         analyses.append(analysis)
+        round_count += 1
 
+        # If verbose, show round analysis
+        if verbose_analysis:
+            print(
+                f"ReAct Round #{round_count} Analysis:\n {analysis.model_dump_json(indent=2)}",
+            )
         if extensions:
             extensions -= 1
 
