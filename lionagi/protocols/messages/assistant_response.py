@@ -2,9 +2,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines `AssistantResponse`, a specialized `RoledMessage` for the AI's
-assistant replies (usually from LLM or related).
+"""AI assistant response handling for LionAGI's message system.
+
+This module provides the AssistantResponse class, which represents responses
+from AI models or assistants. It supports:
+
+- Raw model output preservation
+- Template-based response formatting
+- Multiple response formats (streaming, single response)
+- Structured data extraction from model outputs
+
+The module includes utilities for preparing and formatting assistant responses,
+with special handling for different model output formats (OpenAI, Anthropic, etc.).
 """
 from typing import Any
 
@@ -19,6 +28,35 @@ from .message import MessageRole, RoledMessage, Template, jinja_env
 def prepare_assistant_response(
     assistant_response: BaseModel | list[BaseModel] | dict | str | Any, /
 ) -> dict:
+    """Prepare an AI model's response for storage and rendering.
+
+    This function handles various response formats from different LLM providers:
+    - OpenAI-style responses (choices[0].message.content)
+    - Streaming responses (choices[0].delta.content)
+    - Raw dictionaries with 'content' field
+    - Plain strings or other formats
+
+    Args:
+        assistant_response: The raw response from an AI model, which could be:
+            - A Pydantic model (e.g., OpenAI response)
+            - A list of streaming chunks
+            - A dictionary with model-specific structure
+            - A plain string or other content
+
+    Returns:
+        dict: A standardized dictionary containing:
+            - assistant_response: The extracted text content
+            - model_response: The full model output (if available)
+
+    Example:
+        >>> response = prepare_assistant_response({
+        ...     "choices": [{
+        ...         "message": {"content": "Hello!"}
+        ...     }]
+        ... })
+        >>> print(response)
+        {'assistant_response': 'Hello!', 'model_response': {...}}
+    """
     if assistant_response:
         content = {}
         # Handle model.choices[0].message.content format
@@ -73,10 +111,35 @@ def prepare_assistant_response(
 
 
 class AssistantResponse(RoledMessage):
-    """
-    A message representing the AI assistant's reply, typically
-    from a model or LLM call. If the raw model output is available,
-    it's placed in `metadata["model_response"]`.
+    """A message representing an AI model's response.
+
+    This class extends RoledMessage to handle responses from AI models,
+    preserving both the human-readable content and the raw model output.
+    It supports:
+    - Multiple response formats (streaming, single response)
+    - Template-based rendering
+    - Raw model output preservation
+    - Easy access to response content and metadata
+
+    The class automatically extracts the relevant text from various model
+    output formats (OpenAI, Anthropic, etc.) while preserving the complete
+    model response in metadata for debugging or analysis.
+
+    Properties:
+        response (str): The extracted text portion of the response
+        model_response (dict | list[dict]): The raw model output data
+        template (Template | str | None): Template for rendering responses
+
+    Example:
+        >>> response = AssistantResponse.create(
+        ...     assistant_response={
+        ...         "choices": [{
+        ...             "message": {"content": "Hello!"}
+        ...         }]
+        ...     }
+        ... )
+        >>> print(response.response)  # "Hello!"
+        >>> print(response.model_response)  # Full model output
     """
 
     template: Template | str | None = jinja_env.get_template(
@@ -85,7 +148,18 @@ class AssistantResponse(RoledMessage):
 
     @property
     def response(self) -> str:
-        """Get or set the text portion of the assistant's response."""
+        """Get the text content of the assistant's response.
+
+        This property provides easy access to the human-readable portion
+        of the response, regardless of the original model output format.
+
+        Returns:
+            str: The extracted text content from the response.
+
+        Example:
+            >>> response.response
+            "The capital of France is Paris."
+        """
         return copy(self.content["assistant_response"])
 
     @response.setter
@@ -94,11 +168,28 @@ class AssistantResponse(RoledMessage):
 
     @property
     def model_response(self) -> dict | list[dict]:
-        """
-        Access the underlying model's raw data, if available.
+        """Access the raw model output data.
+
+        This property provides access to the complete, unprocessed model
+        response, which can be useful for:
+        - Debugging model behavior
+        - Accessing additional model metadata
+        - Analyzing model confidence or other attributes
+        - Handling provider-specific response fields
 
         Returns:
-            dict or list[dict]: The stored model output data.
+            dict | list[dict]: The complete model output, either as a
+                single response dictionary or a list of streaming chunks.
+
+        Example:
+            >>> response.model_response
+            {
+                "id": "chatcmpl-123",
+                "choices": [{
+                    "message": {"content": "Hello!"},
+                    "finish_reason": "stop"
+                }]
+            }
         """
         return copy(self.metadata.get("model_response", {}))
 

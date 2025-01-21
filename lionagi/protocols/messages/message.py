@@ -2,9 +2,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Implements the `RoledMessage` base for system, user, assistant,
-and action messages, plus Jinja2 environment and template loading.
+"""Core message class implementation for LionAGI's message system.
+
+This module provides the RoledMessage base class, which serves as the foundation
+for all message types in the system (system messages, user instructions,
+assistant responses, etc.). It includes:
+
+- RoledMessage: Base class with role, content, and template support
+- Jinja2 environment setup for message templating
+- Serialization helpers for message content
+- Clone/copy functionality for message forking
+
+The RoledMessage class combines Node (for graph integration) and Sendable
+(for message passing) to create a versatile base for all message types.
 """
 
 import json
@@ -32,9 +42,33 @@ __all__ = ("RoledMessage",)
 
 
 class RoledMessage(Node, Sendable):
-    """
-    A base class for all messages that have a `role` and carry structured
-    `content`. Subclasses might be `Instruction`, `ActionRequest`, etc.
+    """Base class for all role-based messages in LionAGI.
+
+    This class provides the foundation for all message types in the system,
+    combining structured content, role-based identification, and template-based
+    rendering. It supports:
+    - Role-based message identification (system/user/assistant)
+    - Structured content storage with template rendering
+    - Sender/recipient tracking for message routing
+    - Message cloning and serialization
+    - Integration with the graph system via Node inheritance
+    - Message passing via Sendable inheritance
+
+    Attributes:
+        content (dict): The structured content of the message
+        role (MessageRole): The role this message plays (system/user/etc.)
+        template (str | Template): Optional Jinja template for rendering
+        sender (SenderRecipient): Who sent this message
+        recipient (SenderRecipient): Who should receive this message
+
+    Example:
+        >>> msg = RoledMessage(
+        ...     content={"text": "Hello"},
+        ...     role=MessageRole.USER,
+        ...     sender="user_123",
+        ...     recipient=MessageRole.ASSISTANT
+        ... )
+        >>> print(msg.rendered)  # Renders content using template
     """
 
     content: dict = Field(
@@ -77,12 +111,21 @@ class RoledMessage(Node, Sendable):
 
     @property
     def image_content(self) -> list[dict[str, Any]] | None:
-        """
-        Extract structured image data from the message content if it is
-        represented as a chat message array.
+        """Extract image data from message content.
+
+        If the message content contains a chat message array with image
+        data (e.g., from a multimodal model), this extracts the image
+        information into a structured format.
 
         Returns:
-            list[dict[str,Any]] | None: If no images found, None.
+            list[dict[str,Any]] | None: List of image data dictionaries,
+                each containing type and URL information. Returns None if
+                no images are found.
+
+        Example:
+            >>> msg.image_content
+            [{'type': 'image_url',
+              'image_url': {'url': 'data:image/jpeg;base64,...'}}]
         """
         msg_ = self.chat_msg
         if isinstance(msg_, dict) and isinstance(msg_["content"], list):
@@ -91,11 +134,19 @@ class RoledMessage(Node, Sendable):
 
     @property
     def chat_msg(self) -> dict[str, Any] | None:
-        """
-        A dictionary representation typically used in chat-based contexts.
+        """Get a chat-compatible representation of this message.
+
+        Converts the message into a format suitable for chat-based LLM
+        interactions, following the common {"role": ..., "content": ...}
+        pattern used by most LLM providers.
 
         Returns:
-            dict: `{"role": <role>, "content": <rendered content>}`
+            dict[str, Any]: Dictionary with 'role' and 'content' keys,
+                where content is the template-rendered message text.
+
+        Example:
+            >>> msg.chat_msg
+            {'role': 'user', 'content': 'Hello, how are you?'}
         """
         try:
             return {"role": str(self.role), "content": self.rendered}

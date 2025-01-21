@@ -2,9 +2,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `Instruction` class, representing user commands or instructions
-sent to the system. Supports optional context, images, and schema requests.
+"""User instruction handling for LionAGI's message system.
+
+This module provides the Instruction class, which represents user commands
+or queries sent to the system. It supports:
+
+- Core instruction text with optional guidance
+- Contextual information and image attachments
+- Schema-based response formatting
+- Tool/function references for execution
+- Template-based rendering
+
+The module also includes helper functions for preparing and formatting
+instruction content, handling images, and managing response schemas.
 """
 
 from typing import Any, Literal
@@ -304,9 +314,37 @@ def prepare_instruction_content(
 
 
 class Instruction(RoledMessage):
-    """
-    A user-facing message that conveys commands or tasks. It supports
-    optional images, tool references, and schema-based requests.
+    """A user-facing message that conveys commands or tasks to the system.
+
+    This class extends RoledMessage to provide rich instruction capabilities:
+    - Main instruction text with optional guidance
+    - Contextual information for better understanding
+    - Image attachments for multimodal tasks
+    - Schema-based response formatting
+    - Tool/function references for execution
+    - Template-based rendering
+
+    Properties:
+        guidance (str | None): Optional guiding text for the instruction
+        instruction (JsonValue | None): The main instruction or command
+        context (JsonValue | None): Additional context about the environment
+        tool_schemas (JsonValue | None): Extra data describing available tools
+        plain_content (str | None): Raw plain text fallback
+        image_detail (Literal["low", "high", "auto"] | None): Detail level for images
+        images (list): List of images associated with the instruction
+        request_fields (dict | None): Fields requested in the response
+        response_format (type[BaseModel] | None): Pydantic model for structured responses
+        respond_schema_info (dict | None): Schema information for responses
+        request_response_format (str | None): Formatted request response template
+
+    Example:
+        >>> instruction = Instruction.create(
+        ...     instruction="Analyze this image",
+        ...     guidance="Focus on key objects",
+        ...     images=["base64_image_data"],
+        ...     response_format=AnalysisResult
+        ... )
+        >>> print(instruction.rendered)  # Get formatted content
     """
 
     @classmethod
@@ -516,12 +554,23 @@ class Instruction(RoledMessage):
         images: list | str,
         image_detail: Literal["low", "high", "auto"] = None,
     ) -> None:
-        """
-        Append images to the existing list.
+        """Append images to the instruction's image list.
+
+        This method allows adding more images to an existing instruction,
+        optionally updating the image detail level for all images.
 
         Args:
-            images: The new images to add, a single or multiple.
-            image_detail: If provided, updates the image detail field.
+            images: New images to add (base64 or URLs). Can be a single
+                image or a list of images.
+            image_detail: Optional detail level for image processing
+                ("low", "high", or "auto"). If provided, updates the
+                detail level for all images.
+
+        Example:
+            >>> instruction.extend_images(
+            ...     ["new_image_data"],
+            ...     image_detail="high"
+            ... )
         """
         arr: list = self.images
         arr.extend(images if isinstance(images, list) else [images])
@@ -530,12 +579,22 @@ class Instruction(RoledMessage):
             self.image_detail = image_detail
 
     def extend_context(self, *args, **kwargs) -> None:
-        """
-        Append additional context to the existing context array.
+        """Append additional context to the instruction.
+
+        This method allows adding more contextual information to an
+        existing instruction. Context can be added either as direct
+        values or as key-value pairs.
 
         Args:
-            *args: Positional args are appended as list items.
-            **kwargs: Key-value pairs are appended as separate dict items.
+            *args: Values to append directly to the context list
+            **kwargs: Key-value pairs to add as separate context items
+
+        Example:
+            >>> instruction.extend_context(
+            ...     "Additional info",
+            ...     user_preference="detailed",
+            ...     language="en"
+            ... )
         """
         ctx: list = self.context or []
         if args:

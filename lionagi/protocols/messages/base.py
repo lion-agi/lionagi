@@ -2,10 +2,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Holds foundational enumerations and types for messages, including
-roles like `SYSTEM`, `USER`, and helper functions for validating
-sender/recipient fields.
+"""Foundational types and enums for the message system.
+
+This module provides the core types and enumerations that define message roles,
+flags, and field names in LionAGI's message system. It includes:
+
+- MessageRole: Enum for system, user, and assistant roles
+- MessageFlag: Internal flags for message states
+- MessageField: Standard field names used in messages
+- SenderRecipient: Type alias for message endpoints
+- Helper functions for validating sender/recipient fields
+
+These components form the foundation for all message-based communication
+in the system, whether between users and AI, or between different AI agents.
 """
 
 from enum import Enum
@@ -23,8 +32,19 @@ __all__ = (
 
 
 class MessageRole(str, Enum):
-    """
-    Predefined roles for conversation participants or message semantics.
+    """Predefined roles for conversation participants.
+
+    These roles define the different actors in a conversation:
+    - SYSTEM: System-level messages that set context or constraints
+    - USER: Messages from human users or external agents
+    - ASSISTANT: Responses from AI models or assistants
+    - UNSET: Default/unspecified role
+    - ACTION: Messages related to tool/function execution
+
+    Example:
+        >>> role = MessageRole.USER
+        >>> print(role)  # "user"
+        >>> role == "user"  # True
     """
 
     SYSTEM = "system"
@@ -35,8 +55,14 @@ class MessageRole(str, Enum):
 
 
 class MessageFlag(str, Enum):
-    """
-    Internal flags for certain message states, e.g., clones or loads.
+    """Internal flags for message state tracking.
+
+    These flags help track special states of messages:
+    - MESSAGE_CLONE: Indicates this message is a copy of another
+    - MESSAGE_LOAD: Indicates this message was loaded from storage
+
+    These are primarily used internally by the message system to
+    maintain proper state and relationships between messages.
     """
 
     MESSAGE_CLONE = "MESSAGE_CLONE"
@@ -53,8 +79,18 @@ A union type indicating that a sender or recipient could be:
 
 
 class MessageField(str, Enum):
-    """
-    Common field names used in message objects.
+    """Standard field names used across message objects.
+
+    These field names are used consistently throughout the message system:
+    - CREATED_AT: Message creation timestamp
+    - ROLE: The message's role (system/user/assistant)
+    - CONTENT: The actual message content
+    - ID: Unique message identifier
+    - SENDER: Who sent the message
+    - RECIPIENT: Who should receive the message
+    - METADATA: Additional message data
+
+    This enum ensures consistent field naming across the codebase.
     """
 
     CREATED_AT = "created_at"
