@@ -1,6 +1,6 @@
 [project]
 name = "lionagi"
-version = "0.8.5"
+version = "0.8.6"
 description = "An Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
@@ -45,6 +45,10 @@ dev = [
     "furo>=2024.8.6",
     "ipython>=8.31.0",
     "ipykernel>=6.29.5",
+    "ipywidgets>=8.1.5",
+]
+tools = [
+    "docling>=2.15.1",
 ]
 
 [tool.black]
