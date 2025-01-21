@@ -208,7 +208,7 @@ class ReaderTool(LionTool):
         e = min(length, end if end is not None else length)
 
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 f.seek(s)
                 content = f.read(e - s)
         except Exception as ex:
