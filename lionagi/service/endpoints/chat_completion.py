@@ -28,12 +28,14 @@ class ChatCompletionEndPoint(EndPoint):
         **kwargs,
     ):
         from lionagi.libs.package.imports import check_import
+
         check_import("litellm")
-        
-        import litellm      # type: ignore
+
+        import litellm  # type: ignore
+
         litellm.drop_params = True
-        
-        from litellm import acompletion     # type: ignore
+
+        from litellm import acompletion  # type: ignore
 
         provider = self.config.provider
 
@@ -68,12 +70,13 @@ class ChatCompletionEndPoint(EndPoint):
         **kwargs,
     ) -> AsyncGenerator:
         from lionagi.libs.package.imports import check_import
+
         check_import("litellm")
-        
-        import litellm      # type: ignore
+
+        import litellm  # type: ignore
 
         litellm.drop_params = True
-        from litellm import acompletion     # type: ignore
+        from litellm import acompletion  # type: ignore
 
         provider = self.config.provider
 
