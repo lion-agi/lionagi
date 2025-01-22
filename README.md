@@ -43,11 +43,13 @@ uv pip install "lionagi[dev]"
 ```
 
 Dependencies:
-	•	litellm
-	•	jinja2
-	•	pandas
-	•	pillow
-	•	python-dotenv
+- aiohttp
+- aiocache
+- jinja2
+- pandas
+- pillow
+- pydantic
+- python-dotenv
 
 ## Quick Start
 ```python
