@@ -34,7 +34,7 @@ classifiers=[
     "Framework :: Pytest",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "black[jupyter]>=24.10.0",
     "isort>=5.13.2",
