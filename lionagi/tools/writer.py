@@ -271,7 +271,7 @@ class WriterTool(LionTool):
         original_text = ""
         if path is not None:
             try:
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     original_text = f.read()
             except FileNotFoundError:
                 pass  # treat as empty if not found
@@ -302,7 +302,7 @@ class WriterTool(LionTool):
 
         path, length = self.documents[doc_id]
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 old_text = f.read()
         except Exception as e:
             return WriterResponse(success=False, error=f"Read error: {str(e)}")
