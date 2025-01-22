@@ -36,6 +36,7 @@ jobs:
       run: |
         uv venv
         uv build
+        uv pip install ."[tools]"
     
     - name: Run tests
       run: |
