@@ -14,7 +14,7 @@ from lionagi.utils import run_package_manager_command
 def check_import(
     package_name: str,
     module_name: str | None = None,
-    import_name: str | None = None,
+    import_name: str | list | None = None,
     pip_name: str | None = None,
     attempt_install: bool = True,
     error_message: str = "",
@@ -25,7 +25,7 @@ def check_import(
     Args:
         package_name: The name of the package to check.
         module_name: The specific module to import (if any).
-        import_name: The specific name to import from the module (if any).
+        import_name: The specific name(s) to import from the module (if any).
         pip_name: The name to use for pip installation (if different).
         attempt_install: Whether to attempt installation if not found.
         error_message: Custom error message to use if package not found.
