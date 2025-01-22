@@ -463,7 +463,7 @@ class ReaderTool(LionTool):
 
         path = doc_data["text_path"]
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 text = f.read()
         except Exception as e:
             return ReaderResponse(

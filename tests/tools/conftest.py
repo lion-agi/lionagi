@@ -165,7 +165,7 @@ def mock_file_operations(mocker, temp_dir):
         if path_str in file_contents:
             return file_contents[path_str]
         if os.path.isfile(path_str):
-            with open(path_str, "r", encoding="utf-8") as f:
+            with open(path_str, encoding="utf-8") as f:
                 return f.read()
         return ""
 
