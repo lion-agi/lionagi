@@ -54,7 +54,7 @@ class iModel:
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
-        invoke_with_endpoint: bool = True,
+        invoke_with_endpoint: bool = False,
         **kwargs,
     ) -> None:
         """Initializes the iModel instance.
