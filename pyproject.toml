@@ -80,6 +80,8 @@ python_files = ["test_*.py"]
 markers = [
     "performance: marks tests as performance",
     "slow: marks tests as slow",
+    "asyncio: mark as async",
+    
 ]
 
 [build-system]
