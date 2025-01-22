@@ -37,7 +37,11 @@ async def interpret(
         guidance=guidance + "\n" + kwargs.get("guidance", ""),
         context=context,
         temperature=kwargs.get("temperature", 0.2),
-        **{k: v for k, v in kwargs.items() if k not in ("instruction", "guidance", "temperature", "context")},
+        **{
+            k: v
+            for k, v in kwargs.items()
+            if k not in ("instruction", "guidance", "temperature", "context")
+        },
     )
-    
+
     return str(refined_prompt)

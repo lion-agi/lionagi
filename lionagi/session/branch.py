@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, Union, Optional
 from datetime import datetime
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 
 import pandas as pd
-from lionagi.operations.reflect.reflect import ReflectionChain
 from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
+from lionagi.operations.reflect.reflect import ReflectionChain
 from lionagi.operatives.types import (
     ActionManager,
     FieldModel,
@@ -1601,18 +1601,19 @@ class Branch(Element, Communicatable, Relational):
     ) -> Any:
         """
         Sends a query to a target and awaits response.
-        
+
         Args:
             query: The question or request to send
             target: The recipient - can be another Branch, an iModel, or external system identifier
             timeout: Maximum time to wait for response in seconds
             response_format: Expected format of the response (optional)
             **kwargs: Additional parameters for specific target types
-            
+
         Returns:
             The response from the target, optionally formatted according to response_format
         """
         from lionagi.operations.ask.ask import ask
+
         return await ask(
             self,
             query=query,
@@ -1631,17 +1632,18 @@ class Branch(Element, Communicatable, Relational):
     ) -> ReflectionChain:
         """
         Performs a chain-of-thought reflection on the given context.
-        
+
         Args:
             context: The context to reflect upon
             initial_thought: Optional starting thought for the chain
             max_thoughts: Maximum number of thoughts in the chain
             **kwargs: Additional parameters for thought generation
-            
+
         Returns:
             ReflectionChain containing the sequence of thoughts
         """
         from lionagi.operations.reflect.reflect import reflect
+
         return await reflect(
             self,
             context=context,

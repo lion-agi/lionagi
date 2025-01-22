@@ -27,7 +27,7 @@ async def optimize(
 ) -> OptimizationResponse | T:
     """
     **EXPERIMENTAL** !!!
-    
+
     High-level function to optimize a certain aspect (PROMPT, FLOW, TOOLS, etc.)
     in the given Branch. Updates the Branch if it finds a better configuration.
 

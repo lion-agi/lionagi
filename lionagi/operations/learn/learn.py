@@ -27,7 +27,7 @@ async def learn(
 ) -> LearnResponse | T:
     """
     **EXPERIMENTAL** !!!
-    
+
     High-level function to 'learn' from experiences and update the Branch with
     new knowledge. Distinct from 'optimize' in that it's about "improving
     decision-making" or "improving response patterns" from data.
