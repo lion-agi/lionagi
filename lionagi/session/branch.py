@@ -577,7 +577,7 @@ class Branch(Element, Communicatable, Relational):
         request_options: type[BaseModel] = None,
         description: str = None,
         update: bool = False,
-        **kwargs
+        **kwargs,
     ):
         if not imodel:
             imodel = iModel(
@@ -592,7 +592,7 @@ class Branch(Element, Communicatable, Relational):
                 limit_requests=limit_requests,
                 limit_tokens=limit_tokens,
                 invoke_with_endpoint=invoke_with_endpoint,
-                **kwargs
+                **kwargs,
             )
 
         if not update and name in self.tools:
