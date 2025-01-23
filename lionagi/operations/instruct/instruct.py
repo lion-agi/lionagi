@@ -4,6 +4,7 @@
 
 from typing import TYPE_CHECKING, Any
 
+from lionagi.operatives.instruct.instruct import OperateOptions
 from lionagi.operatives.types import Instruct
 
 if TYPE_CHECKING:
@@ -20,10 +21,20 @@ async def instruct(
         **(instruct.to_dict() if isinstance(instruct, Instruct) else instruct),
         **kwargs,
     }
-    if any(i in config and config[i] for i in Instruct.reserved_kwargs):
-        if "response_format" in config or "request_model" in config:
-            return await branch.operate(**config)
-        for i in Instruct.reserved_kwargs:
-            config.pop(i, None)
+    if config.get("actions"):
+        if config.get("extension_allowed") and config.get("max_extensions"):
+            config.pop("reason", None)
+            config.pop("actions", None)
+            return await branch.ReAct(**config)
 
-    return await branch.communicate(**config)
+        config.pop("extension_allowed", None)
+        config.pop("max_extensions", None)
+        return await branch.operate(**config)
+
+    return await branch.communicate(
+        **{
+            k: v
+            for k, v in config.items()
+            if k not in OperateOptions.model_fields
+        }
+    )
