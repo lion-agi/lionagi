@@ -28,8 +28,13 @@ class RateLimitedAPIProcessor(Processor):
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
+        concurrency_limit: int | None = None,
     ):
-        super().__init__(queue_capacity, capacity_refresh_time)
+        super().__init__(
+            queue_capacity=queue_capacity,
+            capacity_refresh_time=capacity_refresh_time,
+            concurrency_limit=concurrency_limit,
+        )
         self.limit_tokens = limit_tokens
         self.limit_requests = limit_requests
         self.interval = interval or self.capacity_refresh_time
@@ -37,6 +42,9 @@ class RateLimitedAPIProcessor(Processor):
         self.available_token = self.limit_tokens
         self._rate_limit_replenisher_task: asyncio.Task | None = None
         self._lock: asyncio.Lock = asyncio.Lock()
+        self._concurrency_sem = asyncio.Semaphore(
+            concurrency_limit or queue_capacity
+        )
 
     async def start_replenishing(self):
         """Start replenishing rate limit capacities at regular intervals."""
@@ -74,6 +82,7 @@ class RateLimitedAPIProcessor(Processor):
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
+        concurrency_limit: int | None = None,
     ) -> Self:
         self = cls(
             interval=interval,
@@ -81,6 +90,7 @@ class RateLimitedAPIProcessor(Processor):
             capacity_refresh_time=capacity_refresh_time,
             limit_requests=limit_requests,
             limit_tokens=limit_tokens,
+            concurrency_limit=concurrency_limit,
         )
         self._rate_limit_replenisher_task = asyncio.create_task(
             self.start_replenishing()
@@ -126,6 +136,7 @@ class RateLimitedAPIExecutor(Executor):
         limit_requests: int = None,
         limit_tokens: int = None,
         strict_event_type: bool = False,
+        concurrency_limit: int | None = None,
     ):
         config = {
             "queue_capacity": queue_capacity,
@@ -133,13 +144,13 @@ class RateLimitedAPIExecutor(Executor):
             "interval": interval,
             "limit_requests": limit_requests,
             "limit_tokens": limit_tokens,
+            "concurrency_limit": concurrency_limit,
         }
-
+        super().__init__(
+            processor_config=config, strict_event_type=strict_event_type
+        )
         self.config = config
         self.interval = interval
         self.limit_requests = limit_requests
         self.limit_tokens = limit_tokens
-
-        super().__init__(
-            processor_config=config, strict_event_type=strict_event_type
-        )
+        self.concurrency_limit = concurrency_limit or queue_capacity
