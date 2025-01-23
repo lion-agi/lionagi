@@ -2,10 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import asyncio
 import os
 import warnings
 
 from pydantic import BaseModel
+
+from lionagi.protocols.generic.event import EventStatus
 
 from .endpoints.base import APICalling, EndPoint
 from .endpoints.match_endpoint import match_endpoint
@@ -54,7 +57,7 @@ class iModel:
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
-        invoke_with_endpoint: bool = True,
+        invoke_with_endpoint: bool = False,
         **kwargs,
     ) -> None:
         """Initializes the iModel instance.
@@ -232,8 +235,17 @@ class iModel:
 
             await self.executor.append(api_call)
             await self.executor.forward()
-            if api_call.id in self.executor.completed_events:
-                return self.executor.pile.pop(api_call.id)
+
+            ctr = 0
+            while api_call.status not in [
+                EventStatus.COMPLETED,
+                EventStatus.FAILED,
+            ]:
+                ctr += 1
+                await asyncio.sleep(0.1)
+                if ctr > 100:
+                    break
+            return self.executor.pile.pop(api_call.id)
         except Exception as e:
             raise ValueError(f"Failed to invoke API call: {e}")
 

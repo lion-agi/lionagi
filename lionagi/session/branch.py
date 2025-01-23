@@ -1363,7 +1363,7 @@ class Branch(Element, Communicatable, Relational):
         **kwargs,
     ) -> list:
         result = []
-        async for i in await bcall(
+        async for i in bcall(
             action_request, self._act, batch_size=batch_size, **kwargs
         ):
             result.extend(i)

@@ -57,6 +57,9 @@ async def ReAct(
         if verbose_analysis:
             print(f"Interpreted instruction: {instruction_str}")
 
+        if verbose_analysis:
+            print(f"Interpreted instruction: {instruction_str}")
+
     # Convert Instruct to dict if necessary
     instruct_dict = (
         instruct.to_dict()

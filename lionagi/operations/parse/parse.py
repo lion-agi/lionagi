@@ -73,7 +73,10 @@ async def parse(
                 strict=strict,
                 suppress_conversion_errors=suppress_conversion_errors,
             )
-            response_model = request_type.model_validate(response_model)
+            try:
+                response_model = request_type.model_validate(response_model)
+            except Exception:
+                response_model = None
 
     if not isinstance(response_model, BaseModel):
         match handle_validation:

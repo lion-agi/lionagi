@@ -23,13 +23,33 @@ LionAGI is a robust framework for orchestrating multi-step AI operations with pr
 ```
 pip install lionagi
 ```
+```
+poetry add lionagi
+```
+```
+uv add lionagi
+```
+
+### optionally
+
+to install the tools dependency
+```
+uv pip install "lionagi[tools]"
+```
+
+to install the dev dependency
+```
+uv pip install "lionagi[dev]"
+```
 
 Dependencies:
-	•	litellm
-	•	jinja2
-	•	pandas
-	•	pillow
-	•	python-dotenv
+- aiohttp
+- aiocache
+- jinja2
+- pandas
+- pillow
+- pydantic
+- python-dotenv
 
 ## Quick Start
 ```python

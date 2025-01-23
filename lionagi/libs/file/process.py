@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
-from .chunk import chunk_content
+from .chunk import Chunk, chunk_content
 from .save import save_chunks
 
 
@@ -91,7 +91,7 @@ def file_to_chunks(
     verbose: bool = False,
     timestamp: bool = True,
     random_hash_digits: int = 4,
-) -> list[dict[str, Any]]:
+) -> list[Chunk]:
     """
     Process a file and split its content into chunks.
 

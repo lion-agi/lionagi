@@ -22,7 +22,7 @@ __all__ = (
 )
 
 
-class Instruct(HashableModel):
+class ChatInstruct(HashableModel):
     """Model for defining instruction parameters and execution requirements.
 
     Attributes:
@@ -31,17 +31,6 @@ class Instruct(HashableModel):
         context (JsonValue | None): Task context.
     """
 
-    reserved_kwargs: ClassVar[list[str]] = [
-        "operative_model",
-        "field_models",
-        "operative",
-        "reason",
-        "actions",
-        "action_strategy",
-        "batch_size",
-        "request_params",
-        "response_params",
-    ]
     instruction: JsonValue | None = Field(
         None,
         title="Primary Instruction",
@@ -82,6 +71,14 @@ class Instruct(HashableModel):
             "Use None if no additional context is needed."
         ),
     )
+
+    @field_validator("instruction", "guidance", "context", mode="before")
+    def _validate_instruction(cls, v):
+        return validate_nullable_jsonvalue_field(cls, v)
+
+
+class ReActInstruct(HashableModel):
+
     reason: bool | None = Field(
         None,
         description=(
@@ -111,10 +108,10 @@ class Instruct(HashableModel):
         None,
         description="Batch size for executing actions. Only provide for 'batch' strategy.",
     )
-
-    @field_validator("instruction", "guidance", "context", mode="before")
-    def _validate_instruction(cls, v):
-        return validate_nullable_jsonvalue_field(cls, v)
+    allowed_actions: list[str] | None = Field(
+        default_factory=list,
+        description="List of allowed actions for the current instruction.",
+    )
 
     @field_validator("reason", "actions", mode="before")
     def _validate_reason(cls, v):
@@ -132,22 +129,3 @@ class Instruct(HashableModel):
             return to_num(v, num_type=int)
         except Exception:
             return None
-
-
-INSTRUCT_FIELD = FieldModel(
-    name="instruct_model",
-    annotation=Instruct | None,
-    default=None,
-)
-
-
-class InstructResponse(HashableModel):
-    instruct: Instruct
-    response: Any | None = None
-
-
-LIST_INSTRUCT_FIELD_MODEL = FieldModel(
-    name="instruct_models",
-    annotation=list[Instruct] | None,
-    default=None,
-)
