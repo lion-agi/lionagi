@@ -51,6 +51,8 @@ from lionagi.settings import Settings
 from lionagi.tools.base import LionTool
 from lionagi.utils import UNDEFINED, alcall, bcall, copy
 
+from .prompts import LION_SYSTEM_MESSAGE
+
 if TYPE_CHECKING:
     # Forward references for type checking (e.g., in operations or extended modules)
     from lionagi.session.branch import Branch
@@ -131,6 +133,7 @@ class Branch(Element, Communicatable, Relational):
         system_template: Template | str = None,
         system_template_context: dict = None,
         logs: Pile[Log] = None,
+        use_lion_system_message: bool = True,
         **kwargs,
     ):
         """
@@ -168,18 +171,29 @@ class Branch(Element, Communicatable, Relational):
                 Context for rendering the system template.
             logs (Pile[Log], optional):
                 Existing logs to seed the LogManager.
+            use_lion_system_message (bool, optional):
+                If `True`, prepends the system message with a Lion system message.
             **kwargs:
                 Additional parameters passed to `Element` parent init.
         """
         super().__init__(user=user, name=name, **kwargs)
 
-        # --- MessageManager ---
         self._message_manager = MessageManager(messages=messages)
-        # If system instructions or templates are provided, add them
+
         if any(
-            i is not None
-            for i in [system, system_sender, system_datetime, system_template]
+            bool(x)
+            for x in [
+                system,
+                system_datetime,
+                system_template,
+                system_template_context,
+                use_lion_system_message,
+            ]
         ):
+
+            if use_lion_system_message:
+                system = f"Developer Prompt: {str(system)}" if system else ""
+                system = (LION_SYSTEM_MESSAGE + "\n\n" + system).strip()
 
             self._message_manager.add_message(
                 system=system,
