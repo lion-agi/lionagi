@@ -25,11 +25,14 @@ pip install lionagi
 ```
 
 Dependencies:
-	•	litellm
+	•	aiocahce
+  •	aiohttp
 	•	jinja2
 	•	pandas
 	•	pillow
+  •	pydantic
 	•	python-dotenv
+  •	tiktoken
 
 ## Quick Start
 ```python
