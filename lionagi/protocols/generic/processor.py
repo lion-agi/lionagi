@@ -31,6 +31,7 @@ class Processor(Observer):
         self,
         queue_capacity: int,
         capacity_refresh_time: float,
+        concurrency_limit: int,
     ) -> None:
         """Initializes a Processor instance.
 
@@ -56,6 +57,10 @@ class Processor(Observer):
         self._available_capacity = queue_capacity
         self._execution_mode = False
         self._stop_event = asyncio.Event()
+        if concurrency_limit:
+            self._concurrency_sem = asyncio.Semaphore(concurrency_limit)
+        else:
+            self._concurrency_sem = None
 
     @property
     def available_capacity(self) -> int:
@@ -144,8 +149,11 @@ class Processor(Observer):
                 next_event = await self.dequeue()
 
             if await self.request_permission(**next_event.request):
-                next_event.status = EventStatus.PROCESSING
-                task = asyncio.create_task(next_event.invoke())
+
+                if next_event.streaming:
+                    task = asyncio.create_task(next_event.stream())
+                else:
+                    task = asyncio.create_task(next_event.invoke())
                 tasks.add(task)
 
             prev_event = next_event

@@ -86,6 +86,7 @@ class Event(Element):
     """
 
     execution: Execution = Field(default_factory=Execution)
+    streaming: bool = False
 
     @field_serializer("execution")
     def _serialize_execution(self, val: Execution) -> dict:
@@ -153,6 +154,15 @@ class Event(Element):
 
     async def invoke(self) -> None:
         """Performs the event action asynchronously.
+
+        Raises:
+            NotImplementedError: This base method must be overridden by
+            subclasses.
+        """
+        raise NotImplementedError("Override in subclass.")
+
+    async def stream(self) -> None:
+        """Performs the event action asynchronously, streaming results.
 
         Raises:
             NotImplementedError: This base method must be overridden by
