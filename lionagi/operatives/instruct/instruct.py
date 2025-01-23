@@ -78,7 +78,7 @@ class ChatOptions(HashableModel):
         return validate_nullable_jsonvalue_field(cls, v)
 
 
-class OperateRequest(HashableModel):
+class OperateOptions(HashableModel):
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -166,7 +166,7 @@ Request options for a Branch to perform an instruction
         description="Options for the prediction task.",
     )
 
-    operate_options: OperateRequest | None = Field(
+    operate_options: OperateOptions | None = Field(
         None,
         description="Options for the reaction task.",
     )
@@ -188,7 +188,7 @@ CHAT_FIELD = FieldModel(
 
 OPERATE_FIELD = FieldModel(
     name="react_model",
-    annotation=OperateRequest | None,
+    annotation=OperateOptions | None,
     default=None,
 )
 
