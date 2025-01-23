@@ -3,13 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
+import json
 import logging
 from abc import ABC
+from collections.abc import AsyncGenerator
 from typing import Any, Literal
 
 import aiohttp
 from aiocache import cached
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing_extensions import Self
 
 from lionagi._errors import ExecutionError, RateLimitError
 from lionagi.protocols.generic.event import Event, EventStatus
@@ -347,6 +350,12 @@ class APICalling(Event):
     is_cached: bool = Field(default=False, exclude=True)
     should_invoke_endpoint: bool = Field(default=True, exclude=True)
 
+    @model_validator(mode="after")
+    def _validate_streaming(self) -> Self:
+        if self.payload.get("stream") is True:
+            self.streaming = True
+        return self
+
     @property
     def required_tokens(self) -> int | None:
         """int | None: The number of tokens required for this request."""
@@ -442,10 +451,91 @@ class APICalling(Event):
         """
         return await self._inner(**kwargs)
 
-    async def stream(self, **kwargs):
+    async def _stream(
+        self,
+        verbose: bool = True,
+        output_file: str = None,
+        with_response_header: bool = False,
+    ) -> AsyncGenerator:
+        async with aiohttp.ClientSession() as client:
+            async with client.request(
+                method=self.endpoint.method.upper(),
+                url=self.endpoint.full_url,
+                headers=self.headers,
+                json=self.payload,
+            ) as response:
+                if response.status != 200:
+                    try:
+                        error_text = await response.json()
+                    except Exception:
+                        error_text = await response.text()
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=response.history,
+                        status=response.status,
+                        message=f"{error_text}",
+                        headers=response.headers,
+                    )
+
+                file_handle = None
+
+                if output_file:
+                    try:
+                        file_handle = open(output_file, "w")
+                    except Exception as e:
+                        raise ValueError(
+                            f"Invalid to output the response "
+                            f"to {output_file}. Error:{e}"
+                        )
+
+                try:
+                    async for chunk in response.content:
+                        chunk_str = chunk.decode("utf-8")
+                        chunk_list = chunk_str.split("data:")
+                        for c in chunk_list:
+                            c = c.strip()
+                            if c and c != "[DONE]":
+                                try:
+                                    if file_handle:
+                                        file_handle.write(c + "\n")
+                                    c_dict = json.loads(c)
+                                    if verbose:
+                                        if c_dict.get("choices"):
+                                            if content := c_dict["choices"][0][
+                                                "delta"
+                                            ].get("content"):
+                                                print(
+                                                    content, end="", flush=True
+                                                )
+                                    yield c_dict
+                                except json.JSONDecodeError:
+                                    yield c
+                                except asyncio.CancelledError as e:
+                                    raise e
+
+                    if with_response_header:
+                        yield response.headers
+
+                finally:
+                    if file_handle:
+                        file_handle.close()
+
+    async def stream(
+        self,
+        verbose: bool = True,
+        output_file: str = None,
+        with_response_header: bool = False,
+        **kwargs,
+    ) -> AsyncGenerator:
         """Performs a streaming request, if supported by the endpoint.
 
         Args:
+            verbose (bool):
+                If True, prints the response content to the console.
+            output_file (str):
+                If set, writes the response content to this file. (only applies to non-endpoint invoke)
+            with_response_header (bool):
+                If True, yields the response headers as well. (only applies to non-endpoint invoke)
             **kwargs: Additional parameters for the streaming call.
 
         Yields:
@@ -456,23 +546,39 @@ class APICalling(Event):
         """
         start = asyncio.get_event_loop().time()
         response = []
-        if not self.endpoint.is_streamable:
-            raise ValueError(
-                f"Endpoint {self.endpoint.endpoint} is not streamable."
-            )
-
-        async for i in self.endpoint._stream(
-            self.payload, self.headers, **kwargs
-        ):
-            content = i.choices[0].delta.content
-            if content is not None:
-                print(content, end="", flush=True)
-            response.append(i)
-            yield i
-
-        self.execution.duration = asyncio.get_event_loop().time() - start
-        self.execution.response = response
-        self.execution.status = EventStatus.COMPLETED
+        e1 = None
+        try:
+            if self.should_invoke_endpoint and self.endpoint.is_streamable:
+                async for i in self.endpoint._stream(
+                    self.payload, self.headers, **kwargs
+                ):
+                    content = i.choices[0].delta.content
+                    if verbose:
+                        if content is not None:
+                            print(content, end="", flush=True)
+                    response.append(i)
+                    yield i
+            else:
+                async for i in self._stream(
+                    verbose=verbose,
+                    output_file=output_file,
+                    with_response_header=with_response_header,
+                ):
+                    response.append(i)
+                    yield i
+        except Exception as e:
+            e1 = e
+        finally:
+            self.execution.duration = asyncio.get_event_loop().time() - start
+            if not response and e1:
+                self.execution.error = str(e1)
+                self.execution.status = EventStatus.FAILED
+                logging.error(
+                    f"API call to {self.endpoint.full_url} failed: {e1}"
+                )
+            else:
+                self.execution.response = response
+                self.execution.status = EventStatus.COMPLETED
 
     async def invoke(self) -> None:
         """Invokes the API call, updating the execution state with results.
@@ -483,9 +589,10 @@ class APICalling(Event):
         """
         start = asyncio.get_event_loop().time()
         kwargs = {"headers": self.headers, "json": self.payload}
+        response = None
+        e1 = None
 
         try:
-            response = None
             if self.should_invoke_endpoint and self.endpoint.is_invokeable:
                 response = await self.endpoint.invoke(
                     payload=self.payload,
@@ -498,14 +605,20 @@ class APICalling(Event):
                 else:
                     response = await self._inner(**kwargs)
 
-            self.execution.duration = asyncio.get_event_loop().time() - start
-            self.execution.response = response
-            self.execution.status = EventStatus.COMPLETED
         except Exception as e:
+            e1 = e
+
+        finally:
             self.execution.duration = asyncio.get_event_loop().time() - start
-            self.execution.error = str(e)
-            self.execution.status = EventStatus.FAILED
-            logging.error(f"API call to {self.endpoint.full_url} failed: {e}")
+            if not response and e1:
+                self.execution.error = str(e1)
+                self.execution.status = EventStatus.FAILED
+                logging.error(
+                    f"API call to {self.endpoint.full_url} failed: {e1}"
+                )
+            else:
+                self.execution.response = response
+                self.execution.status = EventStatus.COMPLETED
 
     def __str__(self) -> str:
         return (
