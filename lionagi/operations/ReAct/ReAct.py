@@ -28,8 +28,8 @@ async def ReAct(
     tools: Any = None,
     tool_schemas: Any = None,
     response_format: type[BaseModel] | BaseModel = None,
-    extension_allowed: bool = False,
-    max_extensions: int | None = None,
+    extension_allowed: bool = True,
+    max_extensions: int | None = 3,
     response_kwargs: dict | None = None,
     return_analysis: bool = False,
     analysis_model: iModel | None = None,
@@ -54,6 +54,8 @@ async def ReAct(
             sample_writing=interpret_sample,
             **(interpret_kwargs or {}),
         )
+        if verbose_analysis:
+            print(f"Interpreted instruction: {instruction_str}")
 
     # Convert Instruct to dict if necessary
     instruct_dict = (
@@ -92,9 +94,11 @@ async def ReAct(
         )
 
     # Validate and clamp max_extensions if needed
-    if max_extensions and max_extensions > 5:
-        logging.warning("max_extensions should not exceed 5; defaulting to 5.")
-        max_extensions = 5
+    if max_extensions and max_extensions > 100:
+        logging.warning(
+            "max_extensions should not exceed 100; defaulting to 100."
+        )
+        max_extensions = 100
 
     # Step 2: Possibly loop through expansions if extension_needed
     extensions = max_extensions
