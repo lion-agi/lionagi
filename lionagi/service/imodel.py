@@ -2,10 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import asyncio
 import os
 import warnings
 
 from pydantic import BaseModel
+
+from lionagi.protocols.generic.event import EventStatus
 
 from .endpoints.base import APICalling, EndPoint
 from .endpoints.match_endpoint import match_endpoint
@@ -232,10 +235,17 @@ class iModel:
 
             await self.executor.append(api_call)
             await self.executor.forward()
-            if api_call.id in self.executor.completed_events:
-                return self.executor.pile.pop(api_call.id)
+            ctr = 0
+            while api_call.status not in (EventStatus.COMPLETED, EventStatus.FAILED):
+                if ctr > 100:
+                    break
+                await self.executor.forward()
+                ctr += 1
+                await asyncio.sleep(0.1)
         except Exception as e:
             raise ValueError(f"Failed to invoke API call: {e}")
+        finally:
+            return self.executor.pile.pop(api_call.id)
 
     @property
     def allowed_roles(self) -> set[str]:
