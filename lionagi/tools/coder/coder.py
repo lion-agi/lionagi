@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 import os
 import subprocess
@@ -10,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from lionagi.operatives.action.tool import Tool
 
-from .base import LionTool
+from ..base import LionTool
 
 
 def run_command(

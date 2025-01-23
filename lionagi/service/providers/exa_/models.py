@@ -103,9 +103,9 @@ class Contents(BaseModel):
 
 
 class ExaSearchRequest(BaseModel):
-    query: str = Field(
-        ...,
-        description="The main query string describing what you're looking for.",
+    query: str | None = Field(
+        default_factory=str,
+        description="**required** The natural language query query string describing what you're looking for.",
     )
     category: None | CategoryEnum = Field(
         default=None,

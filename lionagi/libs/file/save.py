@@ -9,6 +9,8 @@ from typing import Any
 
 from lionagi.utils import create_path
 
+from .chunk import Chunk
+
 
 def save_to_file(
     text: str,
@@ -70,7 +72,7 @@ def save_to_file(
 
 
 def save_chunks(
-    chunks: list[dict[str, Any]],
+    chunks: list[Chunk],
     output_dir: str | Path,
     verbose: bool,
     timestamp: bool,
@@ -87,7 +89,7 @@ def save_chunks(
             random_hash_digits=random_hash_digits,
         )
         save_to_file(
-            json.dumps(chunk, ensure_ascii=False, indent=2),
+            json.dumps(chunk.model_dump(), ensure_ascii=False, indent=2),
             directory=file_path.parent,
             filename=file_path.name,
             verbose=verbose,

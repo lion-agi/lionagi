@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from lionagi.tools.providers.gh_ import (
+from lionagi.tools.providers.gh_.gh_tool import (
     GithubAction,
     GithubRequest,
     GithubTool,

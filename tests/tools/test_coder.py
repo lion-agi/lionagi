@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from lionagi.tools.coder import (
+from lionagi.tools.coder.coder import (
     CoderAction,
     CoderRequest,
     CoderTool,

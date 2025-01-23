@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 from lionagi.operatives.action.tool import Tool
 from lionagi.utils import to_num
 
-from .base import LionTool
+from ..base import LionTool
 
 
 class WriterAction(str, Enum):

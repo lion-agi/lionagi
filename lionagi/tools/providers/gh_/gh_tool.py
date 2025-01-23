@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from lionagi.operatives.action.tool import Tool
 
-from ..base import LionTool
+from ...base import LionTool
 
 
 def run_git_command(

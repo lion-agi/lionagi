@@ -2,7 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from lionagi.tools.reader import ReaderAction, ReaderRequest, ReaderTool
+from lionagi.tools.reader.reader_tool import (
+    ReaderAction,
+    ReaderRequest,
+    ReaderTool,
+)
 
 
 @pytest.fixture

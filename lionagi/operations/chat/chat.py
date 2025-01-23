@@ -9,8 +9,10 @@ from pydantic import BaseModel
 from lionagi.protocols.types import (
     ActionResponse,
     AssistantResponse,
+    IDType,
     Instruction,
     Log,
+    Progression,
     RoledMessage,
 )
 from lionagi.service.imodel import iModel
@@ -18,6 +20,26 @@ from lionagi.utils import copy
 
 if TYPE_CHECKING:
     from lionagi.session.branch import Branch
+
+
+class OperationRequest(BaseModel): ...
+
+
+class ChatRequest(OperationRequest):
+
+    instruction: str | None = None
+    guidance: str | None = None
+    context: str | list[str] | None
+    request_fields: dict | None = None
+    response_format: type[BaseModel] = None
+    progression: Progression | None | list[IDType] = None
+    imodel: iModel | None = None
+    tool_schemas: list[dict] | dict | None = None
+    images: list = None
+    image_detail: Literal["low", "high", "auto"] = None
+    plain_content: str = None
+
+    ...
 
 
 async def chat(

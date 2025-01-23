@@ -2,229 +2,21 @@ import tempfile
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from lionagi.libs.file.chunk import Chunk, chunk_content
 from lionagi.operatives.action.tool import Tool
 from lionagi.utils import to_num
 
-from .base import LionTool
-
-
-class ReaderAction(str, Enum):
-    """
-    This enumeration indicates the *type* of action the LLM wants to perform.
-    - 'open': Convert a file/URL to text and store it internally for partial reads
-    - 'read': Return a partial slice of the already-opened doc
-    - 'search': Search for a substring in the text; return positions or relevant snippets
-    - 'list_docs': List doc_ids currently opened in memory
-    - 'close': Remove a previously opened doc from memory
-    - 'chunk_doc': Split the doc's text into in-memory chunks
-    - 'list_chunks': List chunk metadata for a doc
-    - 'read_chunk': Return a single chunk from a doc by index
-    - 'read_chunks': Return multiple chunks from a doc by a list of indexes
-    """
-
-    open = "open"
-    read = "read"
-    search = "search"
-    list_docs = "list_docs"
-    close = "close"
-
-    # NEW chunk-based actions
-    chunk_doc = "chunk_doc"
-    list_chunks = "list_chunks"
-    read_chunk = "read_chunk"
-    read_chunks = "read_chunks"
-
-
-class ReaderRequest(BaseModel):
-    """
-    The request model for the 'ReaderTool'.
-
-    It indicates:
-      - action: one of ('open', 'read', 'search', 'list_docs', 'close',
-        'chunk_doc', 'list_chunks', 'read_chunk', 'read_chunks').
-      - path_or_url: required if action='open'
-      - doc_id: required for any doc-based action ('read','search','close','chunk_doc','list_chunks','read_chunk','read_chunks')
-      - start_offset, end_offset: partial read offsets if action='read'
-      - search_query: substring to find if action='search'
-      - chunk_size, overlap, threshold: chunking parameters if action='chunk_doc'
-      - chunk_index, chunk_indexes: which chunk(s) to read if action='read_chunk'/'read_chunks'
-    """
-
-    action: ReaderAction = Field(
-        ...,
-        description=(
-            "Action to perform. Must be one of: "
-            "- 'open': Convert a file/URL to text and store for partial reads. "
-            "- 'read': Return a partial slice of a doc. "
-            "- 'search': Look for a substring in a doc's text. "
-            "- 'list_docs': List open doc_ids. "
-            "- 'close': Remove a doc. "
-            "- 'chunk_doc': Split doc's text into chunks in memory. "
-            "- 'list_chunks': List chunk metadata for a doc. "
-            "- 'read_chunk': Return one chunk by index. "
-            "- 'read_chunks': Return multiple chunks by indexes."
-        ),
-    )
-
-    path_or_url: str | None = Field(
-        None,
-        description=(
-            "Local file path or remote URL to open. REQUIRED if action='open'. "
-            "If action!='open', leave it None."
-        ),
-    )
-
-    doc_id: str | None = Field(
-        None,
-        description=(
-            "Unique ID referencing a previously opened document. "
-            "Required for actions: 'read','search','close','chunk_doc','list_chunks','read_chunk','read_chunks'. "
-            "If action='open', leave it None."
-        ),
-    )
-
-    start_offset: int | None = Field(
-        None,
-        description=(
-            "Character start offset in the doc for partial reading. "
-            "If omitted or None, defaults to 0. Only used if action='read'."
-        ),
-    )
-
-    end_offset: int | None = Field(
-        None,
-        description=(
-            "Character end offset in the doc for partial reading. "
-            "If omitted or None, read until doc's end. Only used if action='read'."
-        ),
-    )
-
-    search_query: str | None = Field(
-        None,
-        description=(
-            "Substring to search for in the doc. Used only if action='search'."
-        ),
-    )
-
-    chunk_size: int = Field(
-        1500,
-        description=(
-            "Chunk size for action='chunk_doc'. If not chunking, ignore."
-        ),
-    )
-
-    overlap: float = Field(
-        0.1,
-        description=(
-            "Fractional overlap between consecutive chunks for action='chunk_doc'."
-        ),
-    )
-
-    threshold: int = Field(
-        200,
-        description=(
-            "Minimum size of the final chunk, used if action='chunk_doc'."
-        ),
-    )
-
-    chunk_index: int | None = Field(
-        None,
-        description=("Chunk index to read if action='read_chunk'."),
-    )
-
-    chunk_indexes: list[int] | None = Field(
-        None,
-        description=("List of chunk indexes to read if action='read_chunks'."),
-    )
-
-    @field_validator("start_offset", "end_offset", mode="before")
-    def _validate_offsets(cls, v):
-        try:
-            return to_num(v, num_type=int)
-        except ValueError:
-            return None
-
-
-class DocumentInfo(BaseModel):
-    """
-    Returned info when we 'open' a doc.
-    doc_id: The unique string to reference this doc in subsequent calls
-    length: The total character length of the doc text
-    """
-
-    doc_id: str
-    length: int | None = None
-
-
-class PartialChunk(BaseModel):
-    """
-    Represents a partial slice of text read from [start_offset..end_offset).
-    """
-
-    start_offset: int | None = None
-    end_offset: int | None = None
-    content: str | None = None
-
-
-class SearchResult(BaseModel):
-    """
-    A model for search results, e.g. positions of a substring in the doc text.
-    """
-
-    positions: list[int] = Field(default_factory=list)
-
-
-class ChunkMetadata(BaseModel):
-    """
-    Describes one chunk of the doc text in memory.
-
-    index: the chunk index
-    start: character start offset in doc
-    end: character end offset in doc
-    text: the chunk content
-    """
-
-    index: int
-    start: int
-    end: int
-    text: str
-
-
-class ReaderResponse(BaseModel):
-    """
-    The response from the 'ReaderTool'.
-
-    - If action='open', doc_info is set on success.
-    - If action='read', chunk is set on success.
-    - If action='search', search_result is set on success.
-    - If action='list_docs', doc_list is set on success.
-    - If action='chunk_doc', chunk_list is set on success.
-    - If action='read_chunk' or 'read_chunks', chunks_read is set on success.
-    - If failure, success=False and error contains details.
-    """
-
-    success: bool = Field(
-        ...,
-        description="Indicates if the requested action was performed successfully.",
-    )
-    error: str | None = Field(
-        None,
-        description="Describes any error that occurred, if success=False.",
-    )
-
-    doc_info: DocumentInfo | None = None
-    chunk: PartialChunk | None = None
-    search_result: SearchResult | None = None
-    doc_list: list[str] | None = None
-
-    chunk_list: list[ChunkMetadata] | None = Field(
-        None, description="Populated if action='chunk_doc' or 'list_chunks'."
-    )
-    chunks_read: list[ChunkMetadata] | None = Field(
-        None, description="Populated if action='read_chunk' or 'read_chunks'."
-    )
+from ..base import LionTool
+from .models import (
+    ChunkMetadata,
+    DocumentInfo,
+    ReaderAction,
+    ReaderRequest,
+    ReaderResponse,
+    SearchResult,
+)
 
 
 class ReaderTool(LionTool):
@@ -354,6 +146,11 @@ class ReaderTool(LionTool):
         try:
             result = self.converter.convert(source)
             text = result.document.export_to_markdown()
+            if not text.strip():
+                return ReaderResponse(
+                    success=False,
+                    error="Parsed document text is empty. Check if docling can parse this PDF.",
+                )
         except Exception as e:
             return ReaderResponse(
                 success=False, error=f"Conversion error: {str(e)}"
@@ -472,26 +269,41 @@ class ReaderTool(LionTool):
 
         from lionagi.libs.file.chunk import chunk_content
 
-        chunk_texts = chunk_content(text, chunk_size, overlap, threshold)
+        chunk_texts = chunk_content(
+            text, chunk_size=chunk_size, overlap=overlap, threshold=threshold
+        )
 
-        # We'll build a list of ChunkMetadata
+        # Optional: debug print for your logs
+        # print(f"[DEBUG] chunk_content returned {len(chunk_texts)} chunk(s).")
+
+        if not chunk_texts:
+            return ReaderResponse(
+                success=False,
+                error=(
+                    "chunk_content returned an empty list of chunks. Possibly "
+                    "the text is empty or chunking logic needs adjustment."
+                ),
+            )
+
         chunk_meta_list: list[ChunkMetadata] = []
+
+        # The effective step between chunk starts
+        step = int(chunk_size - (overlap * chunk_size))
         current_start = 0
+
         for i, ctext in enumerate(chunk_texts):
-            chunk_len = len(ctext)
+            c_len = len(ctext)
             chunk_meta_list.append(
                 ChunkMetadata(
                     index=i,
                     start=current_start,
-                    end=current_start + chunk_len,
+                    end=current_start + c_len,
                     text=ctext,
                 )
             )
-            current_start += chunk_len
+            current_start += step
 
-        # Store them
         doc_data["chunks"] = chunk_meta_list
-
         return ReaderResponse(success=True, chunk_list=chunk_meta_list)
 
     def _list_chunks(self, doc_id: str) -> ReaderResponse:
@@ -540,8 +352,10 @@ class ReaderTool(LionTool):
 
             def reader_tool(**kwargs):
                 """
-                The main entrypoint for using the ReaderTool.
-                Accepts a ReaderRequest (JSON).
+                The single entrypoint for using the ReaderTool. Accepts a
+                ReaderRequest (JSON). When needing specific features don't
+                make up things like `read_chunks`, specify the operation by
+                configuring the different fields in the ReaderRequest model.
                 """
                 return self.handle_request(
                     ReaderRequest(**kwargs)

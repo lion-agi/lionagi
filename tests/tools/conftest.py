@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from lionagi.tools.reader import ReaderResponse, SearchResult
+from lionagi.tools.reader.reader_tool import ReaderResponse, SearchResult
 
 
 # Common fixtures

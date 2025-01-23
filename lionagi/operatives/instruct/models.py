@@ -1,10 +1,6 @@
-# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
-#
-# SPDX-License-Identifier: Apache-2.0
-
 from typing import Any, ClassVar, Literal
 
-from pydantic import Field, JsonValue, field_validator
+from pydantic import BaseModel, Field, JsonValue, field_validator
 
 from lionagi.libs.validate.common_field_validators import (
     validate_boolean_field,
@@ -13,13 +9,6 @@ from lionagi.libs.validate.common_field_validators import (
 from lionagi.utils import HashableModel, to_num
 
 from ..models.field_model import FieldModel
-
-__all__ = (
-    "Instruct",
-    "InstructResponse",
-    "INSTRUCT_FIELD",
-    "LIST_INSTRUCT_FIELD",
-)
 
 
 class ChatInstruct(HashableModel):
@@ -77,7 +66,7 @@ class ChatInstruct(HashableModel):
         return validate_nullable_jsonvalue_field(cls, v)
 
 
-class ReActInstruct(HashableModel):
+class ReActInstruct(BaseModel):
 
     reason: bool | None = Field(
         None,
@@ -104,7 +93,7 @@ class ReActInstruct(HashableModel):
             "is 'concurrent'. Only provide for if actions are enabled.",
         )
     )
-    batch_size: int | None = Field(
+    action_batch_size: int | None = Field(
         None,
         description="Batch size for executing actions. Only provide for 'batch' strategy.",
     )
@@ -129,3 +118,48 @@ class ReActInstruct(HashableModel):
             return to_num(v, num_type=int)
         except Exception:
             return None
+
+
+class Instruct(ChatInstruct):
+
+    react_kwargs: ClassVar[list[str]] = [
+        "field_models",
+        "operative",
+        "reason",
+        "actions",
+        "action_strategy",
+        "batch_size",
+        "request_params",
+        "response_params",
+    ]
+
+    react_options: ReActInstruct | None = Field(
+        None,
+        description="ReAct(reason + action)-specific instruction options.",
+    )
+
+    def to_dict(self):
+        dict_ = self.model_dump()
+        if self.react_options:
+            dict_.update(self.react_options.model_dump())
+        dict_.pop("react_options", None)
+        return {k: v for k, v in dict_.items() if v is not None}
+
+
+INSTRUCT_FIELD = FieldModel(
+    name="instruct_model",
+    annotation=Instruct | None,
+    default=None,
+)
+
+
+class InstructResponse(HashableModel):
+    instruct: Instruct
+    response: Any | None = None
+
+
+LIST_INSTRUCT_FIELD_MODEL = FieldModel(
+    name="instruct_models",
+    annotation=list[Instruct] | None,
+    default=None,
+)
