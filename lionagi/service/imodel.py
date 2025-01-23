@@ -5,10 +5,12 @@
 import asyncio
 import os
 import warnings
+from collections.abc import AsyncGenerator, Callable
 
 from pydantic import BaseModel
 
 from lionagi.protocols.generic.event import EventStatus
+from lionagi.utils import is_coro_func
 
 from .endpoints.base import APICalling, EndPoint
 from .endpoints.match_endpoint import match_endpoint
@@ -57,7 +59,9 @@ class iModel:
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
-        invoke_with_endpoint: bool = True,
+        invoke_with_endpoint: bool = False,
+        concurrency_limit: int | None = None,
+        streaming_process_func: Callable = None,
         **kwargs,
     ) -> None:
         """Initializes the iModel instance.
@@ -91,6 +95,9 @@ class iModel:
             invoke_with_endpoint (bool, optional):
                 If True, the endpoint is actually invoked. If False,
                 calls might be mocked or cached.
+            concurrency_limit (int | None, optional):
+                Maximum number of streaming concurrent requests allowed.
+                only applies to streaming requests.
             **kwargs:
                 Additional keyword arguments, such as `model`, or any other
                 provider-specific fields.
@@ -147,7 +154,14 @@ class iModel:
             interval=interval,
             limit_requests=limit_requests,
             limit_tokens=limit_tokens,
+            concurrency_limit=concurrency_limit,
         )
+        if not streaming_process_func and hasattr(
+            self.endpoint, "process_chunk"
+        ):
+            self.streaming_process_func = self.endpoint.process_chunk
+        else:
+            self.streaming_process_func = streaming_process_func
 
     def create_api_calling(self, **kwargs) -> APICalling:
         """Constructs an `APICalling` object from endpoint-specific payload.
@@ -182,9 +196,12 @@ class iModel:
             chunk:
                 A portion of the streamed data returned by the API.
         """
-        pass
+        if self.streaming_process_func and not isinstance(chunk, APICalling):
+            if is_coro_func(self.streaming_process_func):
+                return await self.streaming_process_func(chunk)
+            return self.streaming_process_func(chunk)
 
-    async def stream(self, **kwargs) -> APICalling | None:
+    async def stream(self, api_call=None, **kwargs) -> AsyncGenerator:
         """Performs a streaming API call with the given arguments.
 
         Args:
@@ -196,14 +213,38 @@ class iModel:
                 An APICalling instance upon success, or None if something
                 goes wrong.
         """
-        try:
+        if api_call is None:
             kwargs["stream"] = True
             api_call = self.create_api_calling(**kwargs)
-            async for i in api_call.stream():
-                await self.process_chunk(i)
-            return api_call
-        except Exception as e:
-            raise ValueError(f"Failed to stream API call: {e}")
+            await self.executor.append(api_call)
+
+        if (
+            self.executor.processor is None
+            or self.executor.processor.is_stopped()
+        ):
+            await self.executor.start()
+
+        if self.executor.processor._concurrency_sem:
+            async with self.executor.processor._concurrency_sem:
+                try:
+                    async for i in api_call.stream():
+                        result = await self.process_chunk(i)
+                        if result:
+                            yield result
+                except Exception as e:
+                    raise ValueError(f"Failed to stream API call: {e}")
+                finally:
+                    yield self.executor.pile.pop(api_call.id)
+        else:
+            try:
+                async for i in api_call.stream():
+                    result = await self.process_chunk(i)
+                    if result:
+                        yield result
+            except Exception as e:
+                raise ValueError(f"Failed to stream API call: {e}")
+            finally:
+                yield self.executor.pile.pop(api_call.id)
 
     async def invoke(
         self, api_call: APICalling = None, **kwargs
@@ -236,7 +277,10 @@ class iModel:
             await self.executor.append(api_call)
             await self.executor.forward()
             ctr = 0
-            while api_call.status not in (EventStatus.COMPLETED, EventStatus.FAILED):
+            while api_call.status not in (
+                EventStatus.COMPLETED,
+                EventStatus.FAILED,
+            ):
                 if ctr > 100:
                     break
                 await self.executor.forward()
