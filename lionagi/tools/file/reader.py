@@ -1,134 +1,9 @@
 import tempfile
-from enum import Enum
-
-from pydantic import BaseModel, Field, field_validator
 
 from lionagi.operatives.action.tool import Tool
-from lionagi.utils import to_num
 
 from ..base import LionTool
-
-
-class ReaderAction(str, Enum):
-    """
-    This enumeration indicates the *type* of action the LLM wants to perform.
-    - 'open': Convert a file/URL to text and store it internally for partial reads
-    - 'read': Return a partial slice of the already-opened doc
-    """
-
-    open = "open"
-    read = "read"
-
-
-class ReaderRequest(BaseModel):
-    """
-    The request model for the 'ReaderTool'.
-    It indicates:
-      - whether we are 'open'-ing a doc or 'read'-ing from a doc
-      - which file/URL we want to open (if action='open')
-      - which doc_id and offsets we want to read (if action='read')
-    """
-
-    action: ReaderAction = Field(
-        ...,
-        description=(
-            "Action to perform. Must be one of: "
-            "- 'open': Convert a file/URL to text and store it internally for partial reads. "
-            "- 'read': Return a partial slice of the already-opened doc."
-        ),
-    )
-
-    path_or_url: str | None = Field(
-        None,
-        description=(
-            "Local file path or remote URL to open. This field is REQUIRED if action='open'. "
-            "If action='read', leave it None."
-        ),
-    )
-
-    doc_id: str | None = Field(
-        None,
-        description=(
-            "Unique ID referencing a previously opened document. "
-            "This field is REQUIRED if action='read'. If action='open', leave it None."
-        ),
-    )
-
-    start_offset: int | None = Field(
-        None,
-        description=(
-            "Character start offset in the doc for partial reading. "
-            "If omitted or None, defaults to 0. Only used if action='read'."
-        ),
-    )
-
-    end_offset: int | None = Field(
-        None,
-        description=(
-            "Character end offset in the doc for partial reading. "
-            "If omitted or None, we read until the document's end. Only used if action='read'."
-        ),
-    )
-
-    @field_validator("start_offset", "end_offset", mode="before")
-    def _validate_offsets(cls, v):
-        try:
-            return to_num(v, num_type=int)
-        except ValueError:
-            return None
-
-
-class DocumentInfo(BaseModel):
-    """
-    Returned info when we 'open' a doc.
-    doc_id: The unique string to reference this doc in subsequent 'read' calls
-    length: The total character length of the converted text
-    """
-
-    doc_id: str
-    length: int | None = None
-
-
-class PartialChunk(BaseModel):
-    """
-    Represents a partial slice of text from [start_offset..end_offset).
-    """
-
-    start_offset: int | None = None
-    end_offset: int | None = None
-    content: str | None = None
-
-
-class ReaderResponse(BaseModel):
-    """
-    The response from the 'ReaderTool'.
-    - If action='open' succeeded, doc_info is filled (doc_id & length).
-    - If action='read' succeeded, chunk is filled (the partial text).
-    - If failure occurs, success=False & error hold details.
-    """
-
-    success: bool = Field(
-        ...,
-        description=(
-            "Indicates if the requested action was performed successfully."
-        ),
-    )
-    error: str | None = Field(
-        None,
-        description=("Describes any error that occurred, if success=False."),
-    )
-    doc_info: DocumentInfo | None = Field(
-        None,
-        description=(
-            "Populated only if action='open' succeeded, letting the LLM know doc_id & total length."
-        ),
-    )
-    chunk: PartialChunk | None = Field(
-        None,
-        description=(
-            "Populated only if action='read' succeeded, providing the partial slice of text."
-        ),
-    )
+from .models import *
 
 
 class ReaderTool(LionTool):
@@ -141,28 +16,28 @@ class ReaderTool(LionTool):
     is_lion_system_tool = True
     system_tool_name = "reader_tool"
 
-    from lionagi.libs.package.imports import check_import
-
-    DocumentConverter = check_import(
-        "docling",
-        module_name="document_converter",
-        import_name="DocumentConverter",
-    )
-
     def __init__(self):
+        from lionagi.libs.package.imports import check_import
+
+        DocumentConverter = check_import(
+            "docling",
+            module_name="document_converter",
+            import_name="DocumentConverter",
+        )
+
         super().__init__()
-        self.converter = ReaderTool.DocumentConverter()
+        self.converter = DocumentConverter()
         self.documents = {}  # doc_id -> (temp_file_path, doc_length)
         self._tool = None
 
-    def handle_request(self, request: ReaderRequest) -> ReaderResponse:
+    def handle_request(self, request: ReaderOption) -> ReaderResponse:
         """
         A function that takes ReaderRequest to either:
         - open a doc (File/URL) -> returns doc_id, doc length
         - read partial text from doc -> returns chunk
         """
         if isinstance(request, dict):
-            request = ReaderRequest(**request)
+            request = ReaderOption(**request)
         if request.action == "open":
             return self._open_doc(request.path_or_url)
         elif request.action == "read":
@@ -193,11 +68,16 @@ class ReaderTool(LionTool):
         self.documents[doc_id] = (temp_file.name, doc_len)
 
         return ReaderResponse(
-            success=True, doc_info=DocumentInfo(doc_id=doc_id, length=doc_len)
+            success=True,
+            doc_info=DocumentInfo(
+                doc_id=doc_id, length=doc_len, source=source
+            ),
         )
 
     def _read_doc(self, doc_id: str, start: int, end: int) -> ReaderResponse:
-        if doc_id not in self.documents:
+        if doc_id not in self.documents or doc_id not in [
+            i.source for i in self.documents.values()
+        ]:
             return ReaderResponse(
                 success=False, error="doc_id not found in memory"
             )
@@ -227,18 +107,17 @@ class ReaderTool(LionTool):
             def reader_tool(**kwargs):
                 """
                 A function that takes ReaderRequest to either:
-                - open a doc (File/URL) -> returns doc_id, doc length
+                - open a local File as md -> returns doc_id, doc length, source
+                - scrape a webiste as md -> returns doc_id, doc length, source
                 - read partial text from doc -> returns chunk
                 """
-                return self.handle_request(
-                    ReaderRequest(**kwargs)
-                ).model_dump()
+                return self.handle_request(ReaderOption(**kwargs)).model_dump()
 
             if self.system_tool_name != "reader_tool":
                 reader_tool.__name__ = self.system_tool_name
 
             self._tool = Tool(
                 func_callable=reader_tool,
-                request_options=ReaderRequest,
+                request_options=ReaderOption,
             )
         return self._tool
