@@ -1631,6 +1631,7 @@ class Branch(Element, Communicatable, Relational):
         return_analysis: bool = False,
         analysis_model: iModel | None = None,
         verbose: bool = False,
+        verbose_length: int = None,
         **kwargs,
     ):
         """
@@ -1719,6 +1720,7 @@ class Branch(Element, Communicatable, Relational):
             analysis_model=analysis_model,
             verbose_action=verbose,
             verbose_analysis=verbose,
+            verbose_length=verbose_length,
             **kwargs,
         )
 
