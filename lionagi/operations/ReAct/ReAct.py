@@ -11,7 +11,7 @@ from lionagi.operatives.types import Instruct
 from lionagi.service.imodel import iModel
 from lionagi.utils import copy
 
-from .utils import ReActAnalysis
+from .utils import Analysis, ReActAnalysis
 
 if TYPE_CHECKING:
     from lionagi.session.branch import Branch
@@ -24,6 +24,7 @@ async def ReAct(
     interpret_domain: str | None = None,
     interpret_style: str | None = None,
     interpret_sample: str | None = None,
+    interpret_model: str | None = None,
     interpret_kwargs: dict | None = None,
     tools: Any = None,
     tool_schemas: Any = None,
@@ -52,6 +53,7 @@ async def ReAct(
             domain=interpret_domain,
             style=interpret_style,
             sample_writing=interpret_sample,
+            interpret_model=interpret_model,
             **(interpret_kwargs or {}),
         )
         if verbose_analysis:
@@ -148,11 +150,16 @@ async def ReAct(
     answer_prompt = ReActAnalysis.ANSWER_PROMPT.format(
         instruction=instruct_dict["instruction"]
     )
-    out = await branch.communicate(
+    if not response_format:
+        response_format = Analysis
+
+    out = await branch.operate(
         instruction=answer_prompt,
         response_format=response_format,
         **(response_kwargs or {}),
     )
+    if isinstance(out, Analysis):
+        out = out.analysis
     if return_analysis:
         return out, analyses
     return out
