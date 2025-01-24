@@ -78,4 +78,4 @@ async def test_react_basic_flow():
             )
 
     # 3) Confirm we got the final answer
-    assert res == "final_answer_mock"
+    assert res.analysis == "final_answer_mock"
