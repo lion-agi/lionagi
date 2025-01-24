@@ -21,14 +21,10 @@ from .instruct.base import (
     REASON_FIELD,
 )
 from .instruct.instruct import (
-    CHAT_FIELD,
     INSTRUCT_FIELD,
     LIST_INSTRUCT_FIELD_MODEL,
-    OPERATE_FIELD,
-    ChatOptions,
     Instruct,
     InstructResponse,
-    OperateOptions,
 )
 from .instruct.node import InstructNode
 from .instruct.reason import CONFIDENCE_SCORE_FIELD, REASON_FIELD, Reason
@@ -73,8 +69,4 @@ __all__ = (
     "FunctionCalling",
     "FlowDefinition",
     "FlowStep",
-    "CHAT_FIELD",
-    "OPERATE_FIELD",
-    "ChatOptions",
-    "OperateOptions",
 )
