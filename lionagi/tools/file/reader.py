@@ -1,7 +1,7 @@
 import tempfile
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from lionagi.operatives.action.tool import Tool
 from lionagi.utils import to_num

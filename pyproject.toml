@@ -50,6 +50,7 @@ dev = [
 tools = [
     "docling>=2.15.1",
     "litellm>=1.59.5",
+    "matplotlib>=3.8.0",  # For RL training visualization
 ]
 
 [tool.black]

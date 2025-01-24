@@ -24,7 +24,7 @@ def chunk_by_chars(
         threshold (int, optional): The minimum size for the last chunk. Defaults to 256.
 
     Returns:
-        List[str]: A list of text chunks.
+        list[str]: A list of text chunks.
 
     Raises:
         ValueError: If an error occurs during the chunking process.
@@ -233,12 +233,12 @@ def chunk_content(
         chunk_size (int): The target size for each chunk.
         overlap (float): The fraction of overlap between chunks.
         threshold (int): The minimum size for the last chunk.
-        metadata (Dict[str, Any]): Metadata to be included with each chunk.
+        metadata (dict[str, Any]): Metadata to be included with each chunk.
         kwargs for tokenizer, if needed.
 
 
     Returns:
-        List[Dict[str, Any]]: A list of dictionaries, each representing a chunk with metadata.
+        list[dict[str, Any]]: A list of dictionaries, each representing a chunk with metadata.
     """
 
     if chunk_by == "tokens":

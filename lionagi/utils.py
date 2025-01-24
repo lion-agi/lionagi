@@ -1788,11 +1788,11 @@ def get_bins(input_: list[str], upper: int) -> list[list[int]]:
     """Organizes indices of strings into bins based on a cumulative upper limit.
 
     Args:
-        input_ (List[str]): The list of strings to be binned.
+        input_ (list[str]): The list of strings to be binned.
         upper (int): The cumulative length upper limit for each bin.
 
     Returns:
-        List[List[int]]: A list of bins, each bin is a list of indices from the input list.
+        list[list[int]]: A list of bins, each bin is a list of indices from the input list.
     """
     current = 0
     bins = []
