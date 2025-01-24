@@ -77,6 +77,8 @@ async def parse(
             )
             try:
                 response_model = request_type.model_validate(response_model)
+            except InterruptedError as e:
+                raise e
             except Exception:
                 if _should_try:
                     continue
