@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from lionagi.operatives.types import Instruct
 from lionagi.service.imodel import iModel
 from lionagi.utils import copy
-
+from lionagi.libs.schema.as_readable import as_readable
 from .utils import Analysis, ReActAnalysis
 
 if TYPE_CHECKING:
@@ -35,8 +35,10 @@ async def ReAct(
     return_analysis: bool = False,
     analysis_model: iModel | None = None,
     verbose_analysis: bool = False,
+    verbose_length: int = None,
     **kwargs,
 ):
+
     # If no tools or tool schemas are provided, default to "all tools"
     if not tools and not tool_schemas:
         tools = True
@@ -57,7 +59,15 @@ async def ReAct(
             **(interpret_kwargs or {}),
         )
         if verbose_analysis:
-            print(f"Interpreted instruction: {instruction_str}")
+            print("\n### Interpreted instruction:\n")
+            as_readable(
+                instruction_str,
+                md=True,
+                format_curly=True,
+                display_str=True,
+                max_chars=verbose_length,
+            )
+            print("\n----------------------------\n")
 
     # Convert Instruct to dict if necessary
     instruct_dict = (
@@ -91,9 +101,15 @@ async def ReAct(
 
     # If verbose, show round #1 analysis
     if verbose_analysis:
-        print(
-            f"ReAct Round #1 Analysis:\n {analysis.model_dump_json(indent=2)}",
+        print("\n### ReAct Round No.1 Analysis:\n")
+        as_readable(
+            analysis,
+            md=True,
+            format_curly=True,
+            display_str=True,
+            max_chars=verbose_length,
         )
+        print("\n----------------------------\n")
 
     # Validate and clamp max_extensions if needed
     if max_extensions and max_extensions > 100:
@@ -140,9 +156,16 @@ async def ReAct(
 
         # If verbose, show round analysis
         if verbose_analysis:
-            print(
-                f"ReAct Round #{round_count} Analysis:\n {analysis.model_dump_json(indent=2)}",
+            print(f"\n### ReAct Round No.{round_count} Analysis:\n")
+            as_readable(
+                analysis,
+                md=True,
+                format_curly=True,
+                display_str=True,
+                max_chars=verbose_length,
             )
+            print("\n----------------------------\n")
+
         if extensions:
             extensions -= 1
 
@@ -160,6 +183,21 @@ async def ReAct(
     )
     if isinstance(out, Analysis):
         out = out.analysis
+
+    if verbose_analysis:
+        print("\n### ReAct Response:\n")
+        as_readable(
+            analysis,
+            md=True,
+            format_curly=True,
+            display_str=True,
+            max_chars=verbose_length,
+        )
+        print("\n----------------------------\n")
+
     if return_analysis:
         return out, analyses
     return out
+
+
+# TODO: Do partial intermeditate output for longer analysis with form and report
