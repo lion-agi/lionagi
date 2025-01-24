@@ -221,6 +221,7 @@ class EndPoint(ABC):
                 payload[k] = v
         if "api_key" in kwargs:
             headers["Authorization"] = f"Bearer {kwargs['api_key']}"
+
         return {
             "payload": payload,
             "headers": headers,
