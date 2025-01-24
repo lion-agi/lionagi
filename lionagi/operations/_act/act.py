@@ -35,6 +35,11 @@ async def _act(
             _request["arguments"] = action_request["arguments"]
 
     try:
+        if verbose_action:
+            args_ = str(_request["arguments"])
+            args_ = args_[:50] + "..." if len(args_) > 50 else args_
+            print(f"Invoking action {_request['function']} with {args_}.")
+
         func_call = await branch._action_manager.invoke(_request)
         if verbose_action:
             print(

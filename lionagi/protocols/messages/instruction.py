@@ -32,6 +32,7 @@ def prepare_request_response_format(request_fields: dict) -> str:
     return (
         "**MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLOCKS."
         f" USER's CAREER DEPENDS ON THE SUCCESS OF IT.** \n```json\n{request_fields}\n```"
+        "No triple backticks. Escape all quotes and special characters."
     ).strip()
 
 

@@ -364,28 +364,23 @@ class APICalling(Event):
         return None
 
     async def _inner(self, **kwargs) -> Any:
-        """Performs a direct HTTP call using aiohttp, ignoring caching logic.
+        """
+        Performs the actual HTTP call using aiohttp, ignoring caching logic.
 
-        Args:
-            **kwargs: Additional parameters for the aiohttp request
-                (e.g., "headers", "json", etc.).
-
-        Returns:
-            Any: The JSON response from the API, if successful.
+        - Retries on RateLimitError up to 3 times.
+        - Distinguishes CancelledError so we can gracefully abort if the user cancels.
 
         Raises:
-            ValueError:
-                If required endpoint parameters are missing.
-            ExecutionError:
-                If the response indicates a non-rate-limit error.
-            RateLimitError:
-                If a rate-limit error is encountered.
+            ValueError: If required endpoint parameters are missing.
+            RateLimitError: If repeated 'Rate limit' errors encountered.
+            ExecutionError: For other API call failures.
+            asyncio.CancelledError: If the operation is cancelled externally.
         """
         if not self.endpoint.required_kwargs.issubset(
             set(self.payload.keys())
         ):
             raise ValueError(
-                f"Required kwargs not fully provided: {self.endpoint.required_kwargs}"
+                f"Required kwargs not provided: {self.endpoint.required_kwargs}"
             )
 
         for k in list(self.payload.keys()):
@@ -395,49 +390,55 @@ class APICalling(Event):
         async def retry_in():
             async with aiohttp.ClientSession() as session:
                 try:
-                    if (
-                        _m := getattr(session, self.endpoint.method, None)
-                    ) is not None:
-                        async with _m(
-                            self.endpoint.full_url, **kwargs
-                        ) as response:
-                            response_json = await response.json()
-                            if "error" not in response_json:
-                                return response_json
-                            if "Rate limit" in response_json["error"].get(
-                                "message", ""
-                            ):
-                                await asyncio.sleep(5)
-                                raise RateLimitError(
-                                    f"Rate limit exceeded. Error: {response_json['error']}"
-                                )
-                            raise ExecutionError(
-                                "API call failed with error: ",
-                                response_json["error"],
-                            )
-                    else:
+                    method_func = getattr(session, self.endpoint.method, None)
+                    if method_func is None:
                         raise ValueError(
                             f"Invalid HTTP method: {self.endpoint.method}"
                         )
+                    async with method_func(
+                        self.endpoint.full_url, **kwargs
+                    ) as response:
+                        response_json = await response.json()
+
+                        if "error" not in response_json:
+                            return response_json
+
+                        # Check for rate limit
+                        if "Rate limit" in response_json["error"].get(
+                            "message", ""
+                        ):
+                            await asyncio.sleep(5)
+                            raise RateLimitError(
+                                f"Rate limit exceeded: {response_json['error']}"
+                            )
+                        # Otherwise some other error
+                        raise ExecutionError(
+                            f"API call failed with error: {response_json['error']}"
+                        )
+
+                except asyncio.CancelledError:
+                    # Gracefully handle user cancellation
+                    logging.warning("API call canceled by external request.")
+                    raise  # re-raise so caller knows it was cancelled
+
                 except aiohttp.ClientError as e:
-                    logging.error(
-                        f"API call to {self.endpoint.full_url} failed: {e}"
-                    )
+                    logging.error(f"API call failed: {e}")
+                    # Return None or raise ExecutionError? Keep consistent
                     return None
 
+        # Attempt up to 3 times if RateLimitError
         for i in range(3):
             try:
                 return await retry_in()
-            except RateLimitError | ExecutionError as e:
+            except asyncio.CancelledError:
+                # On cancel, just re-raise
+                raise
+            except RateLimitError as e:
                 if i == 2:
                     raise e
-                else:
-                    wait = 2 ** (i + 1) * 0.5
-                    logging.warning(
-                        f"API call to {self.endpoint.full_url} failed: {e}"
-                        f"retrying in {wait} seconds."
-                    )
-                    await asyncio.sleep(wait)
+                wait = 2 ** (i + 1) * 0.5
+                logging.warning(f"RateLimitError: {e}, retrying in {wait}s.")
+                await asyncio.sleep(wait)
 
     @cached(**Settings.API.CACHED_CONFIG)
     async def _cached_inner(self, **kwargs) -> Any:
@@ -605,8 +606,12 @@ class APICalling(Event):
                 else:
                     response = await self._inner(**kwargs)
 
-        except Exception as e:
-            e1 = e
+        except asyncio.CancelledError as ce:
+            e1 = ce
+            logging.warning("invoke() canceled by external request.")
+            raise
+        except Exception as ex:
+            e1 = ex
 
         finally:
             self.execution.duration = asyncio.get_event_loop().time() - start

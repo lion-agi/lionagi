@@ -49,7 +49,7 @@ CHAT_COMPLETION_CONFIG = {
         "parallel_tool_calls",
         "user",
     },
-    "allowed_roles": ["user", "assistant", "system"],
+    "allowed_roles": ["user", "assistant", "system", "developer", "tool"],
 }
 
 
@@ -60,3 +60,38 @@ class OpenAIChatCompletionEndPoint(ChatCompletionEndPoint):
 
     def __init__(self, config: dict = CHAT_COMPLETION_CONFIG):
         super().__init__(config)
+
+    def create_payload(self, **kwargs) -> dict:
+        """Generates a request payload (and headers) for this endpoint.
+
+        Args:
+            **kwargs:
+                Arbitrary parameters passed by the caller.
+
+        Returns:
+            dict:
+                A dictionary containing:
+                - "payload": A dict with filtered parameters for the request.
+                - "headers": A dict of additional headers (e.g., `Authorization`).
+                - "is_cached": Whether the request is to be cached.
+        """
+        payload = {}
+        is_cached = kwargs.get("is_cached", False)
+        headers = kwargs.get("headers", {})
+        for k, v in kwargs.items():
+            if k in self.acceptable_kwargs:
+                payload[k] = v
+        if "api_key" in kwargs:
+            headers["Authorization"] = f"Bearer {kwargs['api_key']}"
+
+        if payload.get("model") in ["o1", "o1-2024-12-17"]:
+            payload.pop("temperature", None)
+            payload.pop("top_p", None)
+            if payload["messages"][0].get("role") == "system":
+                payload["messages"][0]["role"] = "developer"
+
+        return {
+            "payload": payload,
+            "headers": headers,
+            "is_cached": is_cached,
+        }

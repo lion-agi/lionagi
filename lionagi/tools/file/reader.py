@@ -1,7 +1,7 @@
 import tempfile
 from enum import Enum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from lionagi.operatives.action.tool import Tool
 from lionagi.utils import to_num
@@ -70,12 +70,17 @@ class ReaderRequest(BaseModel):
         ),
     )
 
-    @field_validator("start_offset", "end_offset", mode="before")
-    def _validate_offsets(cls, v):
-        try:
-            return to_num(v, num_type=int)
-        except ValueError:
-            return None
+    @model_validator(mode="before")
+    def _validate_request(cls, values):
+        for k, v in values.items():
+            if v == {}:
+                values[k] = None
+            if k in ["start_offset", "end_offset"]:
+                try:
+                    values[k] = to_num(v, num_type=int)
+                except ValueError:
+                    values[k] = None
+        return values
 
 
 class DocumentInfo(BaseModel):

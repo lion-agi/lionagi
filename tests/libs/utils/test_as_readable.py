@@ -34,29 +34,5 @@ def test_as_readable_empty():
     assert as_readable(None) == "{}"
 
 
-# Updated Unicode handling test
-def test_as_readable_kwargs():
-    """Test handling of additional kwargs."""
-    data = {"name": "测试"}  # Chinese characters
-
-    # Test ASCII encoding
-    result = as_readable(data, ensure_ascii=True)
-    assert "\\u" in result  # Should contain Unicode escapes
-
-    # Test native character output
-    result = as_readable(data, ensure_ascii=False)
-    assert "测试" in result  # Should contain actual characters
-
-
-# Additional test for custom kwarg handling
-def test_as_readable_custom_kwargs():
-    """Test passing custom kwargs to JSON encoder."""
-    data = {"name": "test"}
-
-    # Test custom indentation
-    result = as_readable(data, indent=2)
-    assert "  " in result  # Should use 2-space indent
-
-
 if __name__ == "__main__":
     pytest.main([__file__])

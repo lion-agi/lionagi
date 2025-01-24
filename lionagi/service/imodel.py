@@ -286,10 +286,9 @@ class iModel:
                 await self.executor.forward()
                 ctr += 1
                 await asyncio.sleep(0.1)
+            return self.executor.pile.pop(api_call.id)
         except Exception as e:
             raise ValueError(f"Failed to invoke API call: {e}")
-        finally:
-            return self.executor.pile.pop(api_call.id)
 
     @property
     def allowed_roles(self) -> set[str]:

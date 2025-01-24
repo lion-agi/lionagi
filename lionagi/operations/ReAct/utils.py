@@ -90,3 +90,8 @@ class ReActAnalysis(BaseModel):
             "provide if and only if action_strategy is 'batch', this specifies the number of actions to run in parallel per batch."
         ),
     )
+
+
+class Analysis(BaseModel):
+
+    answer: str
