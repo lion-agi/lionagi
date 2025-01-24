@@ -133,7 +133,7 @@ class Branch(Element, Communicatable, Relational):
         system_template: Template | str = None,
         system_template_context: dict = None,
         logs: Pile[Log] = None,
-        use_lion_system_message: bool = True,
+        use_lion_system_message: bool = False,
         **kwargs,
     ):
         """
