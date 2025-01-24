@@ -48,6 +48,8 @@ async def parse(
         and not isinstance(response_model, BaseModel)
     ):
         num_try += 1
+        if num_try == max_retries:
+            _should_try = False
         _, res = await branch.chat(
             instruction="reformat text into specified model",
             guidane="follow the required response format, using the model schema as a guide",
@@ -73,7 +75,13 @@ async def parse(
                 strict=strict,
                 suppress_conversion_errors=suppress_conversion_errors,
             )
-            response_model = request_type.model_validate(response_model)
+            try:
+                response_model = request_type.model_validate(response_model)
+            except Exception:
+                if _should_try:
+                    continue
+                else:
+                    break
 
     if not isinstance(response_model, BaseModel):
         match handle_validation:
