@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing_extensions import override
+
 from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
 
 CHAT_COMPLETION_CONFIG = {
@@ -49,7 +51,7 @@ CHAT_COMPLETION_CONFIG = {
         "parallel_tool_calls",
         "user",
     },
-    "allowed_roles": ["user", "assistant", "system"],
+    "allowed_roles": ["user", "assistant", "system", "developer", "tool"],
 }
 
 
@@ -60,3 +62,26 @@ class OpenAIChatCompletionEndPoint(ChatCompletionEndPoint):
 
     def __init__(self, config: dict = CHAT_COMPLETION_CONFIG):
         super().__init__(config)
+
+    @override
+    def create_payload(self, **kwargs) -> dict:
+        """Generates a request payload (and headers) for this endpoint.
+
+        Args:
+            **kwargs:
+                Arbitrary parameters passed by the caller.
+
+        Returns:
+            dict:
+                A dictionary containing:
+                - "payload": A dict with filtered parameters for the request.
+                - "headers": A dict of additional headers (e.g., `Authorization`).
+                - "is_cached": Whether the request is to be cached.
+        """
+        dict_ = super().create_payload(**kwargs)
+        if (
+            "o1" in dict_["payload"]["model"]
+            or "o3" in dict_["payload"]["model"]
+        ):
+            dict_["payload"]["messages"][0]["role"] = "developer"
+        return dict_
