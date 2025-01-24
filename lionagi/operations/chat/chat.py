@@ -127,7 +127,7 @@ async def chat(
         first_instruction = None
 
         if len(messages) == 0:
-            first_instruction = ins.model_copy()
+            first_instruction = ins.model_copy(deep=True)
             first_instruction.guidance = branch.msgs.system.rendered + (
                 first_instruction.guidance or ""
             )

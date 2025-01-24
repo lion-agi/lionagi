@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class CategoryEnum(str, Enum):
@@ -107,9 +107,9 @@ class ExaSearchRequest(BaseModel):
         ...,
         description="The main query string describing what you're looking for.",
     )
-    category: None | CategoryEnum = Field(
+    category: None | list[CategoryEnum] | CategoryEnum = Field(
         default=None,
-        description="A data category to focus on, such as 'company', 'research paper', 'news', etc.",
+        description="One or more data category to focus on, such as 'company', 'research paper', 'news', etc.",
     )
     type: None | SearchTypeEnum = Field(
         default=None,
@@ -158,3 +158,10 @@ class ExaSearchRequest(BaseModel):
         default=None,
         description="Dict defining the different ways you want to retrieve webpage contents, including text, highlights, or summaries.",
     )
+
+    @model_validator(mode="before")
+    def _coerce_to_none(cls, values):
+        for key, value in values.items():
+            if value in [{}, []]:
+                values[key] = None
+        return values

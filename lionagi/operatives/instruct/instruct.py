@@ -4,7 +4,7 @@
 
 from typing import Any, ClassVar, Literal
 
-from pydantic import Field, JsonValue, field_validator
+from pydantic import ConfigDict, Field, JsonValue, field_validator
 
 from lionagi.libs.validate.common_field_validators import (
     validate_boolean_field,
@@ -19,29 +19,34 @@ __all__ = (
     "InstructResponse",
     "INSTRUCT_FIELD",
     "LIST_INSTRUCT_FIELD",
+    "CHAT_FIELD",
+    "OPERATE_FIELD",
 )
 
 
 class Instruct(HashableModel):
-    """Model for defining instruction parameters and execution requirements.
 
-    Attributes:
-        instruction (JsonValue | None): The primary instruction.
-        guidance (JsonValue | None): Execution guidance.
-        context (JsonValue | None): Task context.
-    """
-
-    reserved_kwargs: ClassVar[list[str]] = [
-        "operative_model",
-        "field_models",
-        "operative",
+    reserved_kwargs: ClassVar[set[str]] = {
         "reason",
         "actions",
         "action_strategy",
-        "batch_size",
-        "request_params",
-        "response_params",
-    ]
+        "action_batch_size",
+        "extension_allowed",
+        "max_extensions",
+    }
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "description": """
+Request options for a Branch to perform an instruction
+- instruction is typically required
+- if extension is needed, the Branch will execute a ReAct
+- if reason/action is needed, the Branch will execute an operate
+- else, the Branch will perform a communicate operation
+"""
+        }
+    )
+
     instruction: JsonValue | None = Field(
         None,
         title="Primary Instruction",
@@ -82,6 +87,7 @@ class Instruct(HashableModel):
             "Use None if no additional context is needed."
         ),
     )
+
     reason: bool | None = Field(
         None,
         description=(
@@ -107,14 +113,35 @@ class Instruct(HashableModel):
             "is 'concurrent'. Only provide for if actions are enabled.",
         )
     )
-    batch_size: int | None = Field(
+    action_batch_size: int | None = Field(
         None,
         description="Batch size for executing actions. Only provide for 'batch' strategy.",
+    )
+    extension_allowed: bool | None = Field(
+        None,
+        description="Whether to allow extensions for additional analysis or actions.",
+    )
+    max_extensions: int | None = Field(
+        None,
+        description=(
+            "Maximum number of extensions allowed. If None, no extension will be performed "
+            "Only provide if extension_allowed is True. Should be appropriate for the task."
+            "max is 100."
+        ),
     )
 
     @field_validator("instruction", "guidance", "context", mode="before")
     def _validate_instruction(cls, v):
         return validate_nullable_jsonvalue_field(cls, v)
+
+    @field_validator("action_batch_size", "max_extensions", mode="before")
+    def _validate_batch_size(cls, v):
+        if v is None:
+            return None
+        try:
+            return to_num(v, num_type=int)
+        except Exception:
+            return None
 
     @field_validator("reason", "actions", mode="before")
     def _validate_reason(cls, v):
@@ -125,13 +152,6 @@ class Instruct(HashableModel):
         if v not in ["batch", "sequential", "concurrent"]:
             return "concurrent"
         return v
-
-    @field_validator("batch_size", mode="before")
-    def _validate_batch_size(cls, v):
-        try:
-            return to_num(v, num_type=int)
-        except Exception:
-            return None
 
 
 INSTRUCT_FIELD = FieldModel(
