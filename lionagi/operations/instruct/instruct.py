@@ -4,7 +4,6 @@
 
 from typing import TYPE_CHECKING, Any
 
-from lionagi.operatives.instruct.instruct import OperateOptions
 from lionagi.operatives.types import Instruct
 
 if TYPE_CHECKING:
@@ -35,6 +34,6 @@ async def instruct(
         **{
             k: v
             for k, v in config.items()
-            if k not in OperateOptions.model_fields
+            if k not in Instruct.reserved_kwargs
         }
     )

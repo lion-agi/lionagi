@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from pydantic import ConfigDict, Field, JsonValue, field_validator
 
@@ -24,11 +24,26 @@ __all__ = (
 )
 
 
-class ChatOptions(HashableModel):
+class Instruct(HashableModel):
+
+    reserved_kwargs: ClassVar[set[str]] = {
+        "reason",
+        "actions",
+        "action_strategy",
+        "action_batch_size",
+        "extension_allowed",
+        "max_extensions",
+    }
 
     model_config = ConfigDict(
         json_schema_extra={
-            "description": "Request options for a chat operation to a Branch"
+            "description": """
+Request options for a Branch to perform an instruction
+- instruction is typically required
+- if extension is needed, the Branch will execute a ReAct
+- if reason/action is needed, the Branch will execute an operate
+- else, the Branch will perform a communicate operation
+"""
         }
     )
 
@@ -73,18 +88,6 @@ class ChatOptions(HashableModel):
         ),
     )
 
-    @field_validator("instruction", "guidance", "context", mode="before")
-    def _validate_instruction(cls, v):
-        return validate_nullable_jsonvalue_field(cls, v)
-
-
-class OperateOptions(HashableModel):
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "description": "Request options for an operate operation to a Branch"
-        }
-    )
     reason: bool | None = Field(
         None,
         description=(
@@ -127,6 +130,10 @@ class OperateOptions(HashableModel):
         ),
     )
 
+    @field_validator("instruction", "guidance", "context", mode="before")
+    def _validate_instruction(cls, v):
+        return validate_nullable_jsonvalue_field(cls, v)
+
     @field_validator("action_batch_size", "max_extensions", mode="before")
     def _validate_batch_size(cls, v):
         if v is None:
@@ -146,51 +153,6 @@ class OperateOptions(HashableModel):
             return "concurrent"
         return v
 
-
-class Instruct(HashableModel):
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "description": """
-Request options for a Branch to perform an instruction
-- ChatRequest is typically always required
-- if OperateRequest is also provided, the Branch will execute
-    - operate: if no extension is needed
-    - ReAct: if extension is needed
-- else, the Branch will perform a communicate operation
-"""
-        }
-    )
-    chat_options: ChatOptions | None = Field(
-        None,
-        description="Options for the prediction task.",
-    )
-
-    operate_options: OperateOptions | None = Field(
-        None,
-        description="Options for the reaction task.",
-    )
-
-    def to_dict(self) -> dict:
-        dict_ = {}
-        if self.chat_options:
-            dict_.update(self.chat_options.to_dict())
-        if self.operate_options:
-            dict_.update(self.operate_options.to_dict())
-        return dict_
-
-
-CHAT_FIELD = FieldModel(
-    name="predict_model",
-    annotation=ChatOptions | None,
-    default=None,
-)
-
-OPERATE_FIELD = FieldModel(
-    name="react_model",
-    annotation=OperateOptions | None,
-    default=None,
-)
 
 INSTRUCT_FIELD = FieldModel(
     name="instruct_model",
