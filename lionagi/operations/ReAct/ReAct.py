@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
+from lionagi.libs.schema.as_readable import as_readable
 from lionagi.operatives.types import Instruct
 from lionagi.service.imodel import iModel
 from lionagi.utils import copy
-from lionagi.libs.schema.as_readable import as_readable
+
 from .utils import Analysis, ReActAnalysis
 
 if TYPE_CHECKING:
