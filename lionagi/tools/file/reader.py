@@ -27,7 +27,7 @@ class ReaderTool(LionTool):
 
         super().__init__()
         self.converter = DocumentConverter()
-        self.documents = {}  # doc_id -> (temp_file_path, doc_length)
+        self.documents = {}  # doc_id -> (temp_file_path, doc_length, source)
         self._tool = None
 
     def handle_request(self, request: ReaderOption) -> ReaderResponse:
@@ -42,7 +42,9 @@ class ReaderTool(LionTool):
             return self._open_doc(request.path_or_url)
         elif request.action == "read":
             return self._read_doc(
-                request.doc_id, request.start_offset, request.end_offset
+                request.doc_id,
+                request.start_offset,
+                request.end_offset,
             )
         else:
             return ReaderResponse(success=False, error="Unknown action type")
@@ -65,24 +67,27 @@ class ReaderTool(LionTool):
         temp_file.close()
 
         # store info
-        self.documents[doc_id] = (temp_file.name, doc_len)
+        self.documents[doc_id] = (temp_file.name, doc_len, str(source))
 
         return ReaderResponse(
             success=True,
             doc_info=DocumentInfo(
-                doc_id=doc_id, length=doc_len, source=source
+                doc_id=doc_id, length=doc_len, source=str(source)
             ),
         )
 
     def _read_doc(self, doc_id: str, start: int, end: int) -> ReaderResponse:
-        if doc_id not in self.documents or doc_id not in [
-            i.source for i in self.documents.values()
-        ]:
+        if doc_id not in self.documents:
+            for k, v in self.documents.items():
+                if v[2] == doc_id:
+                    doc_id = k
+                    break
+        if doc_id not in self.documents:
             return ReaderResponse(
                 success=False, error="doc_id not found in memory"
             )
 
-        path, length = self.documents[doc_id]
+        path, length, source = self.documents[doc_id]
         # clamp offsets
         s = max(0, start if start is not None else 0)
         e = min(length, end if end is not None else length)

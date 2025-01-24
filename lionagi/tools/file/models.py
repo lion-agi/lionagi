@@ -1,7 +1,10 @@
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from lionagi.libs.validate.common_field_validators import (
+    validate_empty_container_to_none,
+)
 from lionagi.utils import to_num
 
 __all__ = (
@@ -43,12 +46,12 @@ The request for the 'ReaderTool'. Mainly used for opening docs from a
 file or URL or reading a partial slice of the already-opened docs. Some clever 
 one-round caveats:\n
 1. Open a doc and reading one or more slices of the opened doc, by putting in a
-list of action requests with the same path_or_url/doc_id, first action should be 
+list of action requests with the same doc_id, first action should be 
 'open' or 'scrape' and the rest should be 'read'. With 'sequential' action strategy.
 2. Manipulating multiple docs at once. By putting in a list of action requests of 
-different path_or_url/doc_id. With 'concurrent'/'batch' action strategy.
+different doc_id. With 'concurrent'/'batch' action strategy.
 3. Manipulating multiple docs in sequence. By putting in a list of action requests
-of different path_or_url/doc_id. With 'sequential' action strategy. You can also
+of different doc_id. With 'sequential' action strategy. You can also
 combine the two strategies together.
 ------------------
 """
@@ -94,12 +97,17 @@ combine the two strategies together.
         ),
     )
 
-    @field_validator("start_offset", "end_offset", mode="before")
-    def _validate_offsets(cls, v):
-        try:
-            return to_num(v, num_type=int)
-        except ValueError:
-            return None
+    @model_validator(mode="before")
+    def _validate_reader_option(cls, values):
+        values = validate_empty_container_to_none(cls, values)
+        for k in ["start_offset", "end_offset"]:
+            if k in values:
+                try:
+                    v = to_num(values[k], num_type=int)
+                    values[k] = v
+                except ValueError:
+                    values[k] = None
+        return values
 
 
 class DocumentInfo(BaseModel):
@@ -113,6 +121,17 @@ class DocumentInfo(BaseModel):
     length: int | None = None
     source: str | None = None
 
+    @model_validator(mode="before")
+    def _validate_doc_info(cls, values):
+        values = validate_empty_container_to_none(cls, values)
+        if "length" in values:
+            try:
+                v = to_num(values["length"], num_type=int)
+                values["length"] = v
+            except ValueError:
+                values["length"] = None
+        return values
+
 
 class PartialChunk(BaseModel):
     """
@@ -122,6 +141,18 @@ class PartialChunk(BaseModel):
     start_offset: int | None = None
     end_offset: int | None = None
     content: str | None = None
+
+    @model_validator(mode="before")
+    def _validate_reader_option(cls, values):
+        values = validate_empty_container_to_none(cls, values)
+        for k in ["start_offset", "end_offset"]:
+            if k in values:
+                try:
+                    v = to_num(values[k], num_type=int)
+                    values[k] = v
+                except ValueError:
+                    values[k] = None
+        return values
 
 
 class ReaderResponse(BaseModel):
