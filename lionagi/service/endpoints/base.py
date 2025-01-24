@@ -428,7 +428,7 @@ class APICalling(Event):
         for i in range(3):
             try:
                 return await retry_in()
-            except RateLimitError | ExecutionError as e:
+            except RateLimitError as e:
                 if i == 2:
                     raise e
                 else:
