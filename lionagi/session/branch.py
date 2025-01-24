@@ -51,6 +51,8 @@ from lionagi.settings import Settings
 from lionagi.tools.base import LionTool
 from lionagi.utils import UNDEFINED, alcall, bcall, copy
 
+from .prompts import LION_SYSTEM_MESSAGE
+
 if TYPE_CHECKING:
     # Forward references for type checking (e.g., in operations or extended modules)
     from lionagi.session.branch import Branch
@@ -131,6 +133,7 @@ class Branch(Element, Communicatable, Relational):
         system_template: Template | str = None,
         system_template_context: dict = None,
         logs: Pile[Log] = None,
+        use_lion_system_message: bool = False,
         **kwargs,
     ):
         """
@@ -168,6 +171,8 @@ class Branch(Element, Communicatable, Relational):
                 Context for rendering the system template.
             logs (Pile[Log], optional):
                 Existing logs to seed the LogManager.
+            use_lion_system_message (bool, optional):
+                If `True`, uses the Lion system message for the branch.
             **kwargs:
                 Additional parameters passed to `Element` parent init.
         """
@@ -175,11 +180,21 @@ class Branch(Element, Communicatable, Relational):
 
         # --- MessageManager ---
         self._message_manager = MessageManager(messages=messages)
-        # If system instructions or templates are provided, add them
+
         if any(
-            i is not None
-            for i in [system, system_sender, system_datetime, system_template]
+            bool(x)
+            for x in [
+                system,
+                system_datetime,
+                system_template,
+                system_template_context,
+                use_lion_system_message,
+            ]
         ):
+
+            if use_lion_system_message:
+                system = f"Developer Prompt: {str(system)}" if system else ""
+                system = (LION_SYSTEM_MESSAGE + "\n\n" + system).strip()
 
             self._message_manager.add_message(
                 system=system,
@@ -791,7 +806,9 @@ class Branch(Element, Communicatable, Relational):
             request_fields=request_fields,
             response_format=response_format,
             progression=progression,
-            chat_model=imodel,
+            chat_model=kwargs.pop("chat_model", None)
+            or imodel
+            or self.chat_model,
             tool_schemas=tool_schemas,
             images=images,
             image_detail=image_detail,
@@ -1162,7 +1179,7 @@ class Branch(Element, Communicatable, Relational):
             request_model=request_model,
             response_format=response_format,
             request_fields=request_fields,
-            chat_model=chat_model or imodel,
+            chat_model=kwargs.pop("chat_model", None) or chat_model or imodel,
             parse_model=parse_model,
             skip_validation=skip_validation,
             images=images,
@@ -1365,7 +1382,7 @@ class Branch(Element, Communicatable, Relational):
         **kwargs,
     ) -> list:
         result = []
-        async for i in await bcall(
+        async for i in bcall(
             action_request, self._act, batch_size=batch_size, **kwargs
         ):
             result.extend(i)
@@ -1518,6 +1535,7 @@ class Branch(Element, Communicatable, Relational):
         text: str,
         domain: str | None = None,
         style: str | None = None,
+        interpret_model=None,
         **kwargs,
     ) -> str:
         """
@@ -1561,7 +1579,12 @@ class Branch(Element, Communicatable, Relational):
         from lionagi.operations.interpret.interpret import interpret
 
         return await interpret(
-            self, text=text, domain=domain, style=style, **kwargs
+            self,
+            text=text,
+            domain=domain,
+            style=style,
+            interpret_model=interpret_model,
+            **kwargs,
         )
 
     async def instruct(
