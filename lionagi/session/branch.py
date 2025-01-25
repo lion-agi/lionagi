@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import AsyncGenerator
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -9,6 +10,7 @@ import pandas as pd
 from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
+from lionagi.libs.schema.as_readable import as_readable
 from lionagi.operatives.types import (
     ActionManager,
     FieldModel,
@@ -1621,13 +1623,18 @@ class Branch(Element, Communicatable, Relational):
         interpret_domain: str | None = None,
         interpret_style: str | None = None,
         interpret_sample: str | None = None,
+        interpret_model: str | None = None,
         interpret_kwargs: dict | None = None,
         tools: Any = None,
         tool_schemas: Any = None,
-        response_format: type[BaseModel] = None,
-        extension_allowed: bool = False,
-        max_extensions: int = None,
+        response_format: type[BaseModel] | BaseModel = None,
+        intermediate_response_options: list[BaseModel] | BaseModel = None,
+        intermediate_listable: bool = False,
+        reasoning_effort: Literal["low", "medium", "high"] = None,
+        extension_allowed: bool = True,
+        max_extensions: int | None = 3,
         response_kwargs: dict | None = None,
+        display_as: Literal["json", "yaml"] = "yaml",
         return_analysis: bool = False,
         analysis_model: iModel | None = None,
         verbose: bool = False,
@@ -1721,8 +1728,69 @@ class Branch(Element, Communicatable, Relational):
             verbose_action=verbose,
             verbose_analysis=verbose,
             verbose_length=verbose_length,
+            interpret_model=interpret_model,
+            intermediate_response_options=intermediate_response_options,
+            intermediate_listable=intermediate_listable,
+            reasoning_effort=reasoning_effort,
+            display_as=display_as,
             **kwargs,
         )
+
+    async def ReActStream(
+        self,
+        instruct: Instruct | dict[str, Any],
+        interpret: bool = False,
+        interpret_domain: str | None = None,
+        interpret_style: str | None = None,
+        interpret_sample: str | None = None,
+        interpret_model: str | None = None,
+        interpret_kwargs: dict | None = None,
+        tools: Any = None,
+        tool_schemas: Any = None,
+        response_format: type[BaseModel] | BaseModel = None,
+        intermediate_response_options: list[BaseModel] | BaseModel = None,
+        intermediate_listable: bool = False,
+        reasoning_effort: Literal["low", "medium", "high"] = None,
+        extension_allowed: bool = True,
+        max_extensions: int | None = 3,
+        response_kwargs: dict | None = None,
+        analysis_model: iModel | None = None,
+        verbose: bool = False,
+        display_as: Literal["json", "yaml"] = "yaml",
+        verbose_length: int = None,
+        **kwargs,
+    ) -> AsyncGenerator:
+        from lionagi.operations.ReAct.ReAct import ReActStream
+
+        async for result in ReActStream(
+            self,
+            instruct,
+            interpret=interpret,
+            interpret_domain=interpret_domain,
+            interpret_style=interpret_style,
+            interpret_sample=interpret_sample,
+            interpret_model=interpret_model,
+            interpret_kwargs=interpret_kwargs,
+            tools=tools,
+            tool_schemas=tool_schemas,
+            response_format=response_format,
+            intermediate_response_options=intermediate_response_options,
+            intermediate_listable=intermediate_listable,
+            reasoning_effort=reasoning_effort,
+            extension_allowed=extension_allowed,
+            max_extensions=max_extensions,
+            response_kwargs=response_kwargs,
+            analysis_model=analysis_model,
+            verbose_analysis=True,
+            display_as=display_as,
+            verbose_length=verbose_length,
+            **kwargs,
+        ):
+            analysis, str_ = result
+            if verbose:
+                str_ += "\n---------\n"
+                as_readable(str_, md=True, display_str=True)
+            yield analysis
 
 
 # File: lionagi/session/branch.py
