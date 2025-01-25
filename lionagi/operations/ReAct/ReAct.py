@@ -3,11 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from typing import TYPE_CHECKING, Any
+from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel
 
 from lionagi.libs.schema.as_readable import as_readable
+from lionagi.libs.validate.common_field_validators import (
+    validate_model_to_type,
+)
+from lionagi.operatives.models.field_model import FieldModel
+from lionagi.operatives.models.model_params import ModelParams
 from lionagi.operatives.types import Instruct
 from lionagi.service.imodel import iModel
 from lionagi.utils import copy
@@ -30,15 +36,133 @@ async def ReAct(
     tools: Any = None,
     tool_schemas: Any = None,
     response_format: type[BaseModel] | BaseModel = None,
+    intermediate_response_options: list[BaseModel] | BaseModel = None,
+    intermediate_listable: bool = False,
+    reasoning_effort: Literal["low", "medium", "high"] = None,
     extension_allowed: bool = True,
     max_extensions: int | None = 3,
     response_kwargs: dict | None = None,
+    display_as: Literal["json", "yaml"] = "yaml",
     return_analysis: bool = False,
     analysis_model: iModel | None = None,
     verbose_analysis: bool = False,
     verbose_length: int = None,
     **kwargs,
 ):
+    outs = []
+    if verbose_analysis:
+        async for i in ReActStream(
+            branch=branch,
+            instruct=instruct,
+            interpret=interpret,
+            interpret_domain=interpret_domain,
+            interpret_style=interpret_style,
+            interpret_sample=interpret_sample,
+            interpret_model=interpret_model,
+            interpret_kwargs=interpret_kwargs,
+            tools=tools,
+            tool_schemas=tool_schemas,
+            response_format=response_format,
+            intermediate_response_options=intermediate_response_options,
+            intermediate_listable=intermediate_listable,
+            reasoning_effort=reasoning_effort,
+            extension_allowed=extension_allowed,
+            max_extensions=max_extensions,
+            response_kwargs=response_kwargs,
+            analysis_model=analysis_model,
+            verbose_analysis=verbose_analysis,
+            display_as=display_as,
+            verbose_length=verbose_length,
+            **kwargs,
+        ):
+            analysis, str_ = i
+            str_ += "\n---------\n"
+            as_readable(str_, md=True, display_str=True)
+            outs.append(analysis)
+    else:
+        async for i in ReActStream(
+            branch=branch,
+            instruct=instruct,
+            interpret=interpret,
+            interpret_domain=interpret_domain,
+            interpret_style=interpret_style,
+            interpret_sample=interpret_sample,
+            interpret_model=interpret_model,
+            interpret_kwargs=interpret_kwargs,
+            tools=tools,
+            tool_schemas=tool_schemas,
+            response_format=response_format,
+            intermediate_response_options=intermediate_response_options,
+            intermediate_listable=intermediate_listable,
+            reasoning_effort=reasoning_effort,
+            extension_allowed=extension_allowed,
+            max_extensions=max_extensions,
+            response_kwargs=response_kwargs,
+            analysis_model=analysis_model,
+            display_as=display_as,
+            verbose_length=verbose_length,
+            **kwargs,
+        ):
+            outs.append(i)
+    if return_analysis:
+        return outs
+    return outs[-1]
+
+
+async def ReActStream(
+    branch: "Branch",
+    instruct: Instruct | dict[str, Any],
+    interpret: bool = False,
+    interpret_domain: str | None = None,
+    interpret_style: str | None = None,
+    interpret_sample: str | None = None,
+    interpret_model: str | None = None,
+    interpret_kwargs: dict | None = None,
+    tools: Any = None,
+    tool_schemas: Any = None,
+    response_format: type[BaseModel] | BaseModel = None,
+    intermediate_response_options: list[BaseModel] | BaseModel = None,
+    intermediate_listable: bool = False,
+    reasoning_effort: Literal["low", "medium", "high"] = None,
+    extension_allowed: bool = True,
+    max_extensions: int | None = 3,
+    response_kwargs: dict | None = None,
+    analysis_model: iModel | None = None,
+    verbose_analysis: bool = False,
+    display_as: Literal["json", "yaml"] = "yaml",
+    verbose_length: int = None,
+    **kwargs,
+) -> AsyncGenerator:
+    irfm: FieldModel | None = None
+
+    if intermediate_response_options is not None:
+        iro = (
+            [intermediate_response_options]
+            if not isinstance(intermediate_response_options, list)
+            else intermediate_response_options
+        )
+        field_models = []
+        for i in iro:
+            type_ = validate_model_to_type(None, i)
+            fm = FieldModel(
+                name=str(type_.__name__).lower(),
+                annotation=type_ | None,
+                validator=lambda cls, x: None if x == {} else x,
+            )
+            field_models.append(fm)
+
+        m_ = ModelParams(
+            name="IntermediateResponseOptions", field_models=field_models
+        ).create_new_model()
+
+        irfm = FieldModel(
+            name="intermediate_response_options",
+            annotation=(
+                m_ | None if not intermediate_listable else list[m_] | None
+            ),
+            description="Optional intermediate deliverable outputs. fill as needed ",
+            validator=lambda cls, x: None if not x else x,
+        )
 
     # If no tools or tool schemas are provided, default to "all tools"
     if not tools and not tool_schemas:
@@ -60,15 +184,16 @@ async def ReAct(
             **(interpret_kwargs or {}),
         )
         if verbose_analysis:
-            print("\n### Interpreted instruction:\n")
-            as_readable(
+            str_ = "\n### Interpreted instruction:\n"
+            str_ += as_readable(
                 instruction_str,
                 md=True,
-                format_curly=True,
-                display_str=True,
+                format_curly=True if display_as == "yaml" else False,
                 max_chars=verbose_length,
             )
-            print("\n----------------------------\n")
+            yield instruction_str, str_
+        else:
+            yield instruction_str
 
     # Convert Instruct to dict if necessary
     instruct_dict = (
@@ -98,19 +223,18 @@ async def ReAct(
         chat_model=analysis_model or branch.chat_model,
         **kwargs_for_operate,
     )
-    analyses = [analysis]
-
     # If verbose, show round #1 analysis
     if verbose_analysis:
-        print("\n### ReAct Round No.1 Analysis:\n")
-        as_readable(
+        str_ = "\n### ReAct Round No.1 Analysis:\n"
+        str_ += as_readable(
             analysis,
             md=True,
-            format_curly=True,
-            display_str=True,
+            format_curly=True if display_as == "yaml" else False,
             max_chars=verbose_length,
         )
-        print("\n----------------------------\n")
+        yield analysis, str_
+    else:
+        yield analysis
 
     # Validate and clamp max_extensions if needed
     if max_extensions and max_extensions > 100:
@@ -124,8 +248,13 @@ async def ReAct(
     round_count = 1
 
     while (
-        extension_allowed
-        and analysis.extension_needed
+        extension_allowed and analysis.extension_needed
+        if hasattr(analysis, "extension_needed")
+        else (
+            analysis.get("extension_needed", None)
+            if isinstance(analysis, dict)
+            else False
+        )
         and (extensions if max_extensions else 0) > 0
     ):
         new_instruction = None
@@ -145,6 +274,21 @@ async def ReAct(
         operate_kwargs["action_strategy"] = analysis.action_strategy
         if analysis.action_batch_size:
             operate_kwargs["action_batch_size"] = analysis.action_batch_size
+        if irfm:
+            operate_kwargs["field_models"] = operate_kwargs.get(
+                "field_models", []
+            ) + [irfm]
+        if reasoning_effort:
+            guide = None
+            if reasoning_effort == "low":
+                guide = "Quick concise reasoning.\n"
+            if reasoning_effort == "medium":
+                guide = "Reasonably balanced reasoning.\n"
+            if reasoning_effort == "high":
+                guide = "Thorough, try as hard as you can in reasoning.\n"
+            operate_kwargs["guidance"] = guide + operate_kwargs.get(
+                "guidance", ""
+            )
 
         analysis = await branch.operate(
             instruction=new_instruction,
@@ -152,20 +296,22 @@ async def ReAct(
             tool_schemas=tool_schemas,
             **operate_kwargs,
         )
-        analyses.append(analysis)
         round_count += 1
 
         # If verbose, show round analysis
         if verbose_analysis:
-            print(f"\n### ReAct Round No.{round_count} Analysis:\n")
-            as_readable(
+            str_ = f"\n### ReAct Round No.{round_count} Analysis:\n"
+
+            str_ += as_readable(
                 analysis,
                 md=True,
-                format_curly=True,
-                display_str=True,
+                format_curly=True if display_as == "yaml" else False,
                 max_chars=verbose_length,
             )
-            print("\n----------------------------\n")
+
+            yield analysis, str_
+        else:
+            yield analysis
 
         if extensions:
             extensions -= 1
@@ -177,28 +323,29 @@ async def ReAct(
     if not response_format:
         response_format = Analysis
 
-    out = await branch.operate(
-        instruction=answer_prompt,
-        response_format=response_format,
-        **(response_kwargs or {}),
-    )
+    try:
+        out = await branch.operate(
+            instruction=answer_prompt,
+            response_format=response_format,
+            **(response_kwargs or {}),
+        )
+    except Exception:
+        out = branch.msgs.last_response.response
+
     if isinstance(out, Analysis):
-        out = out.analysis
+        out = out.answer
 
     if verbose_analysis:
-        print("\n### ReAct Response:\n")
-        as_readable(
-            analysis,
+        str_ = "\n### ReAct Final Answer:\n"
+        str_ += as_readable(
+            out,
             md=True,
-            format_curly=True,
-            display_str=True,
+            format_curly=True if display_as == "yaml" else False,
             max_chars=verbose_length,
         )
-        print("\n----------------------------\n")
-
-    if return_analysis:
-        return out, analyses
-    return out
+        yield out, str_
+    else:
+        yield out
 
 
 # TODO: Do partial intermeditate output for longer analysis with form and report

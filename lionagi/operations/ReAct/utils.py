@@ -36,7 +36,9 @@ class ReActAnalysis(BaseModel):
     FIRST_EXT_PROMPT: ClassVar[str] = (
         "You can perform multiple reason-action steps for accuracy. "
         "If you are not ready to finalize, set extension_needed to True. "
-        "You have up to {extensions} expansions. Please continue."
+        "hint: you should set extension_needed to True if the overall goal"
+        "is not yet achieved. Do not set it to False, if you are just providing"
+        "an interim answer. You have up to {extensions} expansions. Please continue."
     )
     CONTINUE_EXT_PROMPT: ClassVar[str] = (
         "Another round is available. You may do multiple actions if needed. "
@@ -49,7 +51,11 @@ class ReActAnalysis(BaseModel):
 
     analysis: str = Field(
         ...,
-        description="Free-form reasoning or chain-of-thought summary. Must be consistent with the plan.",
+        description=(
+            "Free-form reasoning or chain-of-thought summary. Must be consistent with"
+            " the plan. Commonly used for divide_and_conquer, brainstorming, reflections, "
+            "regurgitation, review_checkpoints ...etc."
+        ),
     )
 
     planned_actions: list[PlannedAction] = Field(
