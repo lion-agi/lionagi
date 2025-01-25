@@ -79,7 +79,7 @@ class EndpointConfig(BaseModel):
     requires_tokens: bool = False
     api_version: str | None = None
     allowed_roles: list[str] | None = None
-    request_options: type | None = None
+    request_options: type | None = Field(None, exclude=True)
 
 
 class EndPoint(ABC):
