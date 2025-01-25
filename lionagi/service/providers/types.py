@@ -6,6 +6,27 @@ from .openai_.chat_completions import OpenAIChatCompletionEndPoint
 from .openrouter_.chat_completions import OpenRouterChatCompletionEndPoint
 from .perplexity_.chat_completions import PerplexityChatCompletionEndPoint
 
+SERVICE_PROVIDERS = {
+    "anthropic": {
+        "chat": AnthropicChatCompletionEndPoint,
+    },
+    "exa": {
+        "search": ExaSearchEndPoint,
+    },
+    "groq": {
+        "chat": GroqChatCompletionEndPoint,
+    },
+    "openai": {
+        "chat": OpenAIChatCompletionEndPoint,
+    },
+    "openrouter": {
+        "chat": OpenRouterChatCompletionEndPoint,
+    },
+    "perplexity": {
+        "chat": PerplexityChatCompletionEndPoint,
+    },
+}
+
 __all__ = (
     "AnthropicChatCompletionEndPoint",
     "ExaSearchEndPoint",
@@ -14,4 +35,5 @@ __all__ = (
     "OpenAIChatCompletionEndPoint",
     "OpenRouterChatCompletionEndPoint",
     "PerplexityChatCompletionEndPoint",
+    "SERVICE_PROVIDERS",
 )

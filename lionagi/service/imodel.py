@@ -4,11 +4,11 @@
 
 import asyncio
 import os
-import warnings
 from collections.abc import AsyncGenerator, Callable
 
 from pydantic import BaseModel
 
+from lionagi.protocols._concepts import Observer
 from lionagi.protocols.generic.event import EventStatus
 from lionagi.utils import is_coro_func
 
@@ -16,15 +16,10 @@ from .endpoints.base import APICalling, EndPoint
 from .endpoints.match_endpoint import match_endpoint
 from .endpoints.rate_limited_processor import RateLimitedAPIExecutor
 
-warnings.filterwarnings(
-    "ignore",
-    message=".*Valid config keys have changed in V2.*",
-    category=UserWarning,
-    module="pydantic._internal._config",
-)
+# imodel = endpoint + executor
 
 
-class iModel:
+class iModel(Observer):
     """Manages API calls for a specific provider with optional rate-limiting.
 
     The iModel class encapsulates a specific endpoint configuration (e.g.,
@@ -62,6 +57,7 @@ class iModel:
         invoke_with_endpoint: bool = False,
         concurrency_limit: int | None = None,
         streaming_process_func: Callable = None,
+        needs_api_key: bool = True,
         **kwargs,
     ) -> None:
         """Initializes the iModel instance.
@@ -98,31 +94,34 @@ class iModel:
             concurrency_limit (int | None, optional):
                 Maximum number of streaming concurrent requests allowed.
                 only applies to streaming requests.
+            needs_api_key: (bool | None, optional):
+                whether the endpoint requires API key to interact with
             **kwargs:
                 Additional keyword arguments, such as `model`, or any other
                 provider-specific fields.
         """
-        if api_key is None:
-            match provider:
-                case "openai":
-                    api_key = "OPENAI_API_KEY"
-                case "anthropic":
-                    api_key = "ANTHROPIC_API_KEY"
-                case "openrouter":
-                    api_key = "OPENROUTER_API_KEY"
-                case "perplexity":
-                    api_key = "PERPLEXITY_API_KEY"
-                case "groq":
-                    api_key = "GROQ_API_KEY"
-                case "exa":
-                    api_key = "EXA_API_KEY"
+        super().__init__()
+        self.needs_api_key = needs_api_key
 
-        if os.getenv(api_key, None) is not None:
-            self.api_key_scheme = api_key
-            api_key = os.getenv(api_key)
+        if self.needs_api_key is True:
+            if api_key is None:
+                api_key = provider.upper() + "_API_KEY"
+            if os.getenv(api_key, None) is not None:
+                self.api_key_scheme = api_key
+                api_key = os.getenv(api_key)
+                kwargs["api_key"] = api_key
+            elif len(api_key) > 9:
+                kwargs["api_key"] = api_key
+            else:
+                raise ValueError(
+                    "API key is not valid, needs to be\n"
+                    "- None: to use default environment variable names {PROVIDER}_API_KEY\n"
+                    "- Env variable name: to use the provided environment variable\n"
+                    "- API key string: to use the provided API key, needs to be at "
+                    "least 10 characters long\n"
+                )
 
-        kwargs["api_key"] = api_key
-        model = kwargs.get("model", None)
+        model: str = kwargs.get("model", None)
         if model:
             if not provider:
                 if "/" in model:
@@ -342,8 +341,9 @@ class iModel:
                 if hasattr(self, "api_key_scheme")
                 else None
             ),
-            "processor_config": self.executor.config,
+            "processor_config": self.executor.processor_config.to_dict(),
             "invoke_with_endpoint": self.should_invoke_endpoint,
+            "needs_api_key": self.needs_api_key,
             **{k: v for k, v in kwargs.items() if k != "api_key"},
         }
 
