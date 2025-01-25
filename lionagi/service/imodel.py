@@ -4,7 +4,6 @@
 
 import asyncio
 import os
-import warnings
 from collections.abc import AsyncGenerator, Callable
 
 from pydantic import BaseModel
@@ -15,13 +14,6 @@ from lionagi.utils import is_coro_func
 from .endpoints.base import APICalling, EndPoint
 from .endpoints.match_endpoint import match_endpoint
 from .endpoints.rate_limited_processor import RateLimitedAPIExecutor
-
-warnings.filterwarnings(
-    "ignore",
-    message=".*Valid config keys have changed in V2.*",
-    category=UserWarning,
-    module="pydantic._internal._config",
-)
 
 
 class iModel:
