@@ -5,6 +5,10 @@
 import asyncio
 from typing import Any, ClassVar
 
+from pydantic import Field, field_validator
+
+from lionagi.utils import HashableModel
+
 from .._concepts import Observer
 from .element import ID
 from .event import Event, EventStatus
@@ -17,6 +21,48 @@ __all__ = (
 )
 
 
+class ProcessorConfig(HashableModel):
+
+    queue_capacity: int = Field(
+        100,
+        description="The maximum number of events processed in one batch.",
+        gt=0,
+    )
+
+    capacity_refresh_time: float = Field(
+        60,
+        description="The time in seconds after which processing capacity is reset.",
+        gt=0,
+    )
+
+    concurrency_limit: int | None = Field(
+        None,
+        description="The maximum number of concurrent event processing tasks.",
+        gt=0,
+    )
+
+    @field_validator("queue_capacity")
+    def check_queue_capacity(cls, value):
+        if value is None:
+            return 100
+        if isinstance(value, float):
+            value = int(value)
+        if not isinstance(value, int) or value < 1:
+            raise ValueError("Queue capacity must be a positive integer.")
+
+        return value
+
+    @field_validator("capacity_refresh_time")
+    def check_capacity_refresh_time(cls, value):
+        if value is None:
+            return 60
+        if not isinstance(value, (int, float)) or value <= 0:
+            raise ValueError(
+                "Capacity refresh time must be a positive number."
+            )
+        return value
+
+
 class Processor(Observer):
     """Manages a queue of events with capacity-limited, async processing.
 
@@ -26,41 +72,21 @@ class Processor(Observer):
     """
 
     event_type: ClassVar[type[Event]]
+    config_type: ClassVar[type[ProcessorConfig]] = ProcessorConfig
 
-    def __init__(
-        self,
-        queue_capacity: int,
-        capacity_refresh_time: float,
-        concurrency_limit: int,
-    ) -> None:
-        """Initializes a Processor instance.
-
-        Args:
-            queue_capacity (int):
-                The maximum number of events processed in one batch.
-            capacity_refresh_time (float):
-                The time in seconds after which processing capacity is reset.
-
-        Raises:
-            ValueError: If `queue_capacity` < 1, or
-                `capacity_refresh_time` <= 0.
-        """
+    def __init__(self, config: ProcessorConfig):
         super().__init__()
-        if queue_capacity < 1:
-            raise ValueError("Queue capacity must be greater than 0.")
-        if capacity_refresh_time <= 0:
-            raise ValueError("Capacity refresh time must be larger than 0.")
-
-        self.queue_capacity = queue_capacity
-        self.capacity_refresh_time = capacity_refresh_time
+        self.config = config
+        self.queue_capacity = self.config.queue_capacity
+        self.capacity_refresh_time = self.config.capacity_refresh_time
         self.queue = asyncio.Queue()
-        self._available_capacity = queue_capacity
+        self._available_capacity = self.config.queue_capacity
         self._execution_mode = False
         self._stop_event = asyncio.Event()
-        if concurrency_limit:
-            self._concurrency_sem = asyncio.Semaphore(concurrency_limit)
-        else:
-            self._concurrency_sem = None
+        self._lock: asyncio.Lock = asyncio.Lock()
+        self._concurrency_sem = asyncio.Semaphore(
+            self.config.concurrency_limit or self.config.queue_capacity
+        )
 
     @property
     def available_capacity(self) -> int:
@@ -117,7 +143,7 @@ class Processor(Observer):
         return self._stop_event.is_set()
 
     @classmethod
-    async def create(cls, **kwargs: Any) -> "Processor":
+    async def create(cls, config: ProcessorConfig) -> "Processor":
         """Asynchronously constructs a new Processor instance.
 
         Args:
@@ -127,7 +153,7 @@ class Processor(Observer):
         Returns:
             Processor: A newly instantiated processor.
         """
-        return cls(**kwargs)
+        return cls(config)
 
     async def process(self) -> None:
         """Dequeues and processes events up to the available capacity.
@@ -205,8 +231,9 @@ class Executor(Observer):
 
     def __init__(
         self,
-        processor_config: dict[str, Any] | None = None,
+        processor_config: ProcessorConfig = None,
         strict_event_type: bool = False,
+        **kwargs,
     ) -> None:
         """Initializes the Executor.
 
@@ -216,8 +243,21 @@ class Executor(Observer):
             strict_event_type (bool):
                 If True, the underlying Pile enforces exact type matching
                 for Event objects.
+            kwargs:
+                Additional parameters for processor config
         """
-        self.processor_config = processor_config or {}
+        super().__init__()
+        ct = self.processor_type.config_type
+
+        if not processor_config:
+            processor_config = ct(**kwargs)
+        if isinstance(processor_config, dict):
+            params = {**processor_config, **kwargs}
+            processor_config = ct(**params)
+        if isinstance(processor_config, ct):
+            self.processor_config = processor_config
+        else:
+            self.processor_config = ct()
         self.pending = Progression()
         self.processor: Processor | None = None
         self.pile: Pile[Event] = Pile(
@@ -262,7 +302,7 @@ class Executor(Observer):
     async def _create_processor(self) -> None:
         """Instantiates the processor using the stored config."""
         self.processor = await self.processor_type.create(
-            **self.processor_config
+            config=self.processor_config
         )
 
     async def append(self, event: Event) -> None:
