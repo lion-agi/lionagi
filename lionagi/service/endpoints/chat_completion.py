@@ -1,7 +1,7 @@
 # Copyright (c) 2023 - 2025, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
-
+import warnings
 from collections.abc import AsyncGenerator
 
 from .base import EndPoint
@@ -14,6 +14,14 @@ CHAT_COMPLETION_CONFIG = {
     "is_invokeable": True,
     "is_streamable": True,
 }
+
+
+warnings.filterwarnings(
+    "ignore",
+    message=".*Valid config keys have changed in V2.*",
+    category=UserWarning,
+    module="pydantic._internal._config",
+)
 
 
 class ChatCompletionEndPoint(EndPoint):
