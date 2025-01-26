@@ -5,7 +5,35 @@
 import inspect
 from typing import Any, Literal
 
+from pydantic import BaseModel
+
 from .extract_docstring import extract_docstring
+
+
+class ToolSchema(BaseModel):
+
+    function: str | None = None
+    description: str | None = None
+    parameters: dict[str, Any] | None = None
+
+    @property
+    def name(self):
+        return self.function
+
+    @name.setter
+    def name(self, value):
+        self.function = value
+
+    def to_dict(self):
+        return {
+            "type": "function",
+            "function": {
+                "name": self.function,
+                "description": self.description,
+                "parameters": self.parameters,
+            },
+        }
+
 
 py_json_msp = {
     "str": "string",
@@ -20,11 +48,15 @@ py_json_msp = {
 
 def function_to_schema(
     f_,
+    /,
     style: Literal["google", "rest"] = "google",
     *,
+    name: str = None,
     func_description: str = None,
-    parametert_description: dict[str, str] = None,
-) -> dict:
+    param_description: dict[str, str] = None,
+    request_options: type[BaseModel] = None,
+    as_obj: bool = False,
+) -> dict | ToolSchema:
     """
     Generate a schema description for a given function. in openai format
 
@@ -62,37 +94,50 @@ def function_to_schema(
         'example_func'
     """
     # Extract function name
-    func_name = f_.__name__
+    func_name = f_.__name__ if name is None else name
 
     # Extract function description and parameter descriptions
-    if not func_description or not parametert_description:
+    if not func_description or not param_description:
         func_desc, params_desc = extract_docstring(f_, style)
         func_description = func_description or func_desc
-        parametert_description = parametert_description or params_desc
+        param_description = param_description or params_desc
 
     # Extract parameter details using typing hints
     sig = inspect.signature(f_)
+
     parameters: dict[str, Any] = {
         "type": "object",
         "properties": {},
         "required": [],
     }
 
-    for name, param in sig.parameters.items():
-        # Default type to string and update if type hint is available
-        param_type = "string"
-        if param.annotation is not inspect.Parameter.empty:
-            param_type = py_json_msp[param.annotation.__name__]
+    if request_options:
+        schema_ = request_options.model_json_schema()
+        parameters = schema_
 
-        # Extract parameter description from docstring, if available
-        param_description = parametert_description.get(name)
+    else:
+        for n, param in sig.parameters.items():
+            # Default type to string and update if type hint is available
+            param_type = "string"
+            if param.annotation is not inspect.Parameter.empty:
+                param_type = py_json_msp[param.annotation.__name__]
 
-        # Assuming all parameters are required for simplicity
-        parameters["required"].append(name)
-        parameters["properties"][name] = {
-            "type": param_type,
-            "description": param_description,
-        }
+            # Extract parameter description from docstring, if available
+            param_description = param_description.get(n)
+
+            # Assuming all parameters are required for simplicity
+            parameters["required"].append(n)
+            parameters["properties"][n] = {
+                "type": param_type,
+                "description": param_description,
+            }
+
+    if as_obj:
+        return ToolSchema(
+            function=func_name,
+            description=func_description,
+            parameters=parameters,
+        )
 
     return {
         "type": "function",
