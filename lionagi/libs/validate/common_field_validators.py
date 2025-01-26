@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Any
+
 from pydantic import BaseModel, JsonValue
 
 from lionagi.utils import UNDEFINED, copy, to_list
@@ -109,7 +111,7 @@ def validate_dict_kwargs_params(cls, value) -> dict:
 
 
 def validate_callable(
-    cls, value, undefind_able: bool = True, check_name: bool = False
+    cls, value, undefine_able: bool = True, check_name: bool = False
 ) -> callable:
     """Validate strict callable function.
 
@@ -124,7 +126,7 @@ def validate_callable(
         ValueError: If value is not callable.
     """
     if not callable(value):
-        if undefind_able and value in [None, UNDEFINED]:
+        if undefine_able and value in [None, UNDEFINED]:
             pass
         else:
             raise ValueError("Value must be a callable function")
@@ -133,14 +135,23 @@ def validate_callable(
     return value
 
 
-def validate_model_to_type(cls, value):
+def validate_model_to_type(cls, value, default=UNDEFINED) -> type | Any:
+    if not value and default is not UNDEFINED:
+        return default
+
     if value is None:
         return BaseModel
-    if isinstance(value, type) and issubclass(value, BaseModel):
-        return value
-    if isinstance(value, BaseModel):
-        return value.__class__
-    raise ValueError("Base must be a BaseModel subclass or instance.")
+    try:
+        if isinstance(value, type) and issubclass(value, BaseModel):
+            return value
+
+        if isinstance(value, BaseModel):
+            return value.__class__
+
+    except Exception:
+        if default is not UNDEFINED:
+            return default
+        raise ValueError("Base must be a BaseModel subclass or instance.")
 
 
 def validate_list_dict_str_keys(cls, value):

@@ -24,7 +24,7 @@ CHAT_COMPLETION_CONFIG = {
     },
     "optional_kwargs": {
         "store",
-        "reasoning_effort",
+        "reasoning_effort",  # "low", "medium", "high"
         "metadata",
         "frequency_penalty",
         "logit_bias",
@@ -84,9 +84,13 @@ class OpenAIChatCompletionEndPoint(ChatCompletionEndPoint):
         if "api_key" in kwargs:
             headers["Authorization"] = f"Bearer {kwargs['api_key']}"
 
-        if payload.get("model") in ["o1", "o1-2024-12-17"]:
+        if "o1" in payload.get("model", []):
             payload.pop("temperature", None)
             payload.pop("top_p", None)
+            payload.pop("presence_penalty", None)
+
+        if payload.get("model") in ["o1", "o1-2024-12-17"]:
+
             if payload["messages"][0].get("role") == "system":
                 payload["messages"][0]["role"] = "developer"
 

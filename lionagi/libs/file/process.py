@@ -29,7 +29,7 @@ def dir_to_files(
         directory (Union[str, Path]): The directory to process.
         file_types (Optional[List[str]]): List of file extensions to include (e.g., ['.txt', '.pdf']).
                                           If None, include all file types.
-        max_workers (Optional[int]): Maximum number of worker threads for concurrent processing.
+        max_workers (int | None): Maximum number of worker threads for concurrent processing.
                                      If None, uses the default ThreadPoolExecutor behavior.
         ignore_errors (bool): If True, log warnings for errors instead of raising exceptions.
         verbose (bool): If True, print verbose output.
@@ -105,7 +105,7 @@ def file_to_chunks(
         overlap (float): The fraction of overlap between chunks.
         threshold (int): The minimum size for the last chunk.
         encoding (str): File encoding to use when reading the file.
-        custom_metadata (Optional[Dict[str, Any]]): Additional metadata to include with each chunk.
+        custom_metadata (dict[str, Any] | None): Additional metadata to include with each chunk.
         output_dir (Optional[Union[str, Path]]): Directory to save output chunks (if provided).
         verbose (bool): If True, print verbose output.
         timestamp (bool): If True, include timestamp in output filenames.

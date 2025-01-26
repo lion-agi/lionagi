@@ -242,7 +242,7 @@ class ReaderTool(LionTool):
             if self.system_tool_name != "reader_tool":
                 reader_tool.__name__ = self.system_tool_name
 
-            self._tool = Tool(
+            self._tool = Tool.create(
                 func_callable=reader_tool,
                 request_options=ReaderRequest,
             )

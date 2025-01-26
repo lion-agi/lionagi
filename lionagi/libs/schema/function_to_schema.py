@@ -132,18 +132,12 @@ def function_to_schema(
                 "description": param_description,
             }
 
-    if as_obj:
-        return ToolSchema(
-            function=func_name,
-            description=func_description,
-            parameters=parameters,
-        )
+    schema = ToolSchema(
+        function=func_name,
+        description=func_description,
+        parameters=parameters,
+    )
 
-    return {
-        "type": "function",
-        "function": {
-            "name": func_name,
-            "description": func_description,
-            "parameters": parameters,
-        },
-    }
+    if as_obj:
+        return schema
+    return schema.to_dict()

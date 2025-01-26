@@ -8,7 +8,7 @@ from lionagi.operatives.types import Instruct
 from lionagi.protocols.generic.event import EventStatus
 from lionagi.service.endpoints.base import APICalling, EndPoint
 from lionagi.service.imodel import iModel
-from lionagi.service.providers.openai_.chat_completions import (
+from lionagi.service.providers.openai_.chat_completions.chat_completions import (
     CHAT_COMPLETION_CONFIG,
 )
 from lionagi.session.branch import Branch

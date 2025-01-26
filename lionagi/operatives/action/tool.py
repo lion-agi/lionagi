@@ -10,13 +10,14 @@ type aliases for function references.
 
 import inspect
 from collections.abc import Callable
-from typing import Any, TypeAlias
+from typing import Any, ClassVar, Literal, TypeAlias
 
-from pydantic import Field, field_validator, model_validator
-from typing_extensions import Self
+from pydantic import Field, model_validator
 
-from lionagi.libs.schema.function_to_schema import function_to_schema
-from lionagi.libs.validate.common_field_validators import validate_callable
+from lionagi.libs.schema.function_to_schema import (
+    ToolSchema,
+    function_to_schema,
+)
 from lionagi.protocols.generic.element import Element
 
 __all__ = (
@@ -38,13 +39,32 @@ class Tool(Element):
     `tool_schema` is auto-generated from the function signature if not provided.
     """
 
+    USING_FIELDS: ClassVar[set[str]] = {
+        "func_callable",
+        "tool_schema",
+        "request_options",
+        "preprocessor",
+        "preprocessor_kwargs",
+        "postprocessor",
+        "postprocessor_kwargs",
+        "strict_func_call",
+    }
+
+    ADDITIONAL_CREATE_PARAMS: ClassVar[set[str]] = {
+        "function",
+        "name",
+        "func_description",
+        "param_description",
+        "docstring_style",
+    }
+
     func_callable: Callable[..., Any] = Field(
         ...,  # ... indicates required field
         description="The callable function to be wrapped by the tool",
         exclude=True,
     )
 
-    tool_schema: dict[str, Any] | None = Field(
+    tool_schema: dict[str, Any] | ToolSchema | None = Field(
         default=None,
         description="Schema describing the function's parameters and structure",
     )
@@ -83,22 +103,70 @@ class Tool(Element):
         description="Whether to enforce strict validation of function parameters",
     )
 
-    @field_validator("func_callable", mode="before")
-    def _validate_func_callable(cls, value: Any) -> Callable[..., Any]:
-        return validate_callable(
-            cls, value, undefind_able=False, check_name=True
+    @model_validator(mode="before")
+    def _validate_tool_before(cls, values: dict) -> dict:
+        values = {k: v for k, v in values.items() if v}
+
+        if not values.get("func_callable"):
+            raise ValueError("Func_callable is Required.")
+
+        if any(
+            not callable(values.get(i))
+            for i in ("preprocessor", "postprocessor", "func_callable")
+        ):
+            raise ValueError(
+                "Func_callable must be callable functions and is Required. Preprocessor/postprocessor must be callable functions."
+            )
+
+        if tool_schema := values.get("tool_schema"):
+            if isinstance(tool_schema, dict):
+                tool_schema = ToolSchema(**tool_schema)
+
+            if not tool_schema:
+                params = {}
+                params["style"] = values.get("docstring_style")
+                params["func_description"] = values.get("func_description")
+                params["param_description"] = values.get("param_description")
+                params["request_options"] = values.get("request_options")
+                params["as_obj"] = True
+                params["name"] = values.get("function") or values.get("name")
+                tool_schema = function_to_schema(
+                    values["func_callable"], **params
+                )
+
+            if not isinstance(tool_schema, ToolSchema):
+                raise ValueError(
+                    "`tool_schema` must be a dict or a ToolSchema instance."
+                )
+
+            values["tool_schema"] = tool_schema
+
+        return {k: values.get(k) for k in cls.USING_FIELDS}
+
+    def tool_json_schema(self):
+        return self.tool_schema.to_dict()
+
+    @classmethod
+    def create(
+        cls,
+        func_callable: Callable[..., Any],
+        function: str = None,
+        name: str = None,  # alias of function
+        tool_schema: ToolSchema | None = None,
+        request_options: type | None = None,
+        preprocessor: Callable[[Any], Any] | None = None,
+        preprocessor_kwargs: dict[str, Any] = None,
+        postprocessor: Callable[[Any], Any] | None = None,
+        postprocessor_kwargs: dict[str, Any] = None,
+        strict_func_call: bool = False,
+        func_description: str = None,
+        param_description: dict[str, str] = None,
+        docstring_style: Literal["google", "rest"] = "google",
+    ):
+        use_fields = cls.USING_FIELDS | cls.ADDITIONAL_CREATE_PARAMS
+        return cls.model_validate(
+            {k: v for k, v in locals().items() if k in use_fields}
         )
-
-    @model_validator(mode="after")
-    def _validate_tool_schema(self) -> Self:
-        if self.tool_schema is None:
-            self.tool_schema = function_to_schema(self.func_callable)
-        if self.request_options is not None:
-            schema_ = self.request_options.model_json_schema()
-            schema_.pop("title", None)
-            self.tool_schema["function"]["parameters"] = schema_
-
-        return self
 
     @property
     def function(self) -> str:

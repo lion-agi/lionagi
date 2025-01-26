@@ -13,7 +13,7 @@ def match_endpoint(
 ) -> EndPoint:
 
     if endpoint in ["chat/completions", "chat", "messages"]:
-        from ..providers.openai_.chat_completions import (
+        from ..providers.openai_.chat_completions.chat_completions import (
             OpenAIChatCompletionEndPoint,
         )
 
