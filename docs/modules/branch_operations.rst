@@ -517,7 +517,7 @@ is complete, a final answer is produced.
 Optionally repeats expansions if "extension_needed" is signaled, 
 up to a specified limit. Typically used in complex tasks.
 
-.. method:: Branch.ReAct(instruct, interpret=False, tools=None, tool_schemas=None, response_format=None, extension_allowed=False, max_extensions=None, response_kwargs=None, return_analysis=False, analysis_model=None, **kwargs)
+.. method:: Branch.ReAct(instruct, interpret=False, interpret_domain=None, interpret_style=None, interpret_sample=None, interpret_model=None, interpret_kwargs=None, tools=None, tool_schemas=None, response_format=None, extension_allowed=False, max_extensions=None, response_kwargs=None, return_analysis=False, analysis_model=None, verbose_analysis=False, verbose_length=None, **kwargs)
 
     Performs a multi-step "ReAct" flow (inspired by the ReAct paradigm in LLM usage),
     which may include chain-of-thought analysis, multiple expansions, and tool usage.
@@ -528,13 +528,24 @@ up to a specified limit. Typically used in complex tasks.
         The user's instruction object or a dict with equivalent keys
     interpret : bool, default=False
         If True, first interprets (branch.interpret) the instructions
+    interpret_domain : str, optional
+        Domain hint for interpretation (e.g. "finance", "marketing")
+    interpret_style : str, optional
+        Style hint for interpretation (e.g. "concise", "detailed")
+    interpret_sample : str, optional
+        Sample writing to guide interpretation style
+    interpret_model : str, optional
+        Custom model to use for interpretation step
+    interpret_kwargs : dict, optional
+        Additional kwargs for interpretation step
     tools : Any, optional
         Tools to be made available for the ReAct process. If omitted,
         defaults to True (all tools)
     tool_schemas : Any, optional
         Additional or custom schemas for tools if function calling is needed
     response_format : type[BaseModel] | BaseModel, optional
-        The final schema for the user-facing output after ReAct expansions
+        The final schema for the user-facing output after ReAct expansions.
+        Defaults to Analysis model if not specified.
     extension_allowed : bool, default=False
         Whether to allow multiple expansions if analysis indicates more steps
     max_extensions : int, optional
@@ -545,6 +556,10 @@ up to a specified limit. Typically used in complex tasks.
         If True, returns both final output and list of analysis objects
     analysis_model : iModel, optional
         A custom LLM model for generating the ReAct analysis steps
+    verbose_analysis : bool, default=False
+        If True, displays formatted analysis at each step
+    verbose_length : int, optional
+        Maximum length for verbose analysis output before truncation
     **kwargs
         Additional keyword arguments passed into the initial operate() call
 
@@ -553,19 +568,22 @@ up to a specified limit. Typically used in complex tasks.
     Any | tuple[Any, list]
         - If return_analysis=False, returns only the final output
         - If return_analysis=True, returns (final_output, list_of_analyses)
+        - Final output is an Analysis model by default unless response_format specified
 
     Notes
     -----
     Flow:
-    1. Optionally interprets the user instruction
+    1. Optionally interprets the user instruction with customizable parameters
     2. Generates chain-of-thought analysis using a specialized schema
     3. Optionally expands conversation if analysis indicates more steps
     4. Produces final answer by invoking branch.communicate()
 
     - Messages are automatically added to the branch context
-    - If max_extensions > 5, it is clamped to 5 with a warning
+    - If max_extensions > 100, it is clamped to 100 with a warning
     - The expansions loop continues until either analysis.extension_needed
       is False or extensions (remaining allowed expansions) is 0
+    - Analysis steps are displayed in a readable format if verbose_analysis=True
+    - Uses the Analysis model by default for final response unless overridden
 
 
 ``select``
@@ -690,6 +708,13 @@ Differences and Usage Notes
   - A subset of advanced usage where the model is expected to 
     produce chain-of-thought or partial reasoning steps that 
     may loop if it finds it needs further expansions.
+  - Supports customizable interpretation of instructions with domain
+    and style hints.
+  - Can display formatted analysis at each step for better visibility
+    into the reasoning process.
+  - Uses a structured Analysis model by default for consistent output
+    format (a simple model with a single 'answer' field containing the
+    final response text).
 
 - **_act** vs. **act**:
   - ``_act`` is an internal helper that does the actual invocation 

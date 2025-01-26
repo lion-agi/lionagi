@@ -128,6 +128,7 @@ class Branch(Element, Communicatable, Relational):
         system_sender: SenderRecipient = None,
         chat_model: iModel | dict = None,  # iModelManager kwargs
         parse_model: iModel | dict = None,
+        interpret_model: iModel | dict = None,
         imodel: iModel = None,  # deprecated, alias of chat_model
         tools: FuncTool | list[FuncTool] = None,  # ActionManager kwargs
         log_config: LogManagerConfig | dict = None,  # LogManager kwargs
@@ -212,11 +213,15 @@ class Branch(Element, Communicatable, Relational):
             chat_model = iModel(**Settings.iModel.CHAT)
         if not parse_model:
             parse_model = iModel(**Settings.iModel.PARSE)
+        if not interpret_model:
+            interpret_model = chat_model
 
         if isinstance(chat_model, dict):
             chat_model = iModel.from_dict(chat_model)
         if isinstance(parse_model, dict):
             parse_model = iModel.from_dict(parse_model)
+        if isinstance(interpret_model, dict):
+            interpret_model = iModel.from_dict(interpret_model)
 
         self._imodel_manager = iModelManager(
             chat=chat_model, parse=parse_model
