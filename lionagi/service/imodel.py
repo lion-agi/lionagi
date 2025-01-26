@@ -108,6 +108,9 @@ class iModel:
                     api_key = "GROQ_API_KEY"
                 case "exa":
                     api_key = "EXA_API_KEY"
+                case _:
+                    if isinstance(provider, str):
+                        api_key = f"{provider.upper()}_API_KEY"
 
         if os.getenv(api_key, None) is not None:
             self.api_key_scheme = api_key
