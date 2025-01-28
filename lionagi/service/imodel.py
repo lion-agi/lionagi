@@ -54,6 +54,7 @@ class iModel:
         invoke_with_endpoint: bool = False,
         concurrency_limit: int | None = None,
         streaming_process_func: Callable = None,
+        requires_api_key: bool = True,
         **kwargs,
     ) -> None:
         """Initializes the iModel instance.
@@ -95,6 +96,7 @@ class iModel:
                 provider-specific fields.
         """
         if api_key is None:
+            provider = str(provider or "").strip().lower()
             match provider:
                 case "openai":
                     api_key = "OPENAI_API_KEY"
@@ -108,6 +110,11 @@ class iModel:
                     api_key = "GROQ_API_KEY"
                 case "exa":
                     api_key = "EXA_API_KEY"
+                case "":
+                    if requires_api_key:
+                        raise ValueError("API key must be provided")
+                case _:
+                    api_key = f"{provider.upper()}_API_KEY"
 
         if os.getenv(api_key, None) is not None:
             self.api_key_scheme = api_key
