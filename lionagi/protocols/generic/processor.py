@@ -226,6 +226,7 @@ class Executor(Observer):
         self,
         processor_config: dict[str, Any] | ProcessorConfig,
         strict_event_type: bool = False,
+        **kwargs,
     ) -> None:
         """Initializes the Executor.
 
@@ -243,8 +244,10 @@ class Executor(Observer):
             raise TypeError(
                 "Processor config must be a dict or ProcessorConfig."
             )
+        processor_config = {**processor_config, **kwargs}
+
         self.processor_config: ProcessorConfig = (
-            self.processor_type.config_type.model_validate(processor_config)
+            self.processor.config_type.model_validate(processor_config)
         )
         self.pending: Progression = Progression()
         self.processor: Processor | None = None
