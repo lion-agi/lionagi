@@ -33,3 +33,7 @@ class OperationError(LionError):
 
 class ExecutionError(LionError):
     pass
+
+
+class ActionError(LionError):
+    pass
