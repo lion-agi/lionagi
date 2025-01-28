@@ -5,6 +5,10 @@
 import asyncio
 from typing import Any, ClassVar
 
+from pydantic import Field
+
+from lionagi.utils import HashableModel
+
 from .._concepts import Observer
 from .element import ID
 from .event import Event, EventStatus
@@ -17,6 +21,12 @@ __all__ = (
 )
 
 
+class ProcessorConfig(HashableModel):
+    queue_capacity: int = 100
+    capacity_refresh_time: float = (Field(60.0, description="seconds", gt=0),)
+    concurrency_limit: int | None = None
+
+
 class Processor(Observer):
     """Manages a queue of events with capacity-limited, async processing.
 
@@ -26,6 +36,7 @@ class Processor(Observer):
     """
 
     event_type: ClassVar[type[Event]]
+    config_type: ClassVar[type[ProcessorConfig]]
 
     def __init__(
         self,
@@ -117,7 +128,9 @@ class Processor(Observer):
         return self._stop_event.is_set()
 
     @classmethod
-    async def create(cls, **kwargs: Any) -> "Processor":
+    async def create(
+        cls, processor_config: ProcessorConfig | dict, **kwargs: Any
+    ) -> "Processor":
         """Asynchronously constructs a new Processor instance.
 
         Args:
@@ -127,7 +140,13 @@ class Processor(Observer):
         Returns:
             Processor: A newly instantiated processor.
         """
-        return cls(**kwargs)
+        params = (
+            processor_config
+            if isinstance(processor_config, dict)
+            else processor_config.to_dict()
+        )
+        params = cls.config_type.model_validate({**params, **kwargs})
+        return cls(**params.to_dict())
 
     async def process(self) -> None:
         """Dequeues and processes events up to the available capacity.
@@ -205,7 +224,7 @@ class Executor(Observer):
 
     def __init__(
         self,
-        processor_config: dict[str, Any] | None = None,
+        processor_config: dict[str, Any] | ProcessorConfig,
         strict_event_type: bool = False,
     ) -> None:
         """Initializes the Executor.
@@ -217,8 +236,17 @@ class Executor(Observer):
                 If True, the underlying Pile enforces exact type matching
                 for Event objects.
         """
-        self.processor_config = processor_config or {}
-        self.pending = Progression()
+        super().__init__()
+        if isinstance(processor_config, ProcessorConfig):
+            processor_config = processor_config.to_dict()
+        if not isinstance(processor_config, dict):
+            raise TypeError(
+                "Processor config must be a dict or ProcessorConfig."
+            )
+        self.processor_config: ProcessorConfig = (
+            self.processor_type.config_type.model_validate(processor_config)
+        )
+        self.pending: Progression = Progression()
         self.processor: Processor | None = None
         self.pile: Pile[Event] = Pile(
             item_type=self.processor_type.event_type,
@@ -262,7 +290,7 @@ class Executor(Observer):
     async def _create_processor(self) -> None:
         """Instantiates the processor using the stored config."""
         self.processor = await self.processor_type.create(
-            **self.processor_config
+            processor_config=self.processor_config
         )
 
     async def append(self, event: Event) -> None:
