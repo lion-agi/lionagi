@@ -7,7 +7,11 @@ import logging
 
 from typing_extensions import Self, override
 
-from lionagi.protocols.generic.processor import Executor, Processor
+from lionagi.protocols.generic.processor import (
+    Executor,
+    Processor,
+    ProcessorConfig,
+)
 
 from .base import APICalling
 
@@ -17,9 +21,17 @@ __all__ = (
 )
 
 
+class RateLimitedProcessorConfig(ProcessorConfig):
+
+    interval: float | None = None
+    limit_requests: int | None = None
+    limit_tokens: int | None = None
+
+
 class RateLimitedAPIProcessor(Processor):
 
     event_type = APICalling
+    config_type = RateLimitedProcessorConfig
 
     def __init__(
         self,
@@ -33,7 +45,7 @@ class RateLimitedAPIProcessor(Processor):
         super().__init__(
             queue_capacity=queue_capacity,
             capacity_refresh_time=capacity_refresh_time,
-            concurrency_limit=concurrency_limit,
+            concurrency_limit=concurrency_limit or queue_capacity,
         )
         self.limit_tokens = limit_tokens
         self.limit_requests = limit_requests
@@ -42,9 +54,6 @@ class RateLimitedAPIProcessor(Processor):
         self.available_token = self.limit_tokens
         self._rate_limit_replenisher_task: asyncio.Task | None = None
         self._lock: asyncio.Lock = asyncio.Lock()
-        self._concurrency_sem = asyncio.Semaphore(
-            concurrency_limit or queue_capacity
-        )
 
     async def start_replenishing(self):
         """Start replenishing rate limit capacities at regular intervals."""
@@ -130,27 +139,22 @@ class RateLimitedAPIExecutor(Executor):
 
     def __init__(
         self,
-        queue_capacity: int,
-        capacity_refresh_time: float,
+        processor_config: dict | ProcessorConfig,
+        strict_event_type: bool = False,
+        queue_capacity: int = None,
+        capacity_refresh_time: float = None,
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
-        strict_event_type: bool = False,
         concurrency_limit: int | None = None,
     ):
-        config = {
-            "queue_capacity": queue_capacity,
-            "capacity_refresh_time": capacity_refresh_time,
-            "interval": interval,
-            "limit_requests": limit_requests,
-            "limit_tokens": limit_tokens,
-            "concurrency_limit": concurrency_limit,
+        params = {
+            k: v
+            for k, v in locals().items()
+            if k in RateLimitedProcessorConfig.model_fields
         }
         super().__init__(
-            processor_config=config, strict_event_type=strict_event_type
+            processor_config=processor_config,
+            strict_event_type=strict_event_type,
+            **params,
         )
-        self.config = config
-        self.interval = interval
-        self.limit_requests = limit_requests
-        self.limit_tokens = limit_tokens
-        self.concurrency_limit = concurrency_limit or queue_capacity
