@@ -364,6 +364,7 @@ class APICalling(Event):
         exclude=True,
         description="Whether to include token usage information into instruction messages",
     )
+    response_obj: BaseModel | None = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def _validate_streaming(self) -> Self:
@@ -658,7 +659,12 @@ class APICalling(Event):
                     f"API call to {self.endpoint.full_url} failed: {e1}"
                 )
             else:
-                self.execution.response = response
+                self.response_obj = response
+                self.execution.response = (
+                    response.model_dump()
+                    if isinstance(response, BaseModel)
+                    else response
+                )
                 self.execution.status = EventStatus.COMPLETED
 
     def __str__(self) -> str:
