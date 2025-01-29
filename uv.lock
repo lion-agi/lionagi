@@ -1208,7 +1208,7 @@ wheels = [
 
 [[package]]
 name = "lionagi"
-version = "0.9.5"
+version = "0.9.6"
 source = { editable = "." }
 dependencies = [
     { name = "aiocache" },
@@ -1235,9 +1235,15 @@ dev = [
     { name = "sphinx" },
     { name = "sphinx-autobuild" },
 ]
+llms = [
+    { name = "litellm" },
+    { name = "openai" },
+]
+ollama = [
+    { name = "ollama" },
+]
 tools = [
     { name = "docling" },
-    { name = "litellm" },
 ]
 
 [package.metadata]
@@ -1266,10 +1272,12 @@ dev = [
     { name = "sphinx", specifier = ">=8.1.3" },
     { name = "sphinx-autobuild", specifier = ">=2024.10.3" },
 ]
-tools = [
-    { name = "docling", specifier = ">=2.15.1" },
+llms = [
     { name = "litellm", specifier = ">=1.59.5" },
+    { name = "openai", specifier = ">=1.60.0" },
 ]
+ollama = [{ name = "ollama", specifier = ">=0.4.7" }]
+tools = [{ name = "docling", specifier = ">=2.15.1" }]
 
 [[package]]
 name = "litellm"
@@ -1835,6 +1843,19 @@ source = { registry = "https://pypi.org/simple" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/06/39/471f581edbb7804b39e8063d92fc8305bdc7a80ae5c07dbe6ea5c50d14a5/nvidia_nvtx_cu12-12.4.127-py3-none-manylinux2014_aarch64.whl", hash = "sha256:7959ad635db13edf4fc65c06a6e9f9e55fc2f92596db928d169c0bb031e88ef3", size = 100417 },
     { url = "https://files.pythonhosted.org/packages/87/20/199b8713428322a2f22b722c62b8cc278cc53dffa9705d744484b5035ee9/nvidia_nvtx_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl", hash = "sha256:781e950d9b9f60d8241ccea575b32f5105a5baf4c2351cab5256a24869f12a1a", size = 99144 },
+]
+
+[[package]]
+name = "ollama"
+version = "0.4.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b0/6d/dc77539c735bbed5d0c873fb029fb86aa9f0163df169b34152914331c369/ollama-0.4.7.tar.gz", hash = "sha256:891dcbe54f55397d82d289c459de0ea897e103b86a3f1fad0fdb1895922a75ff", size = 12843 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/83/c3ffac86906c10184c88c2e916460806b072a2cfe34cdcaf3a0c0e836d39/ollama-0.4.7-py3-none-any.whl", hash = "sha256:85505663cca67a83707be5fb3aeff0ea72e67846cea5985529d8eca4366564a1", size = 13210 },
 ]
 
 [[package]]
