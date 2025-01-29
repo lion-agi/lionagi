@@ -78,8 +78,9 @@ class EndpointConfig(BaseModel):
     is_streamable: bool = False
     requires_tokens: bool = False
     api_version: str | None = None
-    allowed_roles: list[str] | None = None
+    allowed_roles: set[str] | None = None
     request_options: type | None = Field(None, exclude=True)
+    requires_api_key: bool = True
 
 
 class EndPoint(ABC):

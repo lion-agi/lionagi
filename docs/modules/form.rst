@@ -108,7 +108,7 @@ Flow System
 
    **Attributes**:
 
-   - **steps** (*List[FlowStep]*) -- Ordered list of transformation steps
+   - **steps** (*list[FlowStep]*) -- Ordered list of transformation steps
 
    **Methods**:
 
