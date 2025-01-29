@@ -48,6 +48,13 @@ def match_endpoint(
 
             return OpenRouterChatCompletionEndPoint()
 
+        if provider == "ollama":
+            from ..providers.ollama_.chat_completions import (
+                OllamaChatCompletionEndPoint,
+            )
+
+            return OllamaChatCompletionEndPoint()
+
         return OpenAIChatCompletionEndPoint(
             config={
                 "provider": provider,
