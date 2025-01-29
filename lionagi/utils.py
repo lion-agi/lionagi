@@ -1022,10 +1022,14 @@ def create_path(
         The full Path to the new or existing file.
 
     Raises:
-        ValueError: If no extension or filename invalid.
+        ValueError: If filename is invalid.
         FileExistsError: If file exists and file_exist_ok=False.
     """
-    if "/" in filename or "\\" in filename:
+    if "/" in filename:
+        sub_dir, filename = filename.split("/")[:-1], filename.split("/")[-1]
+        directory = Path(directory) / "/".join(sub_dir)
+
+    if "\\" in filename:
         raise ValueError("Filename cannot contain directory separators.")
 
     directory = Path(directory)
@@ -1035,9 +1039,6 @@ def create_path(
         name, ext = filename.rsplit(".", 1)
     else:
         name, ext = filename, extension
-
-    if not ext:
-        raise ValueError("No extension provided for filename.")
 
     # Ensure extension has a single leading dot
     ext = f".{ext.lstrip('.')}" if ext else ""
