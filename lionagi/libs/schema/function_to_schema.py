@@ -5,7 +5,13 @@
 import inspect
 from typing import Any, Literal
 
-from .extract_docstring import extract_docstring
+from pydantic import Field, field_validator
+
+from lionagi.libs.schema.extract_docstring import extract_docstring
+from lionagi.libs.validate.common_field_validators import (
+    validate_model_to_type,
+)
+from lionagi.operatives.models.schema_model import SchemaModel
 
 py_json_msp = {
     "str": "string",
@@ -18,12 +24,60 @@ py_json_msp = {
 }
 
 
+class FunctionSchema(SchemaModel):
+    name: str
+    description: str | None = Field(
+        None,
+        description=(
+            "A description of what the function does, used by the "
+            "model to choose when and how to call the function."
+        ),
+    )
+    parameters: dict[str, Any] | None = Field(
+        None,
+        description=(
+            "The parameters the functions accepts, described as a JSON Schema object. "
+            "See the guide (https://platform.openai.com/docs/guides/function-calling) "
+            "for examples, and the JSON Schema reference for documentation about the "
+            "format. Omitting parameters defines a function with an empty parameter list."
+        ),
+        validation_alias="request_options",
+    )
+    strict: bool | None = Field(
+        None,
+        description=(
+            "Whether to enable strict schema adherence when generating the function call. "
+            "If set to true, the model will follow the exact schema defined in the parameters "
+            "field. Only a subset of JSON Schema is supported when strict is true."
+        ),
+    )
+
+    @field_validator("parameters", mode="before")
+    def _validate_parameters(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            return v
+        try:
+            model_type = validate_model_to_type(cls, v)
+            return model_type.model_json_schema()
+        except Exception:
+            raise ValueError(f"Invalid model type: {v}")
+
+    def to_dict(self):
+        dict_ = super().to_dict()
+        return {"type": "function", "function": dict_}
+
+
 def function_to_schema(
     f_,
     style: Literal["google", "rest"] = "google",
     *,
+    request_options: dict[str, Any] | None = None,
+    strict: bool = None,
     func_description: str = None,
     parametert_description: dict[str, str] = None,
+    return_obj: bool = False,
 ) -> dict:
     """
     Generate a schema description for a given function. in openai format
@@ -78,27 +132,33 @@ def function_to_schema(
         "required": [],
     }
 
-    for name, param in sig.parameters.items():
-        # Default type to string and update if type hint is available
-        param_type = "string"
-        if param.annotation is not inspect.Parameter.empty:
-            param_type = py_json_msp[param.annotation.__name__]
+    if not request_options:
+        for name, param in sig.parameters.items():
+            # Default type to string and update if type hint is available
+            param_type = "string"
+            if param.annotation is not inspect.Parameter.empty:
+                param_type = py_json_msp[param.annotation.__name__]
 
-        # Extract parameter description from docstring, if available
-        param_description = parametert_description.get(name)
+            # Extract parameter description from docstring, if available
+            param_description = parametert_description.get(name)
 
-        # Assuming all parameters are required for simplicity
-        parameters["required"].append(name)
-        parameters["properties"][name] = {
-            "type": param_type,
-            "description": param_description,
-        }
+            # Assuming all parameters are required for simplicity
+            parameters["required"].append(name)
+            parameters["properties"][name] = {
+                "type": param_type,
+                "description": param_description,
+            }
+    else:
+        parameters = request_options
 
-    return {
-        "type": "function",
-        "function": {
-            "name": func_name,
-            "description": func_description,
-            "parameters": parameters,
-        },
+    params = {
+        "name": func_name,
+        "description": func_description,
+        "parameters": parameters,
     }
+    if strict:
+        params["strict"] = strict
+
+    if return_obj:
+        return FunctionSchema(**params)
+    return FunctionSchema(**params).to_dict()

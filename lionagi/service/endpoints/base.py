@@ -80,6 +80,7 @@ class EndpointConfig(BaseModel):
     api_version: str | None = None
     allowed_roles: list[str] | None = None
     request_options: type | None = Field(None, exclude=True)
+    invoke_with_endpoint: bool | None = None
 
 
 class EndPoint(ABC):
@@ -91,19 +92,28 @@ class EndPoint(ABC):
     HTTP requests.
     """
 
-    def __init__(self, config: dict) -> None:
+    def __init__(
+        self, config: dict | EndpointConfig | type[EndpointConfig], **kwargs
+    ) -> None:
         """Initializes the EndPoint with a given configuration.
 
         Args:
-            config (dict): Configuration data that matches the EndpointConfig
+            config (dict | EndpointConfig): Configuration data that matches the EndpointConfig
                 schema.
         """
-        self.config = EndpointConfig(**config)
+        if isinstance(config, dict):
+            self.config = EndpointConfig(**config)
+        if isinstance(config, EndpointConfig):
+            self.config = config
+        if isinstance(config, type) and issubclass(config, EndpointConfig):
+            self.config = config()
+        if kwargs:
+            self.update_config(**kwargs)
 
     def update_config(self, **kwargs):
         config = self.config.model_dump()
         config.update(kwargs)
-        self.config = EndpointConfig(**config)
+        self.config = self.config.model_validate(config)
 
     @property
     def name(self) -> str | None:
@@ -354,6 +364,7 @@ class APICalling(Event):
         exclude=True,
         description="Whether to include token usage information into instruction messages",
     )
+    response_obj: BaseModel | None = Field(None, exclude=True)
 
     @model_validator(mode="after")
     def _validate_streaming(self) -> Self:
@@ -648,7 +659,12 @@ class APICalling(Event):
                     f"API call to {self.endpoint.full_url} failed: {e1}"
                 )
             else:
-                self.execution.response = response
+                self.response_obj = response
+                self.execution.response = (
+                    response.model_dump()
+                    if isinstance(response, BaseModel)
+                    else response
+                )
                 self.execution.status = EventStatus.COMPLETED
 
     def __str__(self) -> str:
