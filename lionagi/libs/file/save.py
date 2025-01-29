@@ -60,6 +60,7 @@ def save_to_file(
         )
         with file_path.open("w", encoding="utf-8") as file:
             file.write(text)
+        file.close()
         if verbose:
             logging.info(f"Text saved to: {file_path}")
         return file_path

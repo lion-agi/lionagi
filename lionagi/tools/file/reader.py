@@ -8,6 +8,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, model_validator
 
 from lionagi.operatives.action.tool import Tool
+from lionagi.service.endpoints.token_calculator import TokenCalculator
 from lionagi.utils import to_num
 
 from ..base import LionTool
@@ -18,10 +19,12 @@ class ReaderAction(str, Enum):
     This enumeration indicates the *type* of action the LLM wants to perform.
     - 'open': Convert a file/URL to text and store it internally for partial reads
     - 'read': Return a partial slice of the already-opened doc
+    - 'list_dir': List all files in a directory and store it internally for partial reads
     """
 
     open = "open"
     read = "read"
+    list_dir = "list_dir"
 
 
 class ReaderRequest(BaseModel):
@@ -39,6 +42,7 @@ class ReaderRequest(BaseModel):
             "Action to perform. Must be one of: "
             "- 'open': Convert a file/URL to text and store it internally for partial reads. "
             "- 'read': Return a partial slice of the already-opened doc."
+            "- 'list_dir': List all files in a directory."
         ),
     )
 
@@ -54,7 +58,8 @@ class ReaderRequest(BaseModel):
         None,
         description=(
             "Unique ID referencing a previously opened document. "
-            "This field is REQUIRED if action='read'. If action='open', leave it None."
+            "This field is REQUIRED if action='read'. Else leave it None."
+            "this field starts with 'DOC_' for document and 'DIR_' for directory listing."
         ),
     )
 
@@ -71,6 +76,22 @@ class ReaderRequest(BaseModel):
         description=(
             "Character end offset in the doc for partial reading. "
             "If omitted or None, we read until the document's end. Only used if action='read'."
+        ),
+    )
+
+    recursive: bool = Field(
+        False,
+        description=(
+            "Whether to recursively list files in subdirectories. Defaults to False."
+            "Only used if action='list_dir'."
+        ),
+    )
+
+    file_types: list[str] | None = Field(
+        None,
+        description=(
+            "List files with specific extensions. "
+            "If omitted or None, list all files. Only used if action='list_dir'."
         ),
     )
 
@@ -96,6 +117,7 @@ class DocumentInfo(BaseModel):
 
     doc_id: str
     length: int | None = None
+    num_tokens: int | None = None
 
 
 class PartialChunk(BaseModel):
@@ -150,17 +172,17 @@ class ReaderTool(LionTool):
     is_lion_system_tool = True
     system_tool_name = "reader_tool"
 
-    from lionagi.libs.package.imports import check_import
-
-    DocumentConverter = check_import(
-        "docling",
-        module_name="document_converter",
-        import_name="DocumentConverter",
-    )
-
     def __init__(self):
+        from lionagi.libs.package.imports import check_import
+
+        DocumentConverter = check_import(
+            "docling",
+            module_name="document_converter",
+            import_name="DocumentConverter",
+        )
+
         super().__init__()
-        self.converter = ReaderTool.DocumentConverter()
+        self.converter = DocumentConverter()
         self.documents = {}  # doc_id -> (temp_file_path, doc_length)
         self._tool = None
 
@@ -174,23 +196,18 @@ class ReaderTool(LionTool):
             request = ReaderRequest(**request)
         if request.action == "open":
             return self._open_doc(request.path_or_url)
-        elif request.action == "read":
+        if request.action == "read":
             return self._read_doc(
                 request.doc_id, request.start_offset, request.end_offset
+            )
+        if request.action == "list_dir":
+            return self._list_dir(
+                request.path_or_url, request.recursive, request.file_types
             )
         else:
             return ReaderResponse(success=False, error="Unknown action type")
 
-    def _open_doc(self, source: str) -> ReaderResponse:
-        try:
-            result = self.converter.convert(source)
-            text = result.document.export_to_markdown()
-        except Exception as e:
-            return ReaderResponse(
-                success=False, error=f"Conversion error: {str(e)}"
-            )
-
-        doc_id = f"DOC_{abs(hash(source))}"
+    def _save_to_temp(self, text, doc_id):
         temp_file = tempfile.NamedTemporaryFile(
             delete=False, mode="w", encoding="utf-8"
         )
@@ -202,8 +219,25 @@ class ReaderTool(LionTool):
         self.documents[doc_id] = (temp_file.name, doc_len)
 
         return ReaderResponse(
-            success=True, doc_info=DocumentInfo(doc_id=doc_id, length=doc_len)
+            success=True,
+            doc_info=DocumentInfo(
+                doc_id=doc_id,
+                length=doc_len,
+                num_tokens=TokenCalculator.tokenize(text),
+            ),
         )
+
+    def _open_doc(self, source: str) -> ReaderResponse:
+        try:
+            result = self.converter.convert(source)
+            text = result.document.export_to_markdown()
+        except Exception as e:
+            return ReaderResponse(
+                success=False, error=f"Conversion error: {str(e)}"
+            )
+
+        doc_id = f"DOC_{abs(hash(source))}"
+        return self._save_to_temp(text, doc_id)
 
     def _read_doc(self, doc_id: str, start: int, end: int) -> ReaderResponse:
         if doc_id not in self.documents:
@@ -230,14 +264,30 @@ class ReaderTool(LionTool):
             chunk=PartialChunk(start_offset=s, end_offset=e, content=content),
         )
 
+    def _list_dir(
+        self,
+        directory: str,
+        recursive: bool = False,
+        file_types: list[str] | None = None,
+    ):
+        from lionagi.libs.file.process import dir_to_files
+
+        files = dir_to_files(
+            directory, recursive=recursive, file_types=file_types
+        )
+        files = "\n".join([str(f) for f in files])
+        doc_id = f"DIR_{abs(hash(directory))}"
+        return self._save_to_temp(files, doc_id)
+
     def to_tool(self):
         if self._tool is None:
 
             def reader_tool(**kwargs):
                 """
-                A function that takes ReaderRequest to either:
+                A function that takes ReaderRequest to do one of:
                 - open a doc (File/URL) -> returns doc_id, doc length
                 - read partial text from doc -> returns chunk
+                - list all files in a directory ->  returns list of files as doc format
                 """
                 return self.handle_request(
                     ReaderRequest(**kwargs)

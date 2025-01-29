@@ -18,6 +18,7 @@ def dir_to_files(
     max_workers: int | None = None,
     ignore_errors: bool = False,
     verbose: bool = False,
+    recursive: bool = False,
 ) -> list[Path]:
     """
     Recursively process a directory and return a list of file paths.
@@ -33,6 +34,8 @@ def dir_to_files(
                                      If None, uses the default ThreadPoolExecutor behavior.
         ignore_errors (bool): If True, log warnings for errors instead of raising exceptions.
         verbose (bool): If True, print verbose output.
+        recursive (bool): If True, process directories recursively (the default).
+                          If False, only process files in the top-level directory.
 
     Returns:
         List[Path]: A list of Path objects representing the files found.
@@ -58,11 +61,14 @@ def dir_to_files(
                 raise ValueError(f"Error processing {file_path}: {e}") from e
         return None
 
+    file_iterator = (
+        directory_path.rglob("*") if recursive else directory_path.glob("*")
+    )
     try:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
                 executor.submit(process_file, f)
-                for f in directory_path.rglob("*")
+                for f in file_iterator
                 if f.is_file()
             ]
             files = [
