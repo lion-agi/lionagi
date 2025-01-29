@@ -8,6 +8,7 @@ from enum import Enum
 from pydantic import BaseModel, Field, model_validator
 
 from lionagi.operatives.action.tool import Tool
+from lionagi.service.endpoints.token_calculator import TokenCalculator
 from lionagi.utils import to_num
 
 from ..base import LionTool
@@ -116,6 +117,7 @@ class DocumentInfo(BaseModel):
 
     doc_id: str
     length: int | None = None
+    num_tokens: int | None = None
 
 
 class PartialChunk(BaseModel):
@@ -217,7 +219,12 @@ class ReaderTool(LionTool):
         self.documents[doc_id] = (temp_file.name, doc_len)
 
         return ReaderResponse(
-            success=True, doc_info=DocumentInfo(doc_id=doc_id, length=doc_len)
+            success=True,
+            doc_info=DocumentInfo(
+                doc_id=doc_id,
+                length=doc_len,
+                num_tokens=TokenCalculator.tokenize(text),
+            ),
         )
 
     def _open_doc(self, source: str) -> ReaderResponse:
@@ -277,9 +284,10 @@ class ReaderTool(LionTool):
 
             def reader_tool(**kwargs):
                 """
-                A function that takes ReaderRequest to either:
+                A function that takes ReaderRequest to do one of:
                 - open a doc (File/URL) -> returns doc_id, doc length
                 - read partial text from doc -> returns chunk
+                - list all files in a directory ->  returns list of files as doc format
                 """
                 return self.handle_request(
                     ReaderRequest(**kwargs)
