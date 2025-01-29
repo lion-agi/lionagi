@@ -30,6 +30,8 @@ class ReActAnalysis(BaseModel):
     2) A list of planned actions to perform before finalizing,
     3) Indication whether more expansions/rounds are needed,
     4) Additional tuning knobs: how to handle validation, how to execute actions, etc.
+    Remember do not repeat yourself, and aim to use the most efficient way to achieve
+    the goal to user's satisfaction.
     """
 
     # Standard ReAct strings for controlling expansions:
@@ -38,11 +40,12 @@ class ReActAnalysis(BaseModel):
         "If you are not ready to finalize, set extension_needed to True. "
         "hint: you should set extension_needed to True if the overall goal"
         "is not yet achieved. Do not set it to False, if you are just providing"
-        "an interim answer. You have up to {extensions} expansions. Please continue."
+        "an interim answer. You have up to {extensions} expansions. Please "
+        "strategize accordingly and continue."
     )
     CONTINUE_EXT_PROMPT: ClassVar[str] = (
         "Another round is available. You may do multiple actions if needed. "
-        "You have up to {extensions} expansions. Please continue."
+        "You have up to {extensions} expansions. Please strategize accordingly and continue."
     )
     ANSWER_PROMPT: ClassVar[str] = (
         "Given your reasoning and actions, please now provide the final answer "

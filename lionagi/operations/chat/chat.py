@@ -36,6 +36,7 @@ async def chat(
     image_detail: Literal["low", "high", "auto"] = None,
     plain_content: str = None,
     return_ins_res_message: bool = False,
+    include_token_usage_to_model: bool = False,
     **kwargs,
 ) -> tuple[Instruction, AssistantResponse]:
     ins: Instruction = branch.msgs.create_instruction(
@@ -151,11 +152,12 @@ async def chat(
     kwargs["messages"] = [i.chat_msg for i in messages]
     imodel = imodel or branch.chat_model
 
-    meth = (
-        imodel.invoke
-        if ("stream" not in kwargs or not kwargs["stream"])
-        else imodel.stream
-    )
+    meth = imodel.invoke
+    if "stream" not in kwargs or not kwargs["stream"]:
+        kwargs["include_token_usage_to_model"] = include_token_usage_to_model
+    else:
+        meth = imodel.stream
+
     api_call = await meth(**kwargs)
     branch._log_manager.log(Log.create(api_call))
 

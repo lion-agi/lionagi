@@ -63,6 +63,7 @@ async def operate(
     ] = "return_value",
     operative_model: type[BaseModel] = None,
     request_model: type[BaseModel] = None,
+    include_token_usage_to_model: bool = False,
     **kwargs,
 ) -> list | BaseModel | None | dict | str:
     if operative_model:
@@ -138,6 +139,7 @@ async def operate(
         image_detail=image_detail,
         tool_schemas=tool_schemas,
         return_ins_res_message=True,
+        include_token_usage_to_model=include_token_usage_to_model,
         **kwargs,
     )
     branch.msgs.add_message(instruction=ins)

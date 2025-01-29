@@ -20,7 +20,8 @@ async def interpret(
     instruction = (
         "You are given a user's raw instruction or question. Your task is to rewrite it into a clearer,"
         "more structured prompt for an LLM or system, making any implicit or missing details explicit. "
-        "Return only the re-written prompt."
+        "Return only the re-written prompt. Do not assume any details not mentioned in the input, nor "
+        "give additional instruction than what is explicitly stated."
     )
     guidance = (
         f"Domain hint: {domain or 'general'}. "

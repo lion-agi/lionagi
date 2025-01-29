@@ -349,11 +349,37 @@ class APICalling(Event):
     endpoint: EndPoint = Field(exclude=True)
     is_cached: bool = Field(default=False, exclude=True)
     should_invoke_endpoint: bool = Field(default=True, exclude=True)
+    include_token_usage_to_model: bool = Field(
+        default=False,
+        exclude=True,
+        description="Whether to include token usage information into instruction messages",
+    )
 
     @model_validator(mode="after")
     def _validate_streaming(self) -> Self:
         if self.payload.get("stream") is True:
             self.streaming = True
+
+        if self.include_token_usage_to_model:
+            if isinstance(self.payload["messages"][-1], dict):
+                required_tokens = self.required_tokens
+                self.payload["messages"][-1][
+                    "content"
+                ] += f"\n\nEstimated Current Token Usage: {required_tokens}"
+                if "model" in self.payload:
+                    if (
+                        self.payload["model"].startswith("gpt-4")
+                        or "o1mini" in self.payload["model"]
+                        or "o1-preview" in self.payload["model"]
+                    ):
+                        self.payload["messages"][-1]["content"] += "/128_000"
+                    elif "o1" in self.payload["model"]:
+                        self.payload["messages"][-1]["content"] += "/200_000"
+                    elif "sonnet" in self.payload["model"]:
+                        self.payload["messages"][-1]["content"] += "/200_000"
+                    elif "haiku" in self.payload["model"]:
+                        self.payload["messages"][-1]["content"] += "/200_000"
+
         return self
 
     @property

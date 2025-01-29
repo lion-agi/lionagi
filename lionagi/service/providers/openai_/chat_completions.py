@@ -89,6 +89,8 @@ class OpenAIChatCompletionEndPoint(ChatCompletionEndPoint):
             payload.pop("top_p", None)
             if payload["messages"][0].get("role") == "system":
                 payload["messages"][0]["role"] = "developer"
+        else:
+            payload.pop("reasoning_effort", None)
 
         return {
             "payload": payload,
