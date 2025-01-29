@@ -47,6 +47,8 @@ async def ReAct(
     analysis_model: iModel | None = None,
     verbose_analysis: bool = False,
     verbose_length: int = None,
+    include_token_usage_to_model: bool = True,
+    continue_after_failed_response: bool = False,
     **kwargs,
 ):
     outs = []
@@ -73,6 +75,8 @@ async def ReAct(
             verbose_analysis=verbose_analysis,
             display_as=display_as,
             verbose_length=verbose_length,
+            include_token_usage_to_model=include_token_usage_to_model,
+            continue_after_failed_response=continue_after_failed_response,
             **kwargs,
         ):
             analysis, str_ = i
@@ -101,6 +105,8 @@ async def ReAct(
             analysis_model=analysis_model,
             display_as=display_as,
             verbose_length=verbose_length,
+            include_token_usage_to_model=include_token_usage_to_model,
+            continue_after_failed_response=continue_after_failed_response,
             **kwargs,
         ):
             outs.append(i)
@@ -131,6 +137,8 @@ async def ReActStream(
     verbose_analysis: bool = False,
     display_as: Literal["json", "yaml"] = "yaml",
     verbose_length: int = None,
+    include_token_usage_to_model: bool = True,
+    continue_after_failed_response: bool = False,
     **kwargs,
 ) -> AsyncGenerator:
     irfm: FieldModel | None = None
@@ -213,6 +221,9 @@ async def ReActStream(
     kwargs_for_operate = copy(kwargs)
     kwargs_for_operate["actions"] = True
     kwargs_for_operate["reason"] = True
+    kwargs_for_operate["include_token_usage_to_model"] = (
+        include_token_usage_to_model
+    )
 
     # Step 1: Generate initial ReAct analysis
     analysis: ReActAnalysis = await branch.operate(
@@ -255,7 +266,7 @@ async def ReActStream(
             if isinstance(analysis, dict)
             else False
         )
-        and (extensions if max_extensions else 0) > 0
+        and (extensions - 1 if max_extensions else 0) > 0
     ):
         new_instruction = None
         if extensions == max_extensions:
@@ -272,6 +283,9 @@ async def ReActStream(
         operate_kwargs["reason"] = True
         operate_kwargs["response_format"] = ReActAnalysis
         operate_kwargs["action_strategy"] = analysis.action_strategy
+        operate_kwargs["include_token_usage_to_model"] = (
+            include_token_usage_to_model
+        )
         if analysis.action_batch_size:
             operate_kwargs["action_batch_size"] = analysis.action_batch_size
         if irfm:
@@ -289,6 +303,7 @@ async def ReActStream(
             operate_kwargs["guidance"] = guide + operate_kwargs.get(
                 "guidance", ""
             )
+            operate_kwargs["reasoning_effort"] = reasoning_effort
 
         analysis = await branch.operate(
             instruction=new_instruction,
@@ -297,6 +312,16 @@ async def ReActStream(
             **operate_kwargs,
         )
         round_count += 1
+
+        if isinstance(analysis, dict) and all(
+            i is None for i in analysis.values()
+        ):
+            if not continue_after_failed_response:
+                raise ValueError(
+                    "All values in the response are None. "
+                    "This might be due to a failed response. "
+                    "Set `continue_after_failed_response=True` to ignore this error."
+                )
 
         # If verbose, show round analysis
         if verbose_analysis:
@@ -329,6 +354,15 @@ async def ReActStream(
             response_format=response_format,
             **(response_kwargs or {}),
         )
+        if isinstance(analysis, dict) and all(
+            i is None for i in analysis.values()
+        ):
+            if not continue_after_failed_response:
+                raise ValueError(
+                    "All values in the response are None. "
+                    "This might be due to a failed response. "
+                    "Set `continue_after_failed_response=True` to ignore this error."
+                )
     except Exception:
         out = branch.msgs.last_response.response
 

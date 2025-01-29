@@ -35,6 +35,7 @@ async def communicate(
     fuzzy_match_kwargs=None,
     clear_messages=False,
     operative_model=None,
+    include_token_usage_to_model: bool = False,
     **kwargs,
 ):
     if operative_model:
@@ -80,6 +81,7 @@ async def communicate(
         image_detail=image_detail,
         plain_content=plain_content,
         return_ins_res_message=True,
+        include_token_usage_to_model=include_token_usage_to_model,
         **kwargs,
     )
     branch.msgs.add_message(instruction=ins)
