@@ -51,7 +51,7 @@ class iModel:
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
-        invoke_with_endpoint: bool = False,
+        invoke_with_endpoint: bool = None,
         concurrency_limit: int | None = None,
         streaming_process_func: Callable = None,
         requires_api_key: bool = True,
@@ -95,6 +95,16 @@ class iModel:
                 Additional keyword arguments, such as `model`, or any other
                 provider-specific fields.
         """
+        model = kwargs.get("model", None)
+        if model:
+            if not provider:
+                if "/" in model:
+                    provider = model.split("/")[0]
+                    model = model.replace(provider + "/", "")
+                    kwargs["model"] = model
+                else:
+                    raise ValueError("Provider must be provided")
+
         if api_key is None:
             provider = str(provider or "").strip().lower()
             match provider:
@@ -110,6 +120,8 @@ class iModel:
                     api_key = "GROQ_API_KEY"
                 case "exa":
                     api_key = "EXA_API_KEY"
+                case "ollama":
+                    api_key = "ollama"
                 case "":
                     if requires_api_key:
                         raise ValueError("API key must be provided")
@@ -121,16 +133,6 @@ class iModel:
             api_key = os.getenv(api_key)
 
         kwargs["api_key"] = api_key
-        model = kwargs.get("model", None)
-        if model:
-            if not provider:
-                if "/" in model:
-                    provider = model.split("/")[0]
-                    model = model.replace(provider + "/", "")
-                    kwargs["model"] = model
-                else:
-                    raise ValueError("Provider must be provided")
-
         if isinstance(endpoint, EndPoint):
             self.endpoint = endpoint
         else:
@@ -145,7 +147,13 @@ class iModel:
         if base_url:
             self.endpoint.config.base_url = base_url
 
-        self.should_invoke_endpoint = invoke_with_endpoint
+        if (
+            invoke_with_endpoint is None
+            and self.endpoint.config.invoke_with_endpoint is True
+        ):
+            invoke_with_endpoint = True
+
+        self.should_invoke_endpoint = invoke_with_endpoint or False
         self.kwargs = kwargs
         self.executor = RateLimitedAPIExecutor(
             queue_capacity=queue_capacity,
