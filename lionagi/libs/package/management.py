@@ -14,7 +14,7 @@ def list_installed_packages() -> list[str]:
     List all installed packages.
 
     Returns:
-        List[str]: A list of names of installed packages.
+        list[str]: A list of names of installed packages.
     """
     try:
         return [
