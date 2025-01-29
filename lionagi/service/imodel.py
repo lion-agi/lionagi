@@ -162,7 +162,9 @@ class iModel:
         else:
             self.streaming_process_func = streaming_process_func
 
-    def create_api_calling(self, **kwargs) -> APICalling:
+    def create_api_calling(
+        self, include_token_usage_to_model: bool = False, **kwargs
+    ) -> APICalling:
         """Constructs an `APICalling` object from endpoint-specific payload.
 
         Args:
@@ -183,6 +185,7 @@ class iModel:
             endpoint=self.endpoint,
             is_cached=payload.get("is_cached", False),
             should_invoke_endpoint=self.should_invoke_endpoint,
+            include_token_usage_to_model=include_token_usage_to_model,
         )
 
     async def process_chunk(self, chunk) -> None:
@@ -200,7 +203,12 @@ class iModel:
                 return await self.streaming_process_func(chunk)
             return self.streaming_process_func(chunk)
 
-    async def stream(self, api_call=None, **kwargs) -> AsyncGenerator:
+    async def stream(
+        self,
+        api_call=None,
+        include_token_usage_to_model: bool = False,
+        **kwargs,
+    ) -> AsyncGenerator:
         """Performs a streaming API call with the given arguments.
 
         Args:
@@ -214,7 +222,10 @@ class iModel:
         """
         if api_call is None:
             kwargs["stream"] = True
-            api_call = self.create_api_calling(**kwargs)
+            api_call = self.create_api_calling(
+                include_token_usage_to_model=include_token_usage_to_model,
+                **kwargs,
+            )
             await self.executor.append(api_call)
 
         if (
