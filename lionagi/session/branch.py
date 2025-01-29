@@ -941,6 +941,7 @@ class Branch(Element, Communicatable, Relational):
         ] = "return_value",
         operative_model: type[BaseModel] = None,
         request_model: type[BaseModel] = None,
+        include_token_usage_to_model: bool = False,
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
         """
@@ -1028,6 +1029,8 @@ class Branch(Element, Communicatable, Relational):
                 Alias for `response_format`.
             request_model (type[BaseModel], optional):
                 Another alias for `response_format`.
+            include_token_usage_to_model:
+                If `True`, includes token usage in the model messages.
             **kwargs:
                 Additional keyword arguments passed to the LLM via `branch.chat()`.
 
@@ -1080,6 +1083,7 @@ class Branch(Element, Communicatable, Relational):
             operative_model=operative_model,
             request_model=request_model,
             imodel=imodel,
+            include_token_usage_to_model=include_token_usage_to_model,
             **kwargs,
         )
 
@@ -1106,6 +1110,7 @@ class Branch(Element, Communicatable, Relational):
         fuzzy_match_kwargs: dict = None,
         clear_messages: bool = False,
         operative_model: type[BaseModel] = None,
+        include_token_usage_to_model: bool = False,
         **kwargs,
     ):
         """
@@ -1190,6 +1195,7 @@ class Branch(Element, Communicatable, Relational):
             fuzzy_match_kwargs=fuzzy_match_kwargs,
             clear_messages=clear_messages,
             operative_model=operative_model,
+            include_token_usage_to_model=include_token_usage_to_model,
             **kwargs,
         )
 
@@ -1639,6 +1645,7 @@ class Branch(Element, Communicatable, Relational):
         analysis_model: iModel | None = None,
         verbose: bool = False,
         verbose_length: int = None,
+        include_token_usage_to_model: bool = True,
         **kwargs,
     ):
         """
@@ -1688,6 +1695,12 @@ class Branch(Element, Communicatable, Relational):
             analysis_model (iModel | None, optional):
                 A custom LLM model for generating the ReAct analysis steps. If `None`,
                 uses the branch's default `chat_model`.
+            include_token_usage_to_model:
+                If `True`, includes token usage in the model messages.
+            verbose (bool):
+                If `True`, logs detailed information about the process.
+            verbose_length (int):
+                If `verbose=True`, limits the length of logged strings to this value.
             **kwargs:
                 Additional keyword arguments passed into the initial `branch.operate()` call.
 
@@ -1733,6 +1746,7 @@ class Branch(Element, Communicatable, Relational):
             intermediate_listable=intermediate_listable,
             reasoning_effort=reasoning_effort,
             display_as=display_as,
+            include_token_usage_to_model=include_token_usage_to_model,
             **kwargs,
         )
 
@@ -1758,6 +1772,7 @@ class Branch(Element, Communicatable, Relational):
         verbose: bool = False,
         display_as: Literal["json", "yaml"] = "yaml",
         verbose_length: int = None,
+        include_token_usage_to_model: bool = True,
         **kwargs,
     ) -> AsyncGenerator:
         from lionagi.operations.ReAct.ReAct import ReActStream
@@ -1784,6 +1799,7 @@ class Branch(Element, Communicatable, Relational):
             verbose_analysis=True,
             display_as=display_as,
             verbose_length=verbose_length,
+            include_token_usage_to_model=include_token_usage_to_model,
             **kwargs,
         ):
             analysis, str_ = result
