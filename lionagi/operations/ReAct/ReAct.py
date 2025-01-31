@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel
 
+from lionagi._errors import OperationError
 from lionagi.libs.schema.as_readable import as_readable
 from lionagi.libs.validate.common_field_validators import (
     validate_model_to_type,
@@ -18,7 +19,7 @@ from lionagi.operatives.types import Instruct
 from lionagi.service.imodel import iModel
 from lionagi.utils import copy
 
-from .utils import Analysis, ReActAnalysis
+from .models import Analysis, ReActAnalysis
 
 if TYPE_CHECKING:
     from lionagi.session.branch import Branch
@@ -282,12 +283,14 @@ async def ReActStream(
         operate_kwargs["actions"] = True
         operate_kwargs["reason"] = True
         operate_kwargs["response_format"] = ReActAnalysis
-        operate_kwargs["action_strategy"] = analysis.action_strategy
+        operate_kwargs["action_strategy"] = analysis.action_strategy.strategy
         operate_kwargs["include_token_usage_to_model"] = (
             include_token_usage_to_model
         )
-        if analysis.action_batch_size:
-            operate_kwargs["action_batch_size"] = analysis.action_batch_size
+        if analysis.action_strategy.batch_size:
+            operate_kwargs["action_batch_size"] = (
+                analysis.action_strategy.batch_size
+            )
         if irfm:
             operate_kwargs["field_models"] = operate_kwargs.get(
                 "field_models", []
@@ -297,7 +300,7 @@ async def ReActStream(
             if reasoning_effort == "low":
                 guide = "Quick concise reasoning.\n"
             if reasoning_effort == "medium":
-                guide = "Reasonably balanced reasoning.\n"
+                guide = "Well thought-out balanced reasoning.\n"
             if reasoning_effort == "high":
                 guide = "Thorough, try as hard as you can in reasoning.\n"
             operate_kwargs["guidance"] = guide + operate_kwargs.get(
@@ -317,9 +320,9 @@ async def ReActStream(
             i is None for i in analysis.values()
         ):
             if not continue_after_failed_response:
-                raise ValueError(
+                raise OperationError(
                     "All values in the response are None. "
-                    "This might be due to a failed response. "
+                    "This might be due to a failed response, or parsing errors "
                     "Set `continue_after_failed_response=True` to ignore this error."
                 )
 
@@ -358,11 +361,14 @@ async def ReActStream(
             i is None for i in analysis.values()
         ):
             if not continue_after_failed_response:
-                raise ValueError(
+                raise OperationError(
                     "All values in the response are None. "
-                    "This might be due to a failed response. "
+                    "This might be due to a failed response, or parsing errors. "
                     "Set `continue_after_failed_response=True` to ignore this error."
                 )
+    except OperationError:
+        raise
+
     except Exception:
         out = branch.msgs.last_response.response
 

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 # We'll import or define the ReActAnalysis class to create a real instance:
-from lionagi.operations.ReAct.utils import ReActAnalysis
+from lionagi.operations.ReAct.models import ReActAnalysis
 from lionagi.protocols.generic.event import EventStatus
 from lionagi.service.endpoints.base import APICalling, EndPoint
 from lionagi.service.imodel import iModel

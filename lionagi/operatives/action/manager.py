@@ -11,7 +11,6 @@ incoming requests (ActionRequest) to a registered tool, then run it.
 from typing import Any
 
 from lionagi.protocols._concepts import Manager
-from lionagi.protocols.generic.event import Execution
 from lionagi.protocols.messages.action_request import ActionRequest
 from lionagi.utils import to_list
 

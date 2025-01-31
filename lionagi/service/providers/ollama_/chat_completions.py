@@ -4,7 +4,7 @@
 
 from collections.abc import AsyncGenerator
 
-from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
+from lionagi.service.endpoints.chat_completions import ChatCompletionEndPoint
 
 CHAT_COMPLETION_CONFIG = {
     "provider": "ollama",
