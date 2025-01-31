@@ -54,9 +54,9 @@ tools = [
 ]
 llms = [
     "litellm>=1.59.5",
-    "openai>=1.60.0",
 ]
 ollama = [
+    "openai>=1.60.0",
     "ollama>=0.4.7",
 ]
 

@@ -1224,10 +1224,10 @@ dependencies = [
 [package.optional-dependencies]
 llms = [
     { name = "litellm" },
-    { name = "openai" },
 ]
 ollama = [
     { name = "ollama" },
+    { name = "openai" },
 ]
 tools = [
     { name = "docling" },
@@ -1256,7 +1256,7 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1.0" },
     { name = "litellm", marker = "extra == 'llms'", specifier = ">=1.59.5" },
     { name = "ollama", marker = "extra == 'ollama'", specifier = ">=0.4.7" },
-    { name = "openai", marker = "extra == 'llms'", specifier = ">=1.60.0" },
+    { name = "openai", marker = "extra == 'ollama'", specifier = ">=1.60.0" },
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=10.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
