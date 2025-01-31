@@ -1,6 +1,6 @@
 [project]
 name = "lionagi"
-version = "0.9.6"
+version = "0.9.7"
 description = "An Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
@@ -56,6 +56,9 @@ llms = [
 ]
 ollama = [
     "ollama>=0.4.7",
+]
+gemini = [
+    "google-generativeai>=0.8.4",
 ]
 
 [tool.black]
