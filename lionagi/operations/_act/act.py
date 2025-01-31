@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from lionagi.protocols.types import Log
+from lionagi.operatives.types import ActionResponseModel
+from lionagi.protocols.types import ActionRequest, Log
 
 if TYPE_CHECKING:
-    from lionagi.operatives.types import ActionResponseModel
     from lionagi.session.branch import Branch
 
 
@@ -65,8 +65,6 @@ async def _act(
 
     branch._log_manager.log(Log.create(func_call))
 
-    from lionagi.protocols.types import ActionRequest
-
     if not isinstance(action_request, ActionRequest):
         action_request = ActionRequest.create(
             sender=branch.id,
@@ -82,9 +80,6 @@ async def _act(
         action_request=action_request,
         action_output=func_call.response,
     )
-
-    # Return an ActionResponse object
-    from lionagi.operatives.types import ActionResponseModel
 
     return ActionResponseModel(
         function=action_request.function,
