@@ -1,6 +1,6 @@
 [project]
 name = "lionagi"
-version = "0.9.6"
+version = "0.9.7"
 description = "An Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
@@ -47,14 +47,16 @@ dev = [
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.5",
 ]
+
+[project.optional-dependencies]
 tools = [
     "docling>=2.15.1",
 ]
 llms = [
     "litellm>=1.59.5",
-    "openai>=1.60.0",
 ]
 ollama = [
+    "openai>=1.60.0",
     "ollama>=0.4.7",
 ]
 
