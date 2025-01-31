@@ -27,14 +27,6 @@ CHAT_COMPLETION_CONFIG = {
 class ChatCompletionEndPoint(EndPoint):
 
     def __init__(self, config: dict = CHAT_COMPLETION_CONFIG):
-        super().__init__(config)
-
-    async def _invoke(
-        self,
-        payload: dict,
-        headers: dict,
-        **kwargs,
-    ):
         from lionagi.libs.package.imports import check_import
 
         check_import("litellm")
@@ -42,6 +34,16 @@ class ChatCompletionEndPoint(EndPoint):
 
         litellm.drop_params = True
         from litellm import acompletion  # type: ignore
+
+        super().__init__(config)
+        self._acompletion = acompletion
+
+    async def _invoke(
+        self,
+        payload: dict,
+        headers: dict,
+        **kwargs,
+    ):
 
         provider = self.config.provider
 
@@ -67,7 +69,7 @@ class ChatCompletionEndPoint(EndPoint):
         if not self.openai_compatible:
             params.pop("base_url")
 
-        return await acompletion(**params)
+        return await self._acompletion(**params)
 
     async def _stream(
         self,
@@ -75,13 +77,6 @@ class ChatCompletionEndPoint(EndPoint):
         headers: dict,
         **kwargs,
     ) -> AsyncGenerator:
-        from lionagi.libs.package.imports import check_import
-
-        check_import("litellm")
-        import litellm  # type: ignore
-
-        litellm.drop_params = True
-        from litellm import acompletion  # type: ignore
 
         provider = self.config.provider
 
@@ -108,7 +103,7 @@ class ChatCompletionEndPoint(EndPoint):
             params.pop("base_url")
 
         params["stream"] = True
-        async for i in await acompletion(**params):
+        async for i in await self._acompletion(**params):
             yield i
 
     @property

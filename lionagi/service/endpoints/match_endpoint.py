@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .chat_completion import EndPoint
+from .base import EndPoint
 
 
 def match_endpoint(
