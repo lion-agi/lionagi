@@ -122,6 +122,8 @@ class iModel:
                     api_key = "EXA_API_KEY"
                 case "ollama":
                     api_key = "ollama"
+                case "gemini":
+                    api_key = "GEMINI_API_KEY"
                 case "":
                     if requires_api_key:
                         raise ValueError("API key must be provided")
@@ -373,7 +375,7 @@ class iModel:
         processor_config = data.pop("processor_config", {})
 
         endpoint_config_params = data.pop("endpoint", {})
-        endpoint_ = endpoint_config_params.pop("endpoint", None)
+        endpoint_ = endpoint_config_params.pop("endpoint", "chat")
         endpoint_params = endpoint_config_params.get("endpoint_params", None)
 
         endpoint = match_endpoint(

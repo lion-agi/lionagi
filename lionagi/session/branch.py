@@ -217,6 +217,8 @@ class Branch(Element, Communicatable, Relational):
             chat_model = iModel.from_dict(chat_model)
         if isinstance(parse_model, dict):
             parse_model = iModel.from_dict(parse_model)
+        if isinstance(chat_model, str):
+            chat_model = iModel(model=chat_model)
 
         self._imodel_manager = iModelManager(
             chat=chat_model, parse=parse_model

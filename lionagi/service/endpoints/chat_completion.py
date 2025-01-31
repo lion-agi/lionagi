@@ -45,7 +45,7 @@ class ChatCompletionEndPoint(EndPoint):
 
         provider = self.config.provider
 
-        if not provider in payload["model"]:
+        if not f"{provider}/" in payload["model"]:
             payload["model"] = f"{provider}/{payload['model']}"
 
         api_key = None
