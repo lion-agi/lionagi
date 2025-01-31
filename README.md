@@ -127,6 +127,14 @@ analysis = await branch.communicate("Analyze these stats", imodel=sonnet)
 
 Seamlessly route to different models in the same workflow.
 
+### optional dependencies
+
+```
+pip install "lionagi[tools]"
+pip install "lionagi[llms]"
+pip install "lionagi[ollama]"
+```
+
 ## Community & Contributing
 
 We welcome issues, ideas, and pull requests:
