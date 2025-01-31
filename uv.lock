@@ -1208,7 +1208,7 @@ wheels = [
 
 [[package]]
 name = "lionagi"
-version = "0.9.6"
+version = "0.9.7"
 source = { editable = "." }
 dependencies = [
     { name = "aiocache" },
@@ -1219,6 +1219,18 @@ dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "tiktoken" },
+]
+
+[package.optional-dependencies]
+llms = [
+    { name = "litellm" },
+    { name = "openai" },
+]
+ollama = [
+    { name = "ollama" },
+]
+tools = [
+    { name = "docling" },
 ]
 
 [package.dev-dependencies]
@@ -1235,22 +1247,16 @@ dev = [
     { name = "sphinx" },
     { name = "sphinx-autobuild" },
 ]
-llms = [
-    { name = "litellm" },
-    { name = "openai" },
-]
-ollama = [
-    { name = "ollama" },
-]
-tools = [
-    { name = "docling" },
-]
 
 [package.metadata]
 requires-dist = [
     { name = "aiocache", specifier = ">=0.12.0" },
     { name = "aiohttp", specifier = ">=3.11.0" },
+    { name = "docling", marker = "extra == 'tools'", specifier = ">=2.15.1" },
     { name = "jinja2", specifier = ">=3.1.0" },
+    { name = "litellm", marker = "extra == 'llms'", specifier = ">=1.59.5" },
+    { name = "ollama", marker = "extra == 'ollama'", specifier = ">=0.4.7" },
+    { name = "openai", marker = "extra == 'llms'", specifier = ">=1.60.0" },
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=10.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
@@ -1272,12 +1278,6 @@ dev = [
     { name = "sphinx", specifier = ">=8.1.3" },
     { name = "sphinx-autobuild", specifier = ">=2024.10.3" },
 ]
-llms = [
-    { name = "litellm", specifier = ">=1.59.5" },
-    { name = "openai", specifier = ">=1.60.0" },
-]
-ollama = [{ name = "ollama", specifier = ">=0.4.7" }]
-tools = [{ name = "docling", specifier = ">=2.15.1" }]
 
 [[package]]
 name = "litellm"
