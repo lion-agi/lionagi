@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
+from lionagi.service.endpoints.chat_completions import ChatCompletionEndPoint
 
 from .models import PerplexityChatCompletionRequest
 
