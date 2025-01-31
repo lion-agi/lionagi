@@ -55,6 +55,14 @@ def match_endpoint(
 
             return OllamaChatCompletionEndPoint()
 
+        if provider == "gemini":
+            from ..providers.gemini_.chat_completions import (
+                GeminiChatCompletionEndPoint,
+            )
+
+            return GeminiChatCompletionEndPoint()
+
+
         return OpenAIChatCompletionEndPoint(
             config={
                 "provider": provider,

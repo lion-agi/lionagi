@@ -122,7 +122,9 @@ class iModel:
                     api_key = "EXA_API_KEY"
                 case "ollama":
                     api_key = "ollama"
-                case "":
+                case "gemini":
+                    api_key = "GEMINI_API_KEY"
+                case "", None:
                     if requires_api_key:
                         raise ValueError("API key must be provided")
                 case _:

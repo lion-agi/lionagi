@@ -53,8 +53,8 @@ class OllamaChatCompletionEndPoint(ChatCompletionEndPoint):
         check_import("openai")
         check_import("ollama")
 
-        from ollama import list, pull
-        from openai import AsyncOpenAI
+        from ollama import list, pull       # type: ignore
+        from openai import AsyncOpenAI      # type: ignore
 
         super().__init__(config)
         self.client = AsyncOpenAI(
@@ -100,7 +100,9 @@ class OllamaChatCompletionEndPoint(ChatCompletionEndPoint):
         return ["system", "user", "assistant"]
 
     def _pull_model(self, model: str):
-        from tqdm import tqdm
+        from lionagi.libs.package.imports import check_import
+        check_import("tqdm")
+        from tqdm import tqdm   # type: ignore
 
         current_digest, bars = "", {}
         for progress in self._pull(model, stream=True):
