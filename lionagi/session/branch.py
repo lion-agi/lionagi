@@ -926,8 +926,8 @@ class Branch(Element, Communicatable, Relational):
         reason: bool = False,
         action_kwargs: dict = None,
         action_strategy: Literal[
-            "sequential", "concurrent", "batch"
-        ] = "concurrent",
+            "sequential", "concurrent", "batch", "ordered"
+        ] = "ordered",
         action_batch_size: int = None,
         verbose_action: bool = False,
         field_models: list[FieldModel] = None,
@@ -1005,8 +1005,8 @@ class Branch(Element, Communicatable, Relational):
                 If `True`, signals that the LLM should provide chain-of-thought or reasoning (where applicable).
             action_kwargs (dict | None, optional):
                 Additional parameters for the `branch.act()` call if tools are invoked.
-            action_strategy (Literal["sequential","concurrent","batch"], optional):
-                The strategy for invoking tools (default: "concurrent").
+            action_strategy (Literal["sequential","concurrent","batch", "ordered"], optional):
+                The strategy for invoking tools (default: "ordered").
             action_batch_size (int, optional):
                 The batch size for concurrent tool invocation if `action_strategy="batch"`.
             verbose_action (bool, optional):
@@ -1230,7 +1230,9 @@ class Branch(Element, Communicatable, Relational):
         self,
         action_request: list | ActionRequest | BaseModel | dict,
         *,
-        strategy: Literal["concurrent", "sequential", "batch"] = "concurrent",
+        strategy: Literal[
+            "concurrent", "sequential", "batch", "ordered"
+        ] = "ordered",
         verbose_action: bool = False,
         batch_size: int = None,
         suppress_errors: bool = True,
@@ -1257,7 +1259,7 @@ class Branch(Element, Communicatable, Relational):
             action_request (list|ActionRequest|BaseModel|dict):
                 A single or list of action requests, each requiring
                 `function` and `arguments`.
-            strategy (Literal["concurrent","sequential","batch"]):
+            strategy (Literal["concurrent","sequential","batch", "ordered"]):
                 The execution strategy to use.
             verbose_action (bool):
                 If True, log detailed information about the action.
@@ -1353,6 +1355,70 @@ class Branch(Element, Communicatable, Relational):
                     unique_output=unique_output,
                     flatten_tuple_set=flatten_tuple_set,
                 )
+            case "ordered":
+                return await self._ordered_act(
+                    action_request,
+                    verbose_action=verbose_action,
+                    suppress_errors=suppress_errors,
+                    sanitize_input=sanitize_input,
+                    unique_input=unique_input,
+                    num_retries=num_retries,
+                    initial_delay=initial_delay,
+                    retry_delay=retry_delay,
+                    backoff_factor=backoff_factor,
+                    retry_default=retry_default,
+                    retry_timeout=retry_timeout,
+                    retry_timing=retry_timing,
+                    max_concurrent=max_concurrent,
+                    throttle_period=throttle_period,
+                    flatten=flatten,
+                    dropna=dropna,
+                    unique_output=unique_output,
+                    flatten_tuple_set=flatten_tuple_set,
+                )
+
+    async def actStream(
+        self,
+        action_request: list | ActionRequest | BaseModel | dict,
+        *,
+        strategy: Literal[
+            "sequential", "batch", "ordered", "concurrent"
+        ] = "ordered",
+        verbose_action: bool = False,
+        batch_size: int = None,
+        **kwargs,
+    ):
+        match strategy:
+            case "sequential":
+                async for i in self._sequential_act_stream(
+                    action_request,
+                    verbose_action=verbose_action,
+                    **kwargs,
+                ):
+                    yield i
+            case "batch":
+                async for i in self._batch_act_stream(
+                    action_request,
+                    batch_size=batch_size,
+                    verbose_action=verbose_action,
+                    **kwargs,
+                ):
+                    yield i
+            case "ordered":
+                async for i in self._ordered_act_stream(
+                    action_request,
+                    verbose_action=verbose_action,
+                    **kwargs,
+                ):
+                    yield i
+            case "concurrent":
+                yield await self._concurrent_act(
+                    action_request,
+                    verbose_action=verbose_action,
+                    **kwargs,
+                )
+            case _:
+                raise ValueError(f"Invalid strategy: {strategy}")
 
     async def _concurrent_act(
         self,
@@ -1373,26 +1439,70 @@ class Branch(Element, Communicatable, Relational):
             else [action_request]
         )
         results = []
-        for req in action_request:
-            results.append(
-                await self._act(
-                    req,
-                    verbose_action=verbose_action,
-                    suppress_errors=suppress_errors,
-                )
-            )
+        async for i in self._sequential_act_stream(
+            action_request=action_request,
+            suppress_errors=suppress_errors,
+            verbose_action=verbose_action,
+        ):
+            results.extend(i)
         return results
 
-    async def _batch_act(
+    async def _sequential_act_stream(
+        self,
+        action_request: ActionRequest | BaseModel | dict,
+        suppress_errors: bool = True,
+        verbose_action: bool = False,
+    ) -> AsyncGenerator:
+        action_request = (
+            action_request
+            if isinstance(action_request, list)
+            else [action_request]
+        )
+        for req in action_request:
+            yield self._act(
+                req,
+                verbose_action=verbose_action,
+                suppress_errors=suppress_errors,
+            )
+
+    async def _batch_act_stream(
         self,
         action_request: list[ActionRequest | BaseModel | dict],
         batch_size: int = None,
         **kwargs,
+    ):
+        return bcall(
+            action_request, self._act, batch_size=batch_size, **kwargs
+        )
+
+    async def _ordered_act_stream(
+        self,
+        action_request: list[ActionRequest | BaseModel | dict],
+        **kwargs,
+    ) -> AsyncGenerator:
+        dict_ = {1: []}
+        action_request = (
+            [action_request]
+            if not isinstance(action_request, list)
+            else action_request
+        )
+        for i in action_request:
+            if hasattr(i, "order"):
+                dict_.setdefault(int(i.order), []).append(i)
+            else:
+                dict_[1].append(i)
+
+        for i in range(1, len(dict_) + 1):
+            if i in dict_:
+                yield await alcall(dict_[i], self._act, **kwargs)
+
+    async def _ordered_act(
+        self,
+        action_request: list[ActionRequest | BaseModel | dict],
+        **kwargs,
     ) -> list:
         result = []
-        async for i in bcall(
-            action_request, self._act, batch_size=batch_size, **kwargs
-        ):
+        async for i in self._ordered_act_stream(action_request, **kwargs):
             result.extend(i)
         return result
 
