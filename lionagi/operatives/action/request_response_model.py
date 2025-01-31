@@ -15,7 +15,7 @@ from pydantic import Field, field_validator
 from lionagi.libs.validate.common_field_validators import (
     validate_nullable_string_field,
 )
-from lionagi.utils import HashableModel, to_dict
+from lionagi.utils import HashableModel, to_dict, to_num
 
 from ..models.field_model import FieldModel
 from .utils import (
@@ -38,6 +38,21 @@ class ActionRequestModel(HashableModel):
     Captures a single action request, typically from a user or system message.
     Includes the name of the function and the arguments to be passed.
     """
+
+    order: int = Field(
+        default=1,
+        title="Order",
+        description=(
+            "From a single API call, the order of action request to be"
+            " executed. For example, if multiple actions are requested "
+            "you can label all action request at order 1, to run everything"
+            " in parallel, or you can label them in order 1, 2, 3, etc. to do"
+            " them sequentially. You can also do a mix of both such as 1,1,2,3,4,4,5, "
+            "these action requests will be executed in sequence of order"
+            "increase, but parallel when orders are the same"
+        ),
+        lt=0,
+    )
 
     function: str | None = Field(
         None,
@@ -88,6 +103,13 @@ class ActionRequestModel(HashableModel):
             return []
         except Exception:
             return []
+
+    @field_validator("order", mode="before")
+    def _validate_order(cls, value: Any) -> int:
+        try:
+            return to_num(value, num_type=int)
+        except Exception:
+            return 1
 
 
 ACTION_REQUESTS_FIELD = FieldModel(
