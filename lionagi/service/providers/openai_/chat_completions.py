@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
+from .specs import reasoning_models
+
 
 CHAT_COMPLETION_CONFIG = {
     "provider": "openai",
@@ -84,7 +86,7 @@ class OpenAIChatCompletionEndPoint(ChatCompletionEndPoint):
         if "api_key" in kwargs:
             headers["Authorization"] = f"Bearer {kwargs['api_key']}"
 
-        if payload.get("model") in ["o1", "o1-2024-12-17"]:
+        if payload.get("model") in reasoning_models:
             payload.pop("temperature", None)
             payload.pop("top_p", None)
             if payload["messages"][0].get("role") == "system":
