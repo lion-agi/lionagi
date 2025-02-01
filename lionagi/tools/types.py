@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
+from lionagi.libs.file.process import chunk
+
 from .file.reader import ReaderTool
 
-__all__ = ("ReaderTool",)
+__all__ = ("ReaderTool", "chunk")

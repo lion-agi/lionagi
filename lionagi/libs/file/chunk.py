@@ -218,6 +218,7 @@ def chunk_content(
     threshold: int = 256,
     metadata: dict[str, Any] = {},
     return_tokens: bool = False,
+    as_node: bool = False,
     **kwargs: Any,
 ) -> list[dict[str, Any]]:
     """
@@ -256,6 +257,22 @@ def chunk_content(
             overlap=overlap,
             threshold=threshold,
         )
+
+    if as_node:
+        from lionagi.protocols.graph.node import Node
+
+        return [
+            Node(
+                content=chunk,
+                metadata={
+                    "chunk_id": i + 1,
+                    "total_chunks": len(chunks),
+                    "chunk_size": len(chunk),
+                    **metadata,
+                },
+            )
+            for i, chunk in enumerate(chunks)
+        ]
 
     return [
         {
