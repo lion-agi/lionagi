@@ -50,10 +50,15 @@ class AnthropicChatCompletionEndPoint(ChatCompletionEndPoint):
         for k, v in kwargs.items():
             if k in self.acceptable_kwargs:
                 payload[k] = v
+
+        for i in self.required_kwargs:
+            if i not in payload:
+                raise ValueError(f"Missing required argument: {i}")
+
         if "cache_control" in payload:
             cache_control = payload.pop("cache_control")
             if cache_control:
-                cache_control = "ephemeral"
+                cache_control = {"type": "ephemeral"}
                 last_message = payload["messages"][-1]["content"]
                 if isinstance(last_message, str):
                     last_message = {
@@ -65,6 +70,20 @@ class AnthropicChatCompletionEndPoint(ChatCompletionEndPoint):
                     last_message[-1], dict
                 ):
                     last_message[-1]["cache_control"] = cache_control
+                payload["messages"][-1]["content"] = (
+                    [last_message]
+                    if not isinstance(last_message, list)
+                    else last_message
+                )
+
+        first_message = payload["messages"][0]
+        system = None
+        if first_message.get("role") == "system":
+            system = first_message["content"]
+            system = [{"type": "text", "text": system}]
+            payload["messages"] = payload["messages"][1:]
+            payload["system"] = system
+
         if "api_key" in kwargs:
             headers["x-api-key"] = kwargs["api_key"]
         headers["anthropic-version"] = kwargs.pop(
