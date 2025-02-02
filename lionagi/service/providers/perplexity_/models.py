@@ -33,8 +33,8 @@ class PerplexityChatCompletionRequest(BaseModel):
     """
 
     model: str = Field(
-        ...,
-        description="The model name, e.g. 'llama-3.1-sonar-small-128k-online'.",
+        "sonar",
+        description="The model name, e.g. 'sonar', (the only model available at the time when this request model was updated, check doc for latest info).",
     )
     messages: list[PerplexityMessage] = Field(
         ..., description="A list of messages forming the conversation so far."

@@ -92,11 +92,9 @@ class Tool(Element):
     @model_validator(mode="after")
     def _validate_tool_schema(self) -> Self:
         if self.tool_schema is None:
-            self.tool_schema = function_to_schema(self.func_callable)
-        if self.request_options is not None:
-            schema_ = self.request_options.model_json_schema()
-            schema_.pop("title", None)
-            self.tool_schema["function"]["parameters"] = schema_
+            self.tool_schema = function_to_schema(
+                self.func_callable, request_options=self.request_options
+            )
 
         return self
 

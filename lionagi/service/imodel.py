@@ -9,9 +9,9 @@ from collections.abc import AsyncGenerator, Callable
 from pydantic import BaseModel
 
 from lionagi.protocols.generic.event import EventStatus
-from lionagi.utils import is_coro_func
+from lionagi.utils import is_coro_func, to_dict
 
-from .endpoints.base import APICalling, EndPoint
+from .endpoints.base import APICalling, EndPoint, EndpointConfig
 from .endpoints.match_endpoint import match_endpoint
 from .endpoints.rate_limited_processor import RateLimitedAPIExecutor
 
@@ -352,9 +352,10 @@ class iModel:
         kwargs = self.kwargs
         if "kwargs" in self.kwargs:
             kwargs = self.kwargs["kwargs"]
+
         return {
             "provider": self.endpoint.config.provider,
-            "endpoint": self.endpoint.config.model_dump(),
+            "endpoint": self.endpoint.config.model_dump_json(),
             "api_key": (
                 self.api_key_scheme
                 if hasattr(self, "api_key_scheme")
@@ -370,18 +371,20 @@ class iModel:
         provider = data.pop("provider", None)
         base_url = data.pop("base_url", None)
         api_key = data.pop("api_key", None)
+
         processor_config = data.pop("processor_config", {})
-
         endpoint_config_params = data.pop("endpoint", {})
-        endpoint_ = endpoint_config_params.pop("endpoint", None)
-        endpoint_params = endpoint_config_params.get("endpoint_params", None)
+        endpoint_config_params = to_dict(endpoint_config_params)
 
-        endpoint = match_endpoint(
-            provider=provider,
-            base_url=base_url,
-            endpoint=endpoint_,
-            endpoint_params=endpoint_params,
+        endpoint_config_params["endpoint"] = endpoint_config_params.get(
+            "endpoint", "chat"
         )
+        match_params = {}
+
+        for i in ("provider", "base_url", "endpoint", "endpoint_params"):
+            if endpoint_config_params.get(i):
+                match_params[i] = endpoint_config_params.pop(i)
+        endpoint = match_endpoint(**match_params)
         endpoint.update_config(**endpoint_config_params)
         return cls(
             provider=provider,

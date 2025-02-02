@@ -34,7 +34,7 @@ def test_action_response_links_to_request():
     response = ActionResponse.create(action_request=action_request)
 
     assert action_request.is_responded
-    assert action_request.action_response_id == response.id
+    assert action_request.action_response_id == str(response.id)
 
 
 def test_action_response_content_format():

@@ -371,25 +371,43 @@ class APICalling(Event):
         if self.payload.get("stream") is True:
             self.streaming = True
 
-        if self.include_token_usage_to_model:
+        if self.include_token_usage_to_model and self.endpoint.requires_tokens:
             if isinstance(self.payload["messages"][-1], dict):
                 required_tokens = self.required_tokens
-                self.payload["messages"][-1][
-                    "content"
-                ] += f"\n\nEstimated Current Token Usage: {required_tokens}"
+                content = self.payload["messages"][-1]["content"]
+                token_msg = (
+                    f"\n\nEstimated Current Token Usage: {required_tokens}"
+                )
+
                 if "model" in self.payload:
                     if (
                         self.payload["model"].startswith("gpt-4")
                         or "o1mini" in self.payload["model"]
                         or "o1-preview" in self.payload["model"]
                     ):
-                        self.payload["messages"][-1]["content"] += "/128_000"
+                        token_msg += "/128_000"
                     elif "o1" in self.payload["model"]:
-                        self.payload["messages"][-1]["content"] += "/200_000"
+                        token_msg += "/200_000"
                     elif "sonnet" in self.payload["model"]:
-                        self.payload["messages"][-1]["content"] += "/200_000"
+                        token_msg += "/200_000"
                     elif "haiku" in self.payload["model"]:
-                        self.payload["messages"][-1]["content"] += "/200_000"
+                        token_msg += "/200_000"
+                    elif "gemini" in self.payload["model"]:
+                        token_msg += "/1_000_000"
+                    elif "qwen-turbo" in self.payload["model"]:
+                        token_msg += "/1_000_000"
+
+                if isinstance(content, str):
+                    content += token_msg
+                elif isinstance(content, dict):
+                    if "text" in content:
+                        content["text"] += token_msg
+                elif isinstance(content, list):
+                    for i in reversed(content):
+                        if "text" in i:
+                            i["text"] += token_msg
+                            break
+                self.payload["messages"][-1]["content"] = content
 
         return self
 

@@ -80,7 +80,7 @@ class ActionRequest(RoledMessage):
 
     @action_response_id.setter
     def action_response_id(self, action_response_id: IDType) -> None:
-        self.content["action_response_id"] = action_response_id
+        self.content["action_response_id"] = str(action_response_id)
 
     @property
     def request(self) -> dict[str, Any]:
