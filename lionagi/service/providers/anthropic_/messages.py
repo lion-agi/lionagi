@@ -29,6 +29,7 @@ CHAT_COMPLETION_CONFIG = {
         "tools",
         "top_p",
         "top_k",
+        "cache_control",
     },
     "allowed_roles": ["user", "assistant"],
 }
@@ -49,6 +50,21 @@ class AnthropicChatCompletionEndPoint(ChatCompletionEndPoint):
         for k, v in kwargs.items():
             if k in self.acceptable_kwargs:
                 payload[k] = v
+        if "cache_control" in payload:
+            cache_control = payload.pop("cache_control")
+            if cache_control:
+                cache_control = "ephemeral"
+                last_message = payload["messages"][-1]["content"]
+                if isinstance(last_message, str):
+                    last_message = {
+                        "type": "text",
+                        "text": last_message,
+                        "cache_control": cache_control,
+                    }
+                elif isinstance(last_message, list) and isinstance(
+                    last_message[-1], dict
+                ):
+                    last_message[-1]["cache_control"] = cache_control
         if "api_key" in kwargs:
             headers["x-api-key"] = kwargs["api_key"]
         headers["anthropic-version"] = kwargs.pop(
