@@ -4,6 +4,8 @@
 
 from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
 
+from .spec import reasoning_models, reasoning_not_support_params
+
 CHAT_COMPLETION_CONFIG = {
     "provider": "openai",
     "base_url": "https://api.openai.com/v1",
@@ -84,9 +86,9 @@ class OpenAIChatCompletionEndPoint(ChatCompletionEndPoint):
         if "api_key" in kwargs:
             headers["Authorization"] = f"Bearer {kwargs['api_key']}"
 
-        if payload.get("model") in ["o1", "o1-2024-12-17"]:
-            payload.pop("temperature", None)
-            payload.pop("top_p", None)
+        if payload.get("model") in reasoning_models:
+            for param in reasoning_not_support_params:
+                payload.pop(param, None)
             if payload["messages"][0].get("role") == "system":
                 payload["messages"][0]["role"] = "developer"
         else:
