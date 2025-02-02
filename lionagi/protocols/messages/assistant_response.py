@@ -10,7 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from lionagi.utils import copy, is_same_dtype
+from lionagi.utils import copy
 
 from .base import MessageRole, SenderRecipient
 from .message import MessageRole, RoledMessage, Template, jinja_env
@@ -19,57 +19,60 @@ from .message import MessageRole, RoledMessage, Template, jinja_env
 def prepare_assistant_response(
     assistant_response: BaseModel | list[BaseModel] | dict | str | Any, /
 ) -> dict:
-    if assistant_response:
-        content = {}
-        # Handle model.choices[0].message.content format
-        if isinstance(assistant_response, BaseModel):
-            content["assistant_response"] = (
-                assistant_response.choices[0].message.content or ""
-            )
-            content["model_response"] = assistant_response.model_dump(
-                exclude_none=True, exclude_unset=True
-            )
-        # Handle streaming response[i].choices[0].delta.content format
-        elif isinstance(assistant_response, list):
-            if is_same_dtype(assistant_response, BaseModel):
-                msg = "".join(
-                    [
-                        i.choices[0].delta.content or ""
-                        for i in assistant_response
-                    ]
+
+    assistant_response = (
+        [assistant_response]
+        if not isinstance(assistant_response, list)
+        else assistant_response
+    )
+
+    text_contents = []
+    model_responses = []
+
+    for i in assistant_response:
+
+        if isinstance(i, BaseModel):
+            i = i.model_dump(exclude_none=True, exclude_unset=True)
+
+        model_responses.append(i)
+
+        if isinstance(i, dict):
+            # anthropic standard
+            if "content" in i:
+                content = i["content"]
+                content = (
+                    [content] if not isinstance(content, list) else content
                 )
-                content["assistant_response"] = msg
-                content["model_response"] = [
-                    i.model_dump(
-                        exclude_none=True,
-                        exclude_unset=True,
-                    )
-                    for i in assistant_response
-                ]
-            elif is_same_dtype(assistant_response, dict):
-                msg = "".join(
-                    [
-                        i["choices"][0]["delta"]["content"] or ""
-                        for i in assistant_response
-                    ]
+                for j in content:
+                    if isinstance(j, dict):
+                        if j.get("type") == "text":
+                            text_contents.append(j["text"])
+                    elif isinstance(j, str):
+                        text_contents.append(j)
+
+            # openai standard
+            elif "choices" in i:
+                choices = i["choices"]
+                choices = (
+                    [choices] if not isinstance(choices, list) else choices
                 )
-                content["assistant_response"] = msg
-                content["model_response"] = assistant_response
-        elif isinstance(assistant_response, dict):
-            if "content" in assistant_response:
-                content["assistant_response"] = assistant_response["content"]
-            elif "choices" in assistant_response:
-                content["assistant_response"] = assistant_response["choices"][
-                    0
-                ]["message"]["content"]
-            content["model_response"] = assistant_response
-        elif isinstance(assistant_response, str):
-            content["assistant_response"] = assistant_response
-        else:
-            content["assistant_response"] = str(assistant_response)
-        return content
-    else:
-        return {"assistant_response": ""}
+                for j in choices:
+                    if "message" in j:
+                        text_contents.append(j["message"]["content"] or "")
+                    elif "delta" in j:
+                        text_contents.append(j["delta"]["content"] or "")
+
+        elif isinstance(i, str):
+            text_contents.append(i)
+
+    text_contents = "".join(text_contents)
+    model_responses = (
+        model_responses[0] if len(model_responses) == 1 else model_responses
+    )
+    return {
+        "assistant_response": text_contents,
+        "model_response": model_responses,
+    }
 
 
 class AssistantResponse(RoledMessage):
