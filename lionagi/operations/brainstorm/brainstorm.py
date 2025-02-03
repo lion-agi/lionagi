@@ -87,7 +87,7 @@ async def run_instruct(
     # Prepare config for the branch operation
     config = {**ins.model_dump(), **kwargs}
     result = await branch.operate(**config)
-    branch._log_manager.dump()
+    branch.dump_logs()
 
     # Extract any newly generated instructions
     instructs = []
