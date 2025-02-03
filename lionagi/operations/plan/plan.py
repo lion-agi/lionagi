@@ -93,7 +93,7 @@ async def run_step(
 
     # Run the step
     result = await branch.operate(**config)
-    branch.msgs.logger.dump()  # Dump logs if needed
+    branch.dump_logs()  # Dump logs if needed
     return result
 
 
