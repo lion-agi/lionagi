@@ -52,6 +52,7 @@ class Session(Node, Communicatable, Relational):
     mail_manager: MailManager = Field(
         default_factory=MailManager, exclude=True
     )
+    name: str = Field(default="Session")
 
     @model_validator(mode="after")
     def _add_mail_sources(self) -> Self:
