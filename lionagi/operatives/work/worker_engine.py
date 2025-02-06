@@ -1,63 +1,117 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import asyncio
+from collections.abc import Callable
+from typing import Any
 
-from lionagi.core.collections.pile import pile
-from lionagi.core.generic.graph import Graph
-from lionagi.core.work.work import WorkStatus
-from lionagi.core.work.work_edge import WorkEdge
-from lionagi.core.work.work_function_node import WorkFunctionNode
-from lionagi.core.work.work_task import WorkTask
-from lionagi.core.work.worker import Worker
+from pydantic import Field
+
+from lionagi.protocols.generic.element import Element
+from lionagi.protocols.generic.pile import Pile, pile
+from lionagi.protocols.graph import Graph
+
+from .work import WorkStatus
+from .work_edge import WorkEdge
+from .work_function_node import WorkFunctionNode
+from .work_task import WorkTask
+from .worker import Worker
 
 
-class WorkerEngine:
+class WorkerEngine(Element):
     """
     A class representing an engine that manages and executes work tasks for a worker.
 
+    This class extends Element to provide unique identification and timestamp tracking,
+    while managing task execution and worker orchestration.
+
     Attributes:
         worker (Worker): The worker instance that the engine manages.
-        tasks (Pile): A pile of tasks to be executed.
-        active_tasks (Pile): A pile of currently active tasks.
-        failed_tasks (Pile): A pile of tasks that have failed.
+        tasks (Pile[WorkTask]): A pile of tasks to be executed.
+        active_tasks (Pile[WorkTask]): A pile of currently active tasks.
+        failed_tasks (Pile[WorkTask]): A pile of tasks that have failed.
         worker_graph (Graph): A graph representing the relationships between work functions.
-        refresh_time (int): The time interval for refreshing the work log queue.
+        refresh_time (float): The time interval for refreshing the work log queue.
         _stop_event (asyncio.Event): An event to signal stopping the execution.
     """
 
-    def __init__(self, worker: Worker, refresh_time=1):
+    worker: Worker = Field(
+        ..., description="The worker instance that the engine manages"
+    )
+
+    tasks: Pile[WorkTask] = Field(
+        default_factory=lambda: pile(item_type=WorkTask),
+        description="A pile of tasks to be executed",
+    )
+
+    active_tasks: Pile[WorkTask] = Field(
+        default_factory=lambda: pile(item_type=WorkTask),
+        description="A pile of currently active tasks",
+    )
+
+    failed_tasks: Pile[WorkTask] = Field(
+        default_factory=lambda: pile(item_type=WorkTask),
+        description="A pile of tasks that have failed",
+    )
+
+    worker_graph: Graph = Field(
+        default_factory=Graph,
+        description="A graph representing the relationships between work functions",
+    )
+
+    refresh_time: float = Field(
+        default=1.0,
+        description="The time interval for refreshing the work log queue",
+    )
+
+    def __init__(
+        self, worker: Worker, refresh_time: float = 1.0, **kwargs: Any
+    ) -> None:
         """
         Initializes a new instance of WorkerEngine.
 
         Args:
             worker (Worker): The worker instance to be managed.
-            refresh_time (int): The time interval for refreshing the work log queue.
+            refresh_time (float): The time interval for refreshing the work log queue.
+            **kwargs: Additional keyword arguments for Element initialization.
         """
+        super().__init__(**kwargs)
         self.worker = worker
-        self.tasks = pile()
-        self.active_tasks = pile()
-        self.failed_tasks = pile()
-        self.worker_graph = Graph()
-        self._construct_work_functions()
-        self._construct_workedges()
         self.refresh_time = refresh_time
         self._stop_event = asyncio.Event()
+        self._construct_work_functions()
+        self._construct_workedges()
 
     async def add_task(
         self,
-        *args,
+        *args: Any,
         task_function: str,
-        task_name=None,
-        task_max_steps=10,
-        task_post_processing=None,
-        **kwargs,
-    ):
+        task_name: str | None = None,
+        task_max_steps: int = 10,
+        task_post_processing: Callable | None = None,
+        **kwargs: Any,
+    ) -> WorkTask:
         """
         Adds a new task to the task queue.
 
         Args:
             task_function (str): The name of the task function to execute.
             task_name (str, optional): The name of the task.
-            task_max_steps (int, optional): The maximum number of steps for the task.
-            task_post_processing (Callable, optional): The post-processing function for the task.
+            task_max_steps (int): The maximum number of steps for the task.
+            task_post_processing (Callable, optional): The post-processing function.
             *args: Positional arguments for the task function.
             **kwargs: Keyword arguments for the task function.
 
@@ -69,14 +123,14 @@ class WorkerEngine:
             max_steps=task_max_steps,
             post_processing=task_post_processing,
         )
-        self.tasks.append(task)
+        self.tasks.include(task)
         function = getattr(self.worker, task_function)
         work = await function(*args, **kwargs)
         task.current_work = work
         task.work_history.append(work)
         return task
 
-    async def activate_work_queues(self):
+    async def activate_work_queues(self) -> None:
         """
         Activates the work queues for all work functions.
         """
@@ -84,7 +138,7 @@ class WorkerEngine:
             if not work_function.worklog.queue.execution_mode:
                 asyncio.create_task(work_function.worklog.queue.execute())
 
-    async def stop(self):
+    async def stop(self) -> None:
         """
         Stops the execution of tasks.
         """
@@ -100,7 +154,7 @@ class WorkerEngine:
         """
         return self._stop_event.is_set()
 
-    async def process(self, task: WorkTask):
+    async def process(self, task: WorkTask) -> None:
         """
         Processes a single task.
 
@@ -110,28 +164,29 @@ class WorkerEngine:
         current_work_func_name = task.current_work.async_task_name
         current_work_func = self.worker.work_functions[current_work_func_name]
         updated_task = await task.process(current_work_func)
+
         if updated_task == "COMPLETED":
-            self.active_tasks.pop(task)
+            self.active_tasks.exclude(task)
         elif updated_task == "FAILED":
-            self.active_tasks.pop(task)
-            self.failed_tasks.append(task)
+            self.active_tasks.exclude(task)
+            self.failed_tasks.include(task)
         elif isinstance(updated_task, list):
             self.tasks.include(updated_task)
             self.active_tasks.include(updated_task)
         else:
             await asyncio.sleep(self.refresh_time)
 
-    async def execute(self, stop_queue=True):
+    async def execute(self, stop_queue: bool = True) -> None:
         """
         Executes all tasks in the task queue.
 
         Args:
-            stop_queue (bool, optional): Whether to stop the queue after execution. Defaults to True.
+            stop_queue (bool): Whether to stop the queue after execution.
         """
         for task in self.tasks:
             if task.status == WorkStatus.PENDING:
                 task.status = WorkStatus.IN_PROGRESS
-                self.active_tasks.append(task)
+                self.active_tasks.include(task)
 
         await self.activate_work_queues()
         self._stop_event.clear()
@@ -148,28 +203,33 @@ class WorkerEngine:
             await self.stop()
             await self.worker.stop()
 
-    async def execute_lasting(self):
+    async def execute_lasting(self) -> None:
         """
         Executes tasks continuously until stopped.
         """
         self._stop_event.clear()
 
-        async def execute_lasting_inner():
+        async def execute_lasting_inner() -> None:
             while not self.stopped:
                 await self.execute(stop_queue=False)
                 await asyncio.sleep(self.refresh_time)
 
         asyncio.create_task(execute_lasting_inner())
 
-    def _construct_work_functions(self):
+    def _construct_work_functions(self) -> None:
         """
         Constructs work functions for the worker.
+
+        Raises:
+            TypeError: If a work function exists but is not a WorkFunctionNode.
         """
         if getattr(self.worker, "work_functions", None) is None:
             self.worker.work_functions = {}
+
         work_decorated_function = self.worker._get_decorated_functions(
             decorator_attr="_work_decorator_params", name_only=False
         )
+
         for func_name, func, dec_params in work_decorated_function:
             if func_name not in self.worker.work_functions:
                 self.worker.work_functions[func_name] = WorkFunctionNode(
@@ -188,7 +248,7 @@ class WorkerEngine:
                         f"WorkFunctionNode, or initiate a new worker, or pop it from work_function dict"
                     )
 
-    def _construct_workedges(self):
+    def _construct_workedges(self) -> None:
         """
         Constructs work edges for the worker graph.
         """

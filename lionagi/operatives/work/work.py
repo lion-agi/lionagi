@@ -14,13 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import asyncio
 from collections.abc import Coroutine
+from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from lionagi.core.collections.abc import Component
-from lionagi.libs import SysUtil
+from pydantic import Field
+
+from lionagi.protocols.generic.element import Element
 
 
 class WorkStatus(str, Enum):
@@ -32,26 +33,53 @@ class WorkStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class Work(Component):
+class Work(Element):
     """
     A class representing a unit of work.
+
+    This class extends Element to provide unique identification and timestamp tracking,
+    while adding work-specific attributes for status, results, and execution details.
 
     Attributes:
         status (WorkStatus): The current status of the work.
         result (Any): The result of the work, if completed.
         error (Any): Any error encountered during the work.
         async_task (Coroutine | None): The asynchronous task associated with the work.
+        async_task_name (str | None): The name of the asynchronous task.
         completion_timestamp (str | None): The timestamp when the work was completed.
-        duration (float | None): The duration of the work.
+        duration (float | None): The duration of the work in seconds.
     """
 
-    status: WorkStatus = WorkStatus.PENDING
-    result: Any = None
-    error: Any = None
-    async_task: Coroutine | None = None
-    async_task_name: str | None = None
-    completion_timestamp: str | None = None
-    duration: float | None = None
+    status: WorkStatus = Field(
+        default=WorkStatus.PENDING,
+        description="The current status of the work",
+    )
+
+    result: Any = Field(
+        default=None, description="The result of the work, if completed"
+    )
+
+    error: Any = Field(
+        default=None, description="Any error encountered during the work"
+    )
+
+    async_task: Coroutine | None = Field(
+        default=None,
+        description="The asynchronous task associated with the work",
+        exclude=True,  # Exclude from serialization since coroutines can't be serialized
+    )
+
+    async_task_name: str | None = Field(
+        default=None, description="The name of the asynchronous task"
+    )
+
+    completion_timestamp: str | None = Field(
+        default=None, description="The timestamp when the work was completed"
+    )
+
+    duration: float | None = Field(
+        default=None, description="The duration of the work in seconds"
+    )
 
     async def perform(self):
         """Perform the work and update the status, result, and duration."""
@@ -65,12 +93,14 @@ class Work(Component):
             self.error = e
             self.status = WorkStatus.FAILED
         finally:
+            from lionagi.libs import SysUtil
+
             self.completion_timestamp = SysUtil.get_timestamp(sep=None)[:-6]
 
     def __str__(self):
         return (
-            f"Work(id={self.ln_id[:8]}.., status={self.status.value}, "
-            f"created_at={self.timestamp[:-7]}, "
-            f"completed_at={self.completion_timestamp[:-7]}, "
+            f"Work(id={str(self.id)[:8]}.., status={self.status.value}, "
+            f"created_at={datetime.fromtimestamp(self.created_at).strftime('%Y-%m-%d %H:%M:%S')}, "
+            f"completed_at={self.completion_timestamp[:-7] if self.completion_timestamp else None}, "
             f"duration={float(self.duration) if self.duration else 0:.04f} sec(s))"
         )

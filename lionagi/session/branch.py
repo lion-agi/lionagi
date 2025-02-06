@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from collections import deque
 from collections.abc import AsyncGenerator
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Literal
@@ -11,6 +12,7 @@ from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
 from lionagi.libs.schema.as_readable import as_readable
+from lionagi.operatives.operative import TaskOperative
 from lionagi.operatives.types import (
     ActionManager,
     FieldModel,
@@ -307,6 +309,21 @@ class Branch(Element, Communicatable, Relational):
         keyed by their tool names or IDs.
         """
         return self._action_manager.registry
+
+    @property
+    def task_queue(self) -> Any:
+        """Returns the task queue."""
+        return self._task_queue
+
+    @property
+    def task_manager(self) -> Any:
+        """Returns the task manager."""
+        return self._task_manager
+
+    @property
+    def tasks(self) -> Pile[TaskOperative]:
+        """Returns the tasks pile."""
+        return self._tasks
 
     # -------------------------------------------------------------------------
     # Cloning

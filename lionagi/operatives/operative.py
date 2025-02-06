@@ -2,18 +2,51 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from abc import ABC
+from enum import Enum
+from typing import List
+
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
 from typing_extensions import Self
 
 from lionagi.libs.validate.fuzzy_match_keys import fuzzy_match_keys
 from lionagi.operatives.models.schema_model import SchemaModel
+from lionagi.protocols.types import Condition, Element, Relational
 from lionagi.utils import UNDEFINED, to_json
 
 from .models.model_params import FieldModel, ModelParams
 
 
-class Operative(SchemaModel):
+class TaskStatus(str, Enum):
+    """Enum to represent different statuses of work."""
+
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
+class TaskOperative(Element, Relational, Condition):
+    """Base class for task operatives, implementing Observable and Relational protocols."""
+
+    status: TaskStatus = Field(
+        TaskStatus.PENDING, description="The current status of the task"
+    )
+    task_name: str | None = Field(None, description="Name of the task")
+    input_data_type: str | None = Field(None, description="Type of input data")
+    output_data_type: str | None = Field(None, description="Type of output data")
+    parents: List[str] = Field(default_factory=list, description="List of parent TaskOperatives.")
+    children: List[str] = Field(default_factory=list, description="List of child TaskOperatives.")
+    error: str | None = Field(None, description="Error message if task failed")
+    operative: "Operative" | None = Field(None, description="The operative instance associated with this task.", exclude=True)
+
+    def apply(self, *args, **kwargs) -> bool:
+        """
+        Placeholder for the Condition protocol's apply method.
+        """
+        return True
+
+class Operative(TaskOperative, SchemaModel):
     """Class representing an operative that handles request and response models for operations."""
 
     name: str | None = None
@@ -170,3 +203,6 @@ class Operative(SchemaModel):
             self.response_params._validators.update(validators)
 
         self.response_type = self.response_params.create_new_model()
+
+</file_content>
+</write_to_file>

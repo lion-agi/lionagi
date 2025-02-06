@@ -15,19 +15,27 @@ limitations under the License.
 """
 
 import inspect
-from abc import ABC
+from collections.abc import Callable
 from functools import wraps
+from typing import Any
+
+from pydantic import BaseModel, Field, field_validator
 
 from lionagi import logging as _logging
-from lionagi.core.collections.abc import get_lion_id
 from lionagi.core.report.form import Form
-from lionagi.core.work.work import Work
-from lionagi.core.work.work_function import WorkFunction
+from lionagi.protocols._concepts import Manager
+from lionagi.protocols.generic.element import ID, Element
+
+from .work import Work
+from .work_function import WorkFunction
 
 
-class Worker(ABC):
+class Worker(Element, Manager):
     """
     This class represents a worker that handles multiple work functions.
+
+    This class extends Element to provide unique identification and timestamp tracking,
+    while implementing Manager to handle work function orchestration.
 
     Attributes:
         name (str): The name of the worker.
@@ -36,26 +44,45 @@ class Worker(ABC):
         default_form (str|None): The default form to be used by the worker.
     """
 
-    name: str = "Worker"
+    name: str = Field("Worker", description="The name of the worker")
 
-    def __init__(self, forms=None, default_form=None) -> None:
+    work_functions: dict[str, WorkFunction] = Field(
+        default_factory=dict,
+        description="Dictionary mapping assignments to WorkFunction objects",
+    )
+
+    forms: dict[str, Form] = Field(
+        default_factory=dict,
+        description="Dictionary mapping form identifier to Form objects",
+    )
+
+    default_form: str | None = Field(
+        None, description="The default form to be used by the worker"
+    )
+
+    def __init__(
+        self,
+        forms: dict[str, Form] | None = None,
+        default_form: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """
         Initializes a new instance of Worker.
 
         Args:
             forms (dict[str, Form], optional): Dictionary mapping form identifier to Form objects.
             default_form (str|None, optional): The default form to be used by the worker.
+            **kwargs: Additional keyword arguments for Element initialization.
         """
-        self.work_functions: dict[str, WorkFunction] = {}
-        self.forms: dict[str, Form] = forms or {}
+        super().__init__(**kwargs)
+        self.forms = forms or {}
         self.default_form = default_form
         self._validate_worklink_functions()
 
-    async def stop(self):
+    async def stop(self) -> None:
         """
         Stops the worker and all associated work functions.
         """
-        # self.stopped = True
         _logging.info(f"Stopping worker {self.name}")
         non_stopped_ = []
 
@@ -69,25 +96,18 @@ class Worker(ABC):
             _logging.error(f"Could not stop worklogs: {non_stopped_}")
         _logging.info(f"Stopped worker {self.name}")
 
-    async def is_progressable(self):
+    async def is_progressable(self) -> bool:
         """
         Checks if any work function is progressable and the worker is not stopped.
 
         Returns:
-            bool: True if any work function is progressable and the worker is not stopped, else False.
+            bool: True if any work function is progressable and the worker is not stopped.
         """
-
-        return (
-            any(
-                [
-                    await i.is_progressable()
-                    for i in self.work_functions.values()
-                ]
-            )
-            and not self.stopped
+        return any(
+            [await i.is_progressable() for i in self.work_functions.values()]
         )
 
-    async def change_default_form(self, form_key):
+    async def change_default_form(self, form_key: str) -> None:
         """
         Changes the default form to the specified form key.
 
@@ -96,7 +116,6 @@ class Worker(ABC):
 
         Raises:
             ValueError: If the form key does not exist in the forms dictionary.
-
         """
         if form_key not in self.forms.keys():
             raise ValueError(
@@ -104,16 +123,19 @@ class Worker(ABC):
             )
         self.default_form = self.forms[form_key]
 
-    def _get_decorated_functions(self, decorator_attr, name_only=True):
+    def _get_decorated_functions(
+        self, decorator_attr: str, name_only: bool = True
+    ) -> list[str] | list[tuple[str, Callable, dict]]:
         """
         Retrieves decorated functions based on the specified decorator attribute.
 
         Args:
             decorator_attr (str): The attribute name of the decorator.
-            name_only (bool, optional): Whether to return only the function names. Defaults to True.
+            name_only (bool, optional): Whether to return only the function names.
 
         Returns:
-            list: List of decorated function names or tuples containing function details.
+            list[str] | list[tuple[str, Callable, dict]]: List of decorated function
+                names or tuples containing function details.
         """
         decorated_functions = []
         for name, func in inspect.getmembers(
@@ -127,9 +149,12 @@ class Worker(ABC):
                     decorated_functions.append((name, func, decorator_params))
         return decorated_functions
 
-    def _validate_worklink_functions(self):
+    def _validate_worklink_functions(self) -> None:
         """
         Validates worklink functions to ensure they have the required parameters.
+
+        Raises:
+            ValueError: If a worklink function is missing required parameters.
         """
         worklink_decorated_function = self._get_decorated_functions(
             decorator_attr="_worklink_decorator_params", name_only=False
@@ -144,7 +169,7 @@ class Worker(ABC):
                     f'Either "from_work" or "from_result" must be a parameter in function {func_name}'
                 )
 
-    def construct_all_work_functions(self):
+    def construct_all_work_functions(self) -> None:
         """
         Constructs all work functions for the worker.
         """
@@ -159,29 +184,36 @@ class Worker(ABC):
 
     async def _work_wrapper(
         self,
-        *args,
-        function=None,
-        assignment=None,
-        form_param_key=None,
-        capacity=None,
-        retry_kwargs=None,
-        guidance=None,
-        refresh_time=1,
-        **kwargs,
-    ):
+        *args: Any,
+        function: Callable | None = None,
+        assignment: str | None = None,
+        form_param_key: str | None = None,
+        capacity: int | None = None,
+        retry_kwargs: dict | None = None,
+        guidance: str | None = None,
+        refresh_time: float = 1,
+        **kwargs: Any,
+    ) -> Work:
         """
         Internal wrapper to handle work function execution.
 
         Args:
-            func (Callable): The function to be executed.
+            function (Callable): The function to be executed.
             assignment (str): The assignment description.
-            form_param_key (str): The key to identify the form parameter in
-                the function's signature. This parameter is used to locate and fill
-                the appropriate form according to the assignment. Raises an error
-                if the form parameter key is not found in the function's signature.
+            form_param_key (str): The key to identify the form parameter.
             capacity (int): Capacity for the work queue batch processing.
             retry_kwargs (dict): Retry arguments for the function.
             guidance (str): Guidance or documentation for the function.
+            refresh_time (float): Refresh time for the work log queue.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Work: The created work instance.
+
+        Raises:
+            KeyError: If form_param_key is not found in function signature.
+            ValueError: If form cannot be located.
         """
         if getattr(self, "work_functions", None) is None:
             self.work_functions = {}
@@ -214,7 +246,7 @@ class Worker(ABC):
 
             form_key = arguments.get(form_param_key)
             try:
-                form_key = get_lion_id(form_key)
+                form_key = ID.get_id(form_key)
             except:
                 pass
             form = self.forms.get(form_key) or self.default_form
@@ -230,7 +262,7 @@ class Worker(ABC):
                 kwargs = {"form": subform} | kwargs
             else:
                 raise ValueError(
-                    f"Cannot locate form in Worker's forms and default_form is not available."
+                    "Cannot locate form in Worker's forms and default_form is not available."
                 )
 
         task = work_func.perform(self, *args, **kwargs)
@@ -240,47 +272,44 @@ class Worker(ABC):
 
 
 def work(
-    assignment=None,
-    form_param_key=None,
-    capacity=10,
-    guidance=None,
-    retry_kwargs=None,
-    timeout=10,
-    refresh_time=1,
-):
+    assignment: str | None = None,
+    form_param_key: str | None = None,
+    capacity: int = 10,
+    guidance: str | None = None,
+    retry_kwargs: dict | None = None,
+    timeout: int = 10,
+    refresh_time: float = 1,
+) -> Callable:
     """
     Decorator to mark a method as a work function.
 
     Args:
         assignment (str): The assignment description of the work function.
-        form_param_key (str): The key to identify the form parameter in
-                the function's signature. This parameter is used to locate and fill
-                the appropriate form according to the assignment. Raises an error
-                if the form parameter key is not found in the function's signature.
+        form_param_key (str): The key to identify the form parameter.
         capacity (int): Capacity for the work queue batch processing.
         guidance (str): Guidance or documentation for the work function.
         retry_kwargs (dict): Retry arguments for the work function.
         timeout (int): Timeout for the work function.
-        refresh_time (int, optional): Refresh time for the work log queue.
+        refresh_time (float): Refresh time for the work log queue.
 
     Returns:
         Callable: The decorated function.
     """
 
-    def decorator(func):
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(
             self: Worker,
-            *args,
-            func=func,
-            assignment=assignment,
-            form_param_key=form_param_key,
-            capacity=capacity,
-            retry_kwargs=retry_kwargs,
-            guidance=guidance,
-            refresh_time=refresh_time,
-            **kwargs,
-        ):
+            *args: Any,
+            func: Callable = func,
+            assignment: str | None = assignment,
+            form_param_key: str | None = form_param_key,
+            capacity: int = capacity,
+            retry_kwargs: dict | None = retry_kwargs,
+            guidance: str | None = guidance,
+            refresh_time: float = refresh_time,
+            **kwargs: Any,
+        ) -> Work:
             if not inspect.iscoroutinefunction(func):
                 raise TypeError(
                     f"{func.__name__} must be an asynchronous function"
@@ -313,24 +342,29 @@ def work(
     return decorator
 
 
-def worklink(from_: str, to_: str, auto_schedule: bool = True):
+def worklink(from_: str, to_: str, auto_schedule: bool = True) -> Callable:
     """
     Decorator to create a link between two work functions.
 
     Args:
         from_ (str): The name of the source work function.
         to_ (str): The name of the target work function.
-        auto_schedule (bool, optional): Whether to automatically schedule the next work function. Defaults to True.
+        auto_schedule (bool): Whether to automatically schedule the next work function.
 
     Returns:
         Callable: The decorated function.
     """
 
-    def decorator(func):
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(
-            self: Worker, *args, func=func, from_=from_, to_=to_, **kwargs
-        ):
+            self: Worker,
+            *args: Any,
+            func: Callable = func,
+            from_: str = from_,
+            to_: str = to_,
+            **kwargs: Any,
+        ) -> Any:
             if not inspect.iscoroutinefunction(func):
                 raise TypeError(
                     f"{func.__name__} must be an asynchronous function"
@@ -376,7 +410,8 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
             next_params = await func(self, *args, **kwargs)
             to_work_func = getattr(self, to_)
             if next_params is None:
-                return
+                return None
+
             if isinstance(next_params, list):
                 if wrapper.auto_schedule:
                     return await to_work_func(*next_params)
@@ -408,19 +443,3 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
         return wrapper
 
     return decorator
-
-
-# # Example
-# from lionagi import Session
-# from lionagi.experimental.work.work_function import work
-
-
-# class MyWorker(Worker):
-
-#     @work(assignment="instruction, context -> response")
-#     async def chat(instruction=None, context=None):
-#         session = Session()
-#         return await session.chat(instruction=instruction, context=context)
-
-
-# await a.chat(instruction="Hello", context={})
