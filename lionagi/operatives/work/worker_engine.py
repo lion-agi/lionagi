@@ -1,19 +1,3 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import asyncio
 from collections.abc import Callable
 from typing import Any
@@ -24,7 +8,7 @@ from lionagi.protocols.generic.element import Element
 from lionagi.protocols.generic.event import EventStatus
 from lionagi.protocols.generic.log import Log
 from lionagi.protocols.generic.pile import Pile, pile
-from lionagi.protocols.graph import Graph
+from lionagi.protocols.graph.graph import Graph
 from lionagi.utils import to_dict
 
 from .work_edge import WorkEdge
