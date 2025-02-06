@@ -21,7 +21,7 @@ async def translate(
     **kwargs,
 ):
     if technique == "SynthLang":
-        from lionagi.libs.transform.synthlang import translate_to_synthlang
+        from lionagi.libs.transform.synthlang_ import translate_to_synthlang
 
         if not technique_kwargs:
             technique_kwargs = {}

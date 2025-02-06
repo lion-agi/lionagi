@@ -407,7 +407,7 @@ class iModel:
         """
         Convenience function that instantiates LLMCompressor and compresses text.
         """
-        from lionagi.libs.transform.perplexity import LLMCompressor
+        from lionagi.libs.transform.perplexity_ import LLMCompressor
 
         compressor = LLMCompressor(
             chat_model=self,
