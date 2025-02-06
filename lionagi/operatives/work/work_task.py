@@ -1,34 +1,50 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import inspect
-from collections.abc import Coroutine
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 
-from lionagi.core.collections.abc.component import Component
-from lionagi.core.work.work import Work, WorkStatus
+from lionagi.protocols.generic.event import Event, EventStatus
+from lionagi.protocols.generic.log import Log
+from lionagi.utils import to_dict
+
+from .work import Work
+from .work_function_node import WorkFunctionNode
 
 
-class WorkTask(Component):
+class WorkTask(Event):
     """
     A class representing a work task that can be processed in multiple steps.
 
+    This class extends Event to provide execution state tracking and event handling,
+    while adding work-specific attributes for task management.
+
     Attributes:
         name (str | None): The name of the task.
-        status (WorkStatus): The current status of the task.
-        status_note (str): A note for the task's current status.
         work_history (list[Work]): A list of works processed in this task.
         max_steps (int | None): The maximum number of works allowed in this task.
         current_work (Work | None): The current work in progress.
-        post_processing (Callable | None): The post-processing function to be executed after the entire task is successfully completed.
+        current_func_node (WorkFunctionNode | None): The current function node being processed.
+        post_processing (Callable | None): The post-processing function to be executed after completion.
     """
 
     name: str | None = Field(None, description="Name of the task")
-
-    status: WorkStatus = Field(
-        WorkStatus.PENDING, description="The current status of the task"
-    )
-
-    status_note: str = Field(None, description="Note for tasks current status")
 
     work_history: list[Work] = Field([], description="List of works processed")
 
@@ -40,24 +56,19 @@ class WorkTask(Component):
         None, description="The current work in progress"
     )
 
+    current_func_node: WorkFunctionNode | None = Field(
+        None, description="The current function node being processed"
+    )
+
     post_processing: Callable | None = Field(
         None,
-        description="The post-processing function to be executed after the entire task has been successfully completed.",
+        description="The post-processing function to be executed after completion",
     )
 
     @field_validator("max_steps", mode="before")
     def _validate_max_steps(cls, value):
         """
         Validates that max_steps is a positive integer.
-
-        Args:
-            value (int): The value to validate.
-
-        Returns:
-            int: The validated value.
-
-        Raises:
-            ValueError: If value is not a positive integer.
         """
         if value <= 0:
             raise ValueError(
@@ -66,18 +77,9 @@ class WorkTask(Component):
         return value
 
     @field_validator("post_processing", mode="before")
-    def _validate_prost_processing(cls, value):
+    def _validate_post_processing(cls, value):
         """
         Validates that post_processing is an asynchronous function.
-
-        Args:
-            value (Callable): The value to validate.
-
-        Returns:
-            Callable: The validated value.
-
-        Raises:
-            ValueError: If value is not an asynchronous function.
         """
         if value is not None and not inspect.iscoroutinefunction((value)):
             raise ValueError("post_processing must be a async function")
@@ -87,66 +89,99 @@ class WorkTask(Component):
     def available_steps(self):
         """
         Calculates the number of available steps left in the task.
-
-        Returns:
-            int: The number of available steps.
         """
         return max(0, self.max_steps - len(self.work_history))
 
     def clone(self):
         """
         Creates a clone of the current WorkTask instance.
-
-        Returns:
-            WorkTask: A new instance of WorkTask with the same attributes.
         """
         new_worktask = WorkTask(
             name=self.name,
-            status=self.status,
             max_steps=self.max_steps,
             current_work=self.current_work,
+            current_func_node=self.current_func_node,
         )
         for work in self.work_history:
             new_worktask.work_history.append(work)
         return new_worktask
 
-    async def process(self, current_func_node):
+    async def process(self, func_node: WorkFunctionNode) -> None:
+        """
+        Sets up the task with a function node and processes it.
+        """
+        self.current_func_node = func_node
+        await self.invoke()
+
+    async def invoke(self) -> None:
         """
         Processes the current work function node.
-
-        Args:
-            current_func_node (WorkFunctionNode): The current function node being processed.
-
-        Returns:
-            str | list[WorkTask]: Returns "COMPLETED", "FAILED", or a list of new WorkTask instances if there are next works to process.
         """
-        if self.current_work.status == WorkStatus.FAILED:
-            self.status = WorkStatus.FAILED
-            self.status_note = f"Work {self.current_work.ln_id} failed. Error: {self.current_work.error}"
-            self.current_work = None
-            return "FAILED"
-        elif self.current_work.status == WorkStatus.COMPLETED:
-            next_works = []
-            if not current_func_node.relations["out"].is_empty():
-                for workedge in current_func_node.relations["out"]:
-                    next_work = await workedge.forward(self)
-                    if next_work is not None:
-                        next_works.append(next_work)
-            if len(next_works) == 0:
+        if self.current_func_node is None:
+            raise ValueError("No function node set for processing")
+
+        self.status = EventStatus.PROCESSING
+
+        try:
+            if self.current_work.status == "FAILED":
+                self.status = EventStatus.FAILED
+                self.execution.error = f"Work {self.current_work.ln_id} failed. Error: {self.current_work.error}"
                 self.current_work = None
-                self.status = WorkStatus.COMPLETED
-                if self.post_processing:
-                    await self.post_processing(self)
-                return "COMPLETED"
-            else:
-                return_tasks = []
-                for i in reversed(range(len(next_works))):
-                    if i == 0:
-                        self.current_work = next_works[i]
-                        self.work_history.append(next_works[i])
-                    else:
-                        clone_task = self.clone()
-                        clone_task.current_work = next_works[i]
-                        clone_task.work_history.append(next_works[i])
-                        return_tasks.append(clone_task)
-                return return_tasks
+                self.execution.response = "FAILED"
+            elif self.current_work.status == "COMPLETED":
+                next_works = []
+                if not self.current_func_node.relations["out"].is_empty():
+                    for workedge in self.current_func_node.relations["out"]:
+                        next_work = await workedge.forward(self)
+                        if next_work is not None:
+                            next_works.append(next_work)
+                if len(next_works) == 0:
+                    self.current_work = None
+                    self.status = EventStatus.COMPLETED
+                    if self.post_processing:
+                        await self.post_processing(self)
+                    self.execution.response = "COMPLETED"
+                else:
+                    return_tasks = []
+                    for i in reversed(range(len(next_works))):
+                        if i == 0:
+                            self.current_work = next_works[i]
+                            self.work_history.append(next_works[i])
+                        else:
+                            clone_task = self.clone()
+                            clone_task.current_work = next_works[i]
+                            clone_task.work_history.append(next_works[i])
+                            return_tasks.append(clone_task)
+                    self.execution.response = return_tasks
+
+        except Exception as e:
+            self.status = EventStatus.FAILED
+            self.execution.error = str(e)
+
+    async def stream(self) -> None:
+        """
+        Performs the task with streaming results.
+        For now, we just call invoke since we don't need streaming.
+        """
+        await self.invoke()
+
+    def to_log(self) -> Log:
+        """Create a Log object summarizing this event."""
+        return Log(
+            content={
+                "type": "WorkTask",
+                "name": self.name,
+                "current_work": (
+                    self.current_work.ln_id if self.current_work else None
+                ),
+                "current_func": (
+                    self.current_func_node.name
+                    if self.current_func_node
+                    else None
+                ),
+                "work_history": [w.ln_id for w in self.work_history],
+                "status": str(self.status),
+                "response": to_dict(self.execution.response),
+                "error": self.execution.error,
+            }
+        )

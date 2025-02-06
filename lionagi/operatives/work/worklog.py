@@ -16,10 +16,13 @@ limitations under the License.
 
 from lionagi.protocols._concepts import Ordering
 from lionagi.protocols.generic.element import Element
+from lionagi.protocols.generic.event import EventStatus
+from lionagi.protocols.generic.log import Log
 from lionagi.protocols.generic.pile import Pile, pile
 from lionagi.protocols.generic.progression import Progression, prog
+from lionagi.utils import to_dict
 
-from .work import Work, WorkStatus
+from .work import Work
 from .work_queue import WorkQueue
 
 
@@ -113,7 +116,7 @@ class WorkLog(Element, Ordering[Work]):
             Pile[Work]: A pile of pending work items.
         """
         return pile(
-            [i for i in self.pile if i.status == WorkStatus.PENDING],
+            [i for i in self.pile if i.status == EventStatus.PENDING],
             item_type=Work,
         )
 
@@ -136,8 +139,36 @@ class WorkLog(Element, Ordering[Work]):
             Pile[Work]: A pile of completed work items.
         """
         return pile(
-            [i for i in self.pile if i.status == WorkStatus.COMPLETED],
+            [i for i in self.pile if i.status == EventStatus.COMPLETED],
             item_type=Work,
+        )
+
+    def to_log(self) -> Log:
+        """Create a Log object summarizing this worklog."""
+        return Log(
+            content={
+                "type": "WorkLog",
+                "id": str(self.id),
+                "pending_count": len(self.pending_work),
+                "completed_count": len(self.completed_work),
+                "total_count": len(self.pile),
+                "queue_status": {
+                    "capacity": self.queue.queue_capacity,
+                    "available": self.queue.available_capacity,
+                    "execution_mode": self.queue.execution_mode,
+                    "stopped": self.queue.stopped,
+                },
+                "works": [
+                    {
+                        "id": str(w.id),
+                        "status": str(w.status),
+                        "task_name": w.async_task_name,
+                        "response": to_dict(w.execution.response),
+                        "error": w.execution.error,
+                    }
+                    for w in self.pile
+                ],
+            }
         )
 
     def __contains__(self, work: Work) -> bool:

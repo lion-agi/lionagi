@@ -17,9 +17,7 @@ limitations under the License.
 from collections.abc import Callable
 from typing import Any
 
-from pydantic import Field
-
-from lionagi.protocols.graph import Node
+from lionagi.protocols.graph.node import Node
 
 from .work_function import WorkFunction
 

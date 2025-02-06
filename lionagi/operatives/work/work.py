@@ -16,52 +16,28 @@ limitations under the License.
 
 from collections.abc import Coroutine
 from datetime import datetime
-from enum import Enum
 from typing import Any
 
 from pydantic import Field
 
-from lionagi.protocols.generic.element import Element
+from lionagi.protocols.generic.event import Event, EventStatus
+from lionagi.protocols.generic.log import Log
+from lionagi.utils import to_dict
 
 
-class WorkStatus(str, Enum):
-    """Enum to represent different statuses of work."""
-
-    PENDING = "PENDING"
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-
-
-class Work(Element):
+class Work(Event):
     """
     A class representing a unit of work.
 
-    This class extends Element to provide unique identification and timestamp tracking,
-    while adding work-specific attributes for status, results, and execution details.
+    This class extends Event to provide execution state tracking and event handling,
+    while adding work-specific attributes for execution details.
 
     Attributes:
-        status (WorkStatus): The current status of the work.
-        result (Any): The result of the work, if completed.
-        error (Any): Any error encountered during the work.
         async_task (Coroutine | None): The asynchronous task associated with the work.
         async_task_name (str | None): The name of the asynchronous task.
         completion_timestamp (str | None): The timestamp when the work was completed.
         duration (float | None): The duration of the work in seconds.
     """
-
-    status: WorkStatus = Field(
-        default=WorkStatus.PENDING,
-        description="The current status of the work",
-    )
-
-    result: Any = Field(
-        default=None, description="The result of the work, if completed"
-    )
-
-    error: Any = Field(
-        default=None, description="Any error encountered during the work"
-    )
 
     async_task: Coroutine | None = Field(
         default=None,
@@ -81,26 +57,54 @@ class Work(Element):
         default=None, description="The duration of the work in seconds"
     )
 
-    async def perform(self):
-        """Perform the work and update the status, result, and duration."""
+    async def invoke(self) -> None:
+        """Perform the work and update execution state."""
+        self.status = EventStatus.PROCESSING
         try:
             result, duration = await self.async_task
-            self.result = result
-            self.status = WorkStatus.COMPLETED
+            self.execution.response = result
+            self.status = EventStatus.COMPLETED
             self.duration = duration
             del self.async_task
         except Exception as e:
-            self.error = e
-            self.status = WorkStatus.FAILED
+            self.execution.error = str(e)
+            self.status = EventStatus.FAILED
         finally:
-            from lionagi.libs import SysUtil
+            from lionagi.utils import time
 
-            self.completion_timestamp = SysUtil.get_timestamp(sep=None)[:-6]
+            self.completion_timestamp = time(
+                type_="custom", custom_format="%Y%m%d%H%M%S"
+            )
+
+    async def stream(self) -> None:
+        """
+        Performs the work with streaming results.
+        For now, we just call invoke since we don't need streaming.
+        """
+        await self.invoke()
+
+    def to_log(self) -> Log:
+        """Create a Log object summarizing this event."""
+        return Log(
+            content={
+                "type": "Work",
+                "id": str(self.id),
+                "task_name": self.async_task_name,
+                "status": str(self.status),
+                "created_at": datetime.fromtimestamp(self.created_at).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
+                "completed_at": self.completion_timestamp,
+                "duration": float(self.duration) if self.duration else 0,
+                "response": to_dict(self.execution.response),
+                "error": self.execution.error,
+            }
+        )
 
     def __str__(self):
         return (
             f"Work(id={str(self.id)[:8]}.., status={self.status.value}, "
             f"created_at={datetime.fromtimestamp(self.created_at).strftime('%Y-%m-%d %H:%M:%S')}, "
-            f"completed_at={self.completion_timestamp[:-7] if self.completion_timestamp else None}, "
+            f"completed_at={self.completion_timestamp}, "
             f"duration={float(self.duration) if self.duration else 0:.04f} sec(s))"
         )

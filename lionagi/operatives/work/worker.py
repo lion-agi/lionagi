@@ -19,12 +19,14 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
 from lionagi import logging as _logging
-from lionagi.core.report.form import Form
+from lionagi.operatives.forms.form import Form
 from lionagi.protocols._concepts import Manager
 from lionagi.protocols.generic.element import ID, Element
+from lionagi.protocols.generic.log import Log
+from lionagi.utils import to_dict
 
 from .work import Work
 from .work_function import WorkFunction
@@ -99,9 +101,6 @@ class Worker(Element, Manager):
     async def is_progressable(self) -> bool:
         """
         Checks if any work function is progressable and the worker is not stopped.
-
-        Returns:
-            bool: True if any work function is progressable and the worker is not stopped.
         """
         return any(
             [await i.is_progressable() for i in self.work_functions.values()]
@@ -110,12 +109,6 @@ class Worker(Element, Manager):
     async def change_default_form(self, form_key: str) -> None:
         """
         Changes the default form to the specified form key.
-
-        Args:
-            form_key (str): The key of the form to set as the default.
-
-        Raises:
-            ValueError: If the form key does not exist in the forms dictionary.
         """
         if form_key not in self.forms.keys():
             raise ValueError(
@@ -128,14 +121,6 @@ class Worker(Element, Manager):
     ) -> list[str] | list[tuple[str, Callable, dict]]:
         """
         Retrieves decorated functions based on the specified decorator attribute.
-
-        Args:
-            decorator_attr (str): The attribute name of the decorator.
-            name_only (bool, optional): Whether to return only the function names.
-
-        Returns:
-            list[str] | list[tuple[str, Callable, dict]]: List of decorated function
-                names or tuples containing function details.
         """
         decorated_functions = []
         for name, func in inspect.getmembers(
@@ -152,9 +137,6 @@ class Worker(Element, Manager):
     def _validate_worklink_functions(self) -> None:
         """
         Validates worklink functions to ensure they have the required parameters.
-
-        Raises:
-            ValueError: If a worklink function is missing required parameters.
         """
         worklink_decorated_function = self._get_decorated_functions(
             decorator_attr="_worklink_decorator_params", name_only=False
@@ -196,24 +178,6 @@ class Worker(Element, Manager):
     ) -> Work:
         """
         Internal wrapper to handle work function execution.
-
-        Args:
-            function (Callable): The function to be executed.
-            assignment (str): The assignment description.
-            form_param_key (str): The key to identify the form parameter.
-            capacity (int): Capacity for the work queue batch processing.
-            retry_kwargs (dict): Retry arguments for the function.
-            guidance (str): Guidance or documentation for the function.
-            refresh_time (float): Refresh time for the work log queue.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            Work: The created work instance.
-
-        Raises:
-            KeyError: If form_param_key is not found in function signature.
-            ValueError: If form cannot be located.
         """
         if getattr(self, "work_functions", None) is None:
             self.work_functions = {}
@@ -253,11 +217,13 @@ class Worker(Element, Manager):
 
             if form:
                 subform = form.__class__(
-                    assignment=work_func.assignment, task=work_func.guidance
+                    assignment=work_func.assignment,
+                    guidance=work_func.guidance,
+                    task=work_func.guidance,
                 )
-                for k in subform.input_fields:
-                    v = getattr(form, k, None)
-                    setattr(subform, k, v)
+                # Copy fields from original form
+                fields_to_copy = form.get_results()
+                subform.fill_fields(**fields_to_copy)
                 subform.origin = form
                 kwargs = {"form": subform} | kwargs
             else:
@@ -269,6 +235,30 @@ class Worker(Element, Manager):
         work = Work(async_task=task, async_task_name=work_func.name)
         await work_func.worklog.append(work)
         return work
+
+    def to_log(self) -> Log:
+        """Create a Log object summarizing this worker."""
+        return Log(
+            content={
+                "type": "Worker",
+                "id": str(self.id),
+                "name": self.name,
+                "work_functions": {
+                    name: {
+                        "id": str(func.id),
+                        "assignment": func.assignment,
+                        "guidance": func.guidance,
+                        "pending_work": len(func.worklog.pending_work),
+                        "completed_work": len(func.worklog.completed_work),
+                    }
+                    for name, func in self.work_functions.items()
+                },
+                "forms": {
+                    name: str(form.id) for name, form in self.forms.items()
+                },
+                "default_form": self.default_form,
+            }
+        )
 
 
 def work(
@@ -282,18 +272,6 @@ def work(
 ) -> Callable:
     """
     Decorator to mark a method as a work function.
-
-    Args:
-        assignment (str): The assignment description of the work function.
-        form_param_key (str): The key to identify the form parameter.
-        capacity (int): Capacity for the work queue batch processing.
-        guidance (str): Guidance or documentation for the work function.
-        retry_kwargs (dict): Retry arguments for the work function.
-        timeout (int): Timeout for the work function.
-        refresh_time (float): Refresh time for the work log queue.
-
-    Returns:
-        Callable: The decorated function.
     """
 
     def decorator(func: Callable) -> Callable:
@@ -345,14 +323,6 @@ def work(
 def worklink(from_: str, to_: str, auto_schedule: bool = True) -> Callable:
     """
     Decorator to create a link between two work functions.
-
-    Args:
-        from_ (str): The name of the source work function.
-        to_ (str): The name of the target work function.
-        auto_schedule (bool): Whether to automatically schedule the next work function.
-
-    Returns:
-        Callable: The decorated function.
     """
 
     def decorator(func: Callable) -> Callable:

@@ -21,7 +21,10 @@ from typing import Any
 from pydantic import Field, field_validator
 
 from lionagi.protocols._concepts import Ordering
+from lionagi.protocols.generic.event import EventStatus
+from lionagi.protocols.generic.log import Log
 from lionagi.protocols.graph import Edge
+from lionagi.utils import to_dict
 
 from .work import Work
 from .worker import Worker
@@ -62,15 +65,6 @@ class WorkEdge(Edge, Ordering[Work]):
     def _validate_convert_function(cls, func: Callable) -> Callable:
         """
         Validates that the convert_function is decorated with the worklink decorator.
-
-        Args:
-            func (Callable): The function to validate.
-
-        Returns:
-            Callable: The validated function.
-
-        Raises:
-            ValueError: If the function is not decorated with the worklink decorator.
         """
         try:
             getattr(func, "_worklink_decorator_params")
@@ -84,9 +78,6 @@ class WorkEdge(Edge, Ordering[Work]):
     def name(self) -> str:
         """
         Returns the name of the convert_function.
-
-        Returns:
-            str: The name of the convert_function.
         """
         return self.convert_function.__name__
 
@@ -94,19 +85,10 @@ class WorkEdge(Edge, Ordering[Work]):
         """
         Transforms the result of the current work into parameters for the next work
         and schedules the next work task.
-
-        Args:
-            task (Any): The task to process.
-
-        Returns:
-            Work | None: The next work task to be executed, or None if no more steps
-                are available.
-
-        Raises:
-            StopIteration: If the task has no available steps left to proceed.
         """
         if task.available_steps == 0:
-            task.status_note = (
+            task.status = EventStatus.FAILED
+            task.execution.error = (
                 "Task stopped proceeding further as all available steps have been used up, "
                 "but the task has not yet reached completion."
             )
@@ -118,7 +100,9 @@ class WorkEdge(Edge, Ordering[Work]):
         if "from_work" in func_signature.parameters:
             kwargs = {"from_work": task.current_work} | kwargs
         if "from_result" in func_signature.parameters:
-            kwargs = {"from_result": task.current_work.result} | kwargs
+            kwargs = {
+                "from_result": task.current_work.execution.response
+            } | kwargs
 
         self.convert_function.auto_schedule = True
         next_work = await self.convert_function(
@@ -130,9 +114,6 @@ class WorkEdge(Edge, Ordering[Work]):
         """
         Include a work item in the edge's sequence.
         Required by Ordering protocol but not used in WorkEdge.
-
-        Args:
-            item (Work): The work item to include.
         """
         pass
 
@@ -140,8 +121,20 @@ class WorkEdge(Edge, Ordering[Work]):
         """
         Exclude a work item from the edge's sequence.
         Required by Ordering protocol but not used in WorkEdge.
-
-        Args:
-            item (Work): The work item to exclude.
         """
         pass
+
+    def to_log(self) -> Log:
+        """Create a Log object summarizing this edge."""
+        return Log(
+            content={
+                "type": "WorkEdge",
+                "id": str(self.id),
+                "name": self.name,
+                "convert_function": self.convert_function.__name__,
+                "kwargs": to_dict(self.convert_function_kwargs),
+                "worker": str(self.associated_worker.id),
+                "head": str(self.head.id) if self.head else None,
+                "tail": str(self.tail.id) if self.tail else None,
+            }
+        )

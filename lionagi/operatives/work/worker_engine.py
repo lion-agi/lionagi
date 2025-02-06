@@ -21,10 +21,12 @@ from typing import Any
 from pydantic import Field
 
 from lionagi.protocols.generic.element import Element
+from lionagi.protocols.generic.event import EventStatus
+from lionagi.protocols.generic.log import Log
 from lionagi.protocols.generic.pile import Pile, pile
 from lionagi.protocols.graph import Graph
+from lionagi.utils import to_dict
 
-from .work import WorkStatus
 from .work_edge import WorkEdge
 from .work_function_node import WorkFunctionNode
 from .work_task import WorkTask
@@ -106,17 +108,6 @@ class WorkerEngine(Element):
     ) -> WorkTask:
         """
         Adds a new task to the task queue.
-
-        Args:
-            task_function (str): The name of the task function to execute.
-            task_name (str, optional): The name of the task.
-            task_max_steps (int): The maximum number of steps for the task.
-            task_post_processing (Callable, optional): The post-processing function.
-            *args: Positional arguments for the task function.
-            **kwargs: Keyword arguments for the task function.
-
-        Returns:
-            WorkTask: The newly created task.
         """
         task = WorkTask(
             name=task_name,
@@ -148,44 +139,32 @@ class WorkerEngine(Element):
     def stopped(self) -> bool:
         """
         Checks if the execution has been stopped.
-
-        Returns:
-            bool: True if stopped, otherwise False.
         """
         return self._stop_event.is_set()
 
     async def process(self, task: WorkTask) -> None:
         """
         Processes a single task.
-
-        Args:
-            task (WorkTask): The task to be processed.
         """
         current_work_func_name = task.current_work.async_task_name
         current_work_func = self.worker.work_functions[current_work_func_name]
-        updated_task = await task.process(current_work_func)
+        await task.process(current_work_func)
 
-        if updated_task == "COMPLETED":
+        if task.status == EventStatus.COMPLETED:
             self.active_tasks.exclude(task)
-        elif updated_task == "FAILED":
+        elif task.status == EventStatus.FAILED:
             self.active_tasks.exclude(task)
             self.failed_tasks.include(task)
-        elif isinstance(updated_task, list):
-            self.tasks.include(updated_task)
-            self.active_tasks.include(updated_task)
         else:
             await asyncio.sleep(self.refresh_time)
 
     async def execute(self, stop_queue: bool = True) -> None:
         """
         Executes all tasks in the task queue.
-
-        Args:
-            stop_queue (bool): Whether to stop the queue after execution.
         """
         for task in self.tasks:
-            if task.status == WorkStatus.PENDING:
-                task.status = WorkStatus.IN_PROGRESS
+            if task.status == EventStatus.PENDING:
+                task.status = EventStatus.PROCESSING
                 self.active_tasks.include(task)
 
         await self.activate_work_queues()
@@ -219,9 +198,6 @@ class WorkerEngine(Element):
     def _construct_work_functions(self) -> None:
         """
         Constructs work functions for the worker.
-
-        Raises:
-            TypeError: If a work function exists but is not a WorkFunctionNode.
         """
         if getattr(self.worker, "work_functions", None) is None:
             self.worker.work_functions = {}
@@ -266,3 +242,41 @@ class WorkerEngine(Element):
                 associated_worker=self.worker,
                 edge_class=WorkEdge,
             )
+
+    def to_log(self) -> Log:
+        """Create a Log object summarizing this engine."""
+        return Log(
+            content={
+                "type": "WorkerEngine",
+                "id": str(self.id),
+                "worker": str(self.worker.id),
+                "tasks": {
+                    "total": len(self.tasks),
+                    "active": len(self.active_tasks),
+                    "failed": len(self.failed_tasks),
+                },
+                "graph": {
+                    "nodes": [
+                        {
+                            "id": str(n.id),
+                            "name": n.name,
+                            "type": n.__class__.__name__,
+                        }
+                        for n in self.worker_graph.nodes
+                    ],
+                    "edges": [
+                        {
+                            "id": str(e.id),
+                            "name": e.name,
+                            "head": str(e.head.id) if e.head else None,
+                            "tail": str(e.tail.id) if e.tail else None,
+                        }
+                        for e in self.worker_graph.edges
+                    ],
+                },
+                "status": {
+                    "stopped": self.stopped,
+                    "refresh_time": self.refresh_time,
+                },
+            }
+        )

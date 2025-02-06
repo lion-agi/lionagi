@@ -16,12 +16,12 @@ limitations under the License.
 
 import asyncio
 import inspect
+import time
 from collections.abc import Callable
 from typing import Any
 
 from pydantic import Field, field_validator
 
-from lionagi.libs.ln_func_call import rcall
 from lionagi.protocols.generic.element import Element
 
 from .worklog import WorkLog
@@ -141,7 +141,7 @@ class WorkFunction(Element):
 
     async def perform(self, *args: Any, **kwargs: Any) -> tuple[Any, float]:
         """
-        Performs the work function with retry logic.
+        Performs the work function with timing measurement.
 
         Args:
             *args: Positional arguments for the function.
@@ -151,7 +151,15 @@ class WorkFunction(Element):
             tuple[Any, float]: A tuple containing the result and execution duration.
         """
         kwargs = {**self.retry_kwargs, **kwargs}
-        return await rcall(self.function, *args, timing=True, **kwargs)
+        start_time = time.perf_counter()
+
+        if inspect.iscoroutinefunction(self.function):
+            result = await self.function(*args, **kwargs)
+        else:
+            result = self.function(*args, **kwargs)
+
+        duration = time.perf_counter() - start_time
+        return result, duration
 
     async def forward(self) -> None:
         """

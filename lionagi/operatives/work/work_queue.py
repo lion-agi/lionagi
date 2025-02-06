@@ -17,8 +17,10 @@ limitations under the License.
 import asyncio
 from typing import ClassVar
 
-from lionagi.operatives.work.work import Work, WorkStatus
+from lionagi.protocols.generic.event import EventStatus
 from lionagi.protocols.generic.processor import Processor
+
+from .work import Work
 
 
 class WorkQueue(Processor):
@@ -66,8 +68,8 @@ class WorkQueue(Processor):
         tasks = set()
         while self.available_capacity > 0 and not self.queue.empty():
             next_work = await self.dequeue()
-            next_work.status = WorkStatus.IN_PROGRESS
-            task = asyncio.create_task(next_work.perform())
+            next_work.status = EventStatus.PROCESSING
+            task = asyncio.create_task(next_work.invoke())
             tasks.add(task)
             self.available_capacity -= 1
 
