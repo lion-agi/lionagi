@@ -203,6 +203,3 @@ class Operative(TaskOperative, SchemaModel):
             self.response_params._validators.update(validators)
 
         self.response_type = self.response_params.create_new_model()
-
-</file_content>
-</write_to_file>
