@@ -25,12 +25,12 @@ class Form(BaseForm):
     @model_validator(mode="before")
     def parse_assignment_into_flow(cls, values):
         """
-        If the 'assignment' has semicolons, assume multiple steps, parse into FlowDefinition.
-        If it's a single step or no semicolons, we remain in 'simple' mode.
+        If 'assignment' has semicolons, parse into a FlowDefinition with pass-through steps.
+        If it's single-step or no semicolons, remain in simple mode (FlowDefinition=None).
         """
         assignment_str = values.get("assignment")
         if assignment_str and ";" in assignment_str:
-            flow = FlowDefinition()
+            flow = FlowDefinition(name="auto_flow")
             flow.parse_flow_string(assignment_str)
             values["flow_definition"] = flow
         return values
@@ -38,18 +38,16 @@ class Form(BaseForm):
     @model_validator(mode="after")
     def compute_output_fields(self) -> Self:
         """
-        If in simple mode, we parse something like 'a,b->c' and set output_fields=[c].
-        If in multi-step mode, we set output_fields to the final produced fields of the flow.
+        If we have a flow_definition, set `output_fields` to whatever is produced in the flow.
+        If it's just single-step assignment, parse out the -> outputs if no output_fields given.
         """
         if self.flow_definition:
-            # multi-step
             produced = self.flow_definition.get_produced_fields()
             if not self.output_fields:
                 self.output_fields = list(produced)
         else:
             # single-step
             if self.assignment and "->" in self.assignment:
-                # parse the single arrow
                 ins_outs = self.assignment.split("->", 1)
                 outs_str = ins_outs[1]
                 outs = [x.strip() for x in outs_str.split(",") if x.strip()]
@@ -59,15 +57,16 @@ class Form(BaseForm):
 
     def fill_fields(self, **kwargs) -> None:
         """
-        A small helper: fill fields in this form by direct assignment.
-        Usually you'd do 'myform(field=val, field2=val2)', but sometimes you want partial updates.
+        Simple helper: fill fields of this form by assignment.
+        Usually you'd do MyForm(field=..., field2=...),
+        but partial updates might use fill_fields().
         """
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     def to_instructions(self) -> dict[str, Any]:
         """
-        Return a small dictionary that an LLM can read as an 'instruction context'.
+        Return a dictionary that an LLM might read as 'instruction context'.
         """
         return {
             "assignment": self.assignment,

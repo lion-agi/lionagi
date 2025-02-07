@@ -18,54 +18,43 @@ if TYPE_CHECKING:
 
 class FlowStepEvent(Event):
     """
-    Represents an operation to process a single FlowStep within a multi-step flow,
-    using (or updating) a Form that stores inputs/outputs.
-
-    On `.invoke()`, we attempt to read the step inputs from the form,
-    transform them (if needed), and write the outputs back into the form.
-
-    If the step requires an LLM-based transformation or external logic,
-    we can optionally do that as well.
+    Represents an operation to process a single FlowStep, referencing:
+      - FlowStep (inputs -> outputs)
+      - A Form that stores the actual data
+      - Optional transform technique / branch if you want LLM transformations
     """
 
-    # The flow step definition: which inputs->outputs, etc.
     step: FlowStep = Field(..., description="Flow step definition")
-
-    # The form we are operating on.
     form: Form = Field(
         ..., description="The Form instance storing input+output fields"
     )
 
-    # Possibly store a reference to the branch, or get it injected at runtime
+    # Optionally store a reference to the branch if you do GPT-based transforms
     branch: "Branch" | None = Field(None, exclude=True)
 
     # If the step triggers a transform or function call, specify "technique"
     transform_technique: str | None = Field(
         default=None,
-        description="Optional transform technique, e.g. 'synthlang'",
+        description="Optional transform technique, e.g. 'someLang'",
     )
     transform_kwargs: dict[str, Any] = Field(
         default_factory=dict,
-        description="Parameters for the transformation step if needed",
+        description="Extra parameters for the transformation step, if used",
     )
 
     async def invoke(self) -> None:
         """
-        Processes this flow step by reading inputs, applying transformations, and
-        writing outputs to the form. The logic may vary by step definition or transform technique.
+        Processes this single step by reading inputs from the Form,
+        applying transformations, and storing outputs in the Form.
         """
         self.status = EventStatus.PROCESSING
         try:
-            # 1) Gather step inputs from the form
-            inputs = {}
-            for i in self.step.inputs:
-                val = getattr(self.form, i, None)
-                inputs[i] = val
+            # 1) Gather inputs
+            inputs = {i: getattr(self.form, i, None) for i in self.step.inputs}
 
-            # 2) If there's a transform technique, call branch.transform(...) or local code
+            # 2) If there's a transform technique & branch, do a "branch.transform"
+            #    or local approach. This is an example usage:
             if self.transform_technique and self.branch:
-                # Let's assume we only transform the first input or a combined input
-                # In a real system, you'd define how to handle multi-input transforms
                 combined_input = "\n".join(
                     str(v) for v in inputs.values() if v
                 )
@@ -73,26 +62,16 @@ class FlowStepEvent(Event):
                     data=combined_input,
                     technique=self.transform_technique,
                     technique_kwargs=self.transform_kwargs,
-                    # you can choose store_result_as_message, etc.
                 )
-                # We'll store the result in an output field (like the first in self.step.outputs?)
+                # store in the first output, or you might do something else
                 if self.step.outputs:
-                    out_field = self.step.outputs[0]
-                    setattr(self.form, out_field, transformed)
+                    setattr(self.form, self.step.outputs[0], transformed)
             else:
-                # 2b) If no transform_technique is given, we might do a local pass-through
-                # or do some domain logic
-                for out_field in self.step.outputs:
-                    # trivial pass-through, just copy from first input
-                    if self.step.inputs:
-                        val = inputs[self.step.inputs[0]]
-                        setattr(self.form, out_field, val)
+                # 2b) If no transform_technique, we can just re-use the step logic:
+                self.step.run(self.form)
 
-            # 3) Mark the form's has_processed = True if this step completes its portion
-            # Or we might do more elaborate logic: only if last step?
+            # Done
             self.form.has_processed = True
-
-            # 4) Done
             self.execution.response = {
                 "step": self.step.name,
                 "form_updates": {
@@ -107,20 +86,19 @@ class FlowStepEvent(Event):
 
     async def stream(self) -> None:
         """
-        If we needed streaming logic, we could implement it here.
-        For now, we just call invoke.
+        If needed, implement partial step streaming. For now, same as invoke().
         """
         await self.invoke()
 
     @property
     def request(self) -> dict:
         """
-        Optionally return a dictionary that might be used for rate-limiting or concurrency checks.
+        Optionally return data that might be used for concurrency checks or rate-limits.
         """
-        return {"required_tokens": None, "some_step_name": self.step.name}
+        return {"some_step_name": self.step.name}
 
     def to_log(self) -> Log:
-        """Create a Log object summarizing this event."""
+        """Return a structured log entry."""
         return Log(
             content={
                 "type": "FlowStepEvent",

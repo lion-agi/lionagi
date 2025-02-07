@@ -26,6 +26,7 @@ class TaskStatus(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
+
 class TaskOperative(Element, Relational, Condition):
     """Base class for task operatives, implementing Observable and Relational protocols."""
 
@@ -34,17 +35,28 @@ class TaskOperative(Element, Relational, Condition):
     )
     task_name: str | None = Field(None, description="Name of the task")
     input_data_type: str | None = Field(None, description="Type of input data")
-    output_data_type: str | None = Field(None, description="Type of output data")
-    parents: List[str] = Field(default_factory=list, description="List of parent TaskOperatives.")
-    children: List[str] = Field(default_factory=list, description="List of child TaskOperatives.")
+    output_data_type: str | None = Field(
+        None, description="Type of output data"
+    )
+    parents: List[str] = Field(
+        default_factory=list, description="List of parent TaskOperatives."
+    )
+    children: List[str] = Field(
+        default_factory=list, description="List of child TaskOperatives."
+    )
     error: str | None = Field(None, description="Error message if task failed")
-    operative: "Operative" | None = Field(None, description="The operative instance associated with this task.", exclude=True)
+    operative: "Operative" | None = Field(
+        None,
+        description="The operative instance associated with this task.",
+        exclude=True,
+    )
 
     def apply(self, *args, **kwargs) -> bool:
         """
         Placeholder for the Condition protocol's apply method.
         """
         return True
+
 
 class Operative(TaskOperative, SchemaModel):
     """Class representing an operative that handles request and response models for operations."""

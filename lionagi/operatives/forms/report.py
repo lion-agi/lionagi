@@ -10,15 +10,15 @@ from .form import Form
 
 class Report(BaseForm):
     """
-    A minimal class that collects multiple completed forms as "sub-tasks."
-    If you have a single FlowDefinition that describes the entire multi-step pipeline,
-    you can track each step as a separate form in here.
+    A minimal class that collects multiple completed forms as sub-tasks.
+    For instance, if you have multiple forms representing each step or sub-process,
+    you can store them all here.
     """
 
     default_form_cls: type[Form] = Form
     completed_forms: Pile[Form] = Field(
         default_factory=lambda: Pile(item_type={Form}),
-        description="A list of forms that have been completed for this report.",
+        description="A collection of completed forms.",
     )
     form_assignments: dict[str, str] = Field(
         default_factory=dict,
@@ -29,7 +29,8 @@ class Report(BaseForm):
         self, form: Form, update_report_fields: bool = False
     ):
         """
-        Add a completed form. Optionally update the report’s fields from the form's output.
+        Add a completed form.
+        If update_report_fields=True, we copy the form's output fields back into this report object.
         """
         missing = form.check_completeness()
         if missing:
@@ -38,7 +39,7 @@ class Report(BaseForm):
             )
         self.completed_forms.append(form)
         self.form_assignments[form.id] = form.assignment or ""
-        # optionally update the report’s own fields
+
         if update_report_fields:
             for f_ in form.output_fields:
                 val = getattr(form, f_, None)
