@@ -17,28 +17,33 @@ class BaseForm(Element):
 
     model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
 
-    # A short "assignment" describing input->output
+    # A short "assignment" describing input->output (e.g. a DSL: 'a,b->c')
     assignment: str | None = Field(
         default=None,
         description="A small DSL describing transformation, e.g. 'a,b -> c'.",
     )
-    # Which fields are produced as 'final' or 'required' outputs.
+
+    # Which fields are considered “final” or “required” outputs
     output_fields: list[str] = Field(
         default_factory=list,
         description="Which fields are considered mandatory outputs.",
     )
-    # Whether None counts as valid or incomplete
+
+    # Whether None counts as valid or is treated as incomplete
     none_as_valid: bool = Field(
         default=False,
         description="If True, None is accepted as a valid value for completion checks.",
     )
+
     has_processed: bool = Field(
         default=False,
         description="Marks if the form is considered completed or 'processed'.",
     )
 
     def is_completed(self) -> bool:
-        """Check if all required output fields are set (and not UNDEFINED/None if not allowed)."""
+        """
+        Check if all required output fields are set (and not UNDEFINED/None if not allowed).
+        """
         missing = self.check_completeness()
         return not missing
 
@@ -46,8 +51,8 @@ class BaseForm(Element):
         self, how: Literal["raise", "return_missing"] = "return_missing"
     ) -> list[str]:
         """
-        Return a list of any 'required' output fields that are missing or invalid.
-        If how='raise', raise an exception if missing any.
+        Return any required fields that are missing or invalid.
+        - If how='raise', raises ValueError if any are missing.
         """
         invalid_vals = [UNDEFINED, PydanticUndefined]
         if not self.none_as_valid:
@@ -65,7 +70,7 @@ class BaseForm(Element):
 
     def get_results(self, valid_only: bool = False) -> dict[str, Any]:
         """
-        Return a dict of all `output_fields`, optionally skipping invalid/None if `valid_only`.
+        Return a dict of the `output_fields`, optionally skipping invalid/None if valid_only=True.
         """
         results = {}
         invalid_vals = [UNDEFINED, PydanticUndefined]
@@ -77,4 +82,5 @@ class BaseForm(Element):
             if valid_only and val in invalid_vals:
                 continue
             results[f] = val
+
         return results

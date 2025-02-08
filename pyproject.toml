@@ -59,6 +59,9 @@ ollama = [
     "openai>=1.60.0",
     "ollama>=0.4.7",
 ]
+translate = [
+    "synthlang==0.1.4"
+]
 
 [tool.black]
 line-length = 79
