@@ -244,6 +244,15 @@ class Element(BaseModel, Observable):
         """
         return str(val)
 
+    @property
+    def created_datetime(self) -> datetime:
+        """Returns the creation time as a datetime object.
+
+        Returns:
+            datetime: The creation time in UTC.
+        """
+        return datetime.fromtimestamp(self.created_at)
+
     def __eq__(self, other: Any) -> bool:
         """Compares two Element instances by their ID.
 
