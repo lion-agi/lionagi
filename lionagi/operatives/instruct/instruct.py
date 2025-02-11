@@ -22,6 +22,7 @@ __all__ = (
 )
 
 
+# TODO: Deprecate action strategy with order system
 class Instruct(HashableModel):
     """Model for defining instruction parameters and execution requirements.
 

@@ -898,6 +898,7 @@ class Branch(Element, Communicatable, Relational):
             response_format=response_format,
         )
 
+    # TODO: action_strategy is deprecated, remove in future versions
     async def operate(
         self,
         *,
@@ -1226,6 +1227,8 @@ class Branch(Element, Communicatable, Relational):
             verbose_action=verbose_action,
         )
 
+    # TODO: action_strategy is deprecated, remove in future versions
+    # TODO: consolidate all kinds of act into ordered actions, "dynamic batch"
     async def act(
         self,
         action_request: list | ActionRequest | BaseModel | dict,

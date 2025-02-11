@@ -33,6 +33,7 @@ __all__ = (
 )
 
 
+# TODO: Add an "order" field to ActionRequestModel to allow for ordered actions.
 class ActionRequestModel(HashableModel):
     """
     Captures a single action request, typically from a user or system message.
