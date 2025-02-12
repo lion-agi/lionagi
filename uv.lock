@@ -1217,6 +1217,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pillow" },
     { name = "pydantic" },
+    { name = "pydantic-settings" },
     { name = "python-dotenv" },
     { name = "tiktoken" },
 ]
@@ -1260,6 +1261,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=10.0.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "tiktoken", specifier = ">=0.8.0" },
 ]

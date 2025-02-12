@@ -418,3 +418,120 @@ class iModel:
             verbose=verbose,
         )
         return await compressor.compress(text)
+
+
+## 
+
+# lionagi/service/imodel.py
+
+import os
+from typing import Any, Callable, Dict
+
+from lionagi.service.connectors.base import ResourceConnector
+from lionagi.service.endpoints.endpoint import EndPoint
+from lionagi.service.endpoints.manager import EndpointManager
+
+
+class iModel(ResourceConnector):
+    """
+    Manages a set of EndPoint instances for a specific category of API
+    (e.g., chat models, search engines).
+
+    It implements the ResourceConnector protocol, delegating calls to the
+    appropriate EndPoint.
+    """
+
+    def __init__(
+        self,
+        provider: str,
+        endpoints: Dict[str, EndPoint],
+        default_endpoint: str | None = None,
+        requires_api_key: bool = True,
+        **kwargs,
+    ) -> None:
+        self.name = provider
+        self.endpoints = endpoints
+        self.default_endpoint = default_endpoint or next(
+            iter(endpoints), None
+        )  # First endpoint as default
+        self.api_key = self._get_api_key(provider, requires_api_key)
+
+    async def connect(self, **kwargs):
+        # iModel doesn't need a persistent connection, as EndPoint handles it
+        pass
+
+    def add_endpoint(self, endpoint: EndPoint):
+        if endpoint.name in self.endpoints:
+            # you can define to raise error, or just simply update the existing one
+            pass
+        self.endpoints[endpoint.name] = endpoint
+
+    async def get_endpoint(self, endpoint_name: str | None) -> EndPoint:
+        if endpoint_name is None:
+            if self.default_endpoint:
+                return self.endpoints[self.default_endpoint]
+            else:
+                raise ValueError("No default endpoint specified and no endpoints exist.")
+        if endpoint_name not in self.endpoints:
+            raise ValueError(f"Endpoint '{endpoint_name}' not found in iModel.")
+        return self.endpoints[endpoint_name]
+
+    async def call(self, operation: str, data: dict, endpoint: str | None = None) -> dict:
+        """
+        Implements the ResourceConnector protocol.  Delegates the call to
+        the specified (or default) endpoint.
+        """
+        endpoint_instance = await self.get_endpoint(endpoint)
+
+        # Here you would look at the 'operation' string and the 'data'
+        # to determine *how* to call the endpoint.  For a simple case,
+        # we just assume it's a direct call:
+
+        return await endpoint_instance._invoke(payload=data, headers={})
+
+    async def invoke(
+        self, endpoint_name: str | None = None, **kwargs
+    ) -> dict:  # Keep invoke for now, deprecated
+        import warnings
+
+        warnings.warn(
+            "The 'invoke' method is deprecated and will be removed in a future version. Use 'call' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self.call(operation="invoke", data=kwargs, endpoint=endpoint_name)
+
+    @staticmethod
+    def _get_api_key(provider: str, requires_api_key: bool) -> str:
+        provider = str(provider or "").strip().lower()
+        api_key_env_var = ""
+
+        match provider:
+            case "openai":
+                api_key_env_var = "OPENAI_API_KEY"
+            case "anthropic":
+                api_key_env_var = "ANTHROPIC_API_KEY"
+            case "openrouter":
+                api_key_env_var = "OPENROUTER_API_KEY"
+            case "perplexity":
+                api_key_env_var = "PERPLEXITY_API_KEY"
+            case "groq":
+                api_key_env_var = "GROQ_API_KEY"
+            case "exa":
+                api_key_env_var = "EXA_API_KEY"
+            case "ollama":
+                api_key_env_var = (
+                    "ollama"  # Special case, no actual key needed
+                )
+            case "":
+                if requires_api_key:
+                    raise ValueError("API key must be provided")
+            case _:
+                api_key_env_var = f"{provider.upper()}_API_KEY"
+
+        api_key = os.getenv(api_key_env_var)
+        if not api_key and requires_api_key:
+            raise ValueError(
+                f"API key for {provider} not found in environment variables ({api_key_env_var})"
+            )
+        return api_key
