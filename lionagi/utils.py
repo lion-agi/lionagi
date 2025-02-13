@@ -6,6 +6,8 @@ import asyncio
 import contextlib
 import copy as _copy
 import functools
+import importlib.metadata
+import importlib.util
 import json
 import logging
 import re
@@ -15,7 +17,6 @@ import sys
 import time as t_
 import uuid
 import xml.etree.ElementTree as ET
-from abc import ABC
 from collections.abc import (
     AsyncGenerator,
     Callable,
@@ -40,10 +41,9 @@ from typing import (
     overload,
 )
 
-from pydantic import BaseModel, model_validator
-from pydantic_core import PydanticUndefinedType
 from typing_extensions import Self
 
+from ._pydantic import BaseModel, PydanticUndefinedType
 from .settings import Settings
 
 R = TypeVar("R")
@@ -151,21 +151,6 @@ def hash_dict(data) -> int:
             v = str(v)
         hashable_items.append((k, v))
     return hash(frozenset(hashable_items))
-
-
-class Params(BaseModel):
-
-    def keys(self):
-        return self.model_fields.keys()
-
-    def __call__(self, *args, **kwargs):
-        raise NotImplementedError(
-            "This method should be implemented in a subclass"
-        )
-
-
-class DataClass(ABC):
-    pass
 
 
 # --- Create a global UNDEFINED object ---
@@ -484,24 +469,6 @@ def to_list(
     return processed
 
 
-class ToListParams(Params):
-    flatten: bool = False
-    dropna: bool = False
-    unique: bool = False
-    use_values: bool = False
-    flatten_tuple_set: bool = False
-
-    def __call__(self, input_: Any):
-        return to_list(
-            input_,
-            flatten=self.flatten,
-            dropna=self.dropna,
-            unique=self.unique,
-            use_values=self.use_values,
-            flatten_tuple_set=self.flatten_tuple_set,
-        )
-
-
 def lcall(
     input_: Iterable[T] | T,
     func: Callable[[T], R] | Iterable[Callable[[T], R]],
@@ -607,55 +574,6 @@ def lcall(
         )
 
     return out
-
-
-class CallParams(Params):
-    """params class for high order function with additional handling of lower order function parameters, can take arbitrary number of args and kwargs, args need to be in agrs=, kwargs can be passed as is"""
-
-    args: list = []
-    kwargs: dict = {}
-
-    @model_validator(mode="before")
-    def _validate_data(cls, data: dict):
-        _d = {}
-        for k in list(data.keys()):
-            if k in cls.keys():
-                _d[k] = data.pop(k)
-        _d.setdefault("args", [])
-        _d.setdefault("kwargs", {})
-        _d["kwargs"].update(data)
-        return _d
-
-    def __call__(self, *args, **kwargs):
-        raise NotImplementedError(
-            "This method should be implemented in a subclass"
-        )
-
-
-class LCallParams(CallParams):
-    func: Any = None
-    sanitize_input: bool = False
-    unique_input: bool = False
-    flatten: bool = False
-    dropna: bool = False
-    unique_output: bool = False
-    flatten_tuple_set: bool = False
-
-    def __call__(self, input_: Any, func=None):
-        if self.func is None and func is None:
-            raise ValueError("a sync func must be provided")
-        return lcall(
-            input_,
-            func or self.func,
-            *self.args,
-            sanitize_input=self.sanitize_input,
-            unique_input=self.unique_input,
-            flatten=self.flatten,
-            dropna=self.dropna,
-            unique_output=self.unique_output,
-            flatten_tuple_set=self.flatten_tuple_set,
-            **self.kwargs,
-        )
 
 
 async def alcall(
@@ -853,50 +771,6 @@ async def alcall(
         )
 
 
-class ALCallParams(CallParams):
-    func: Any = None
-    sanitize_input: bool = False
-    unique_input: bool = False
-    num_retries: int = 0
-    initial_delay: float = 0
-    retry_delay: float = 0
-    backoff_factor: float = 1
-    retry_default: Any = UNDEFINED
-    retry_timeout: float | None = None
-    retry_timing: bool = False
-    max_concurrent: int | None = None
-    throttle_period: float | None = None
-    flatten: bool = False
-    dropna: bool = False
-    unique_output: bool = False
-    flatten_tuple_set: bool = False
-
-    async def __call__(self, input_: Any, func=None):
-        if self.func is None and func is None:
-            raise ValueError("a sync/async func must be provided")
-        return await alcall(
-            input_,
-            func or self.func,
-            *self.args,
-            sanitize_input=self.sanitize_input,
-            unique_input=self.unique_input,
-            num_retries=self.num_retries,
-            initial_delay=self.initial_delay,
-            retry_delay=self.retry_delay,
-            backoff_factor=self.backoff_factor,
-            retry_default=self.retry_default,
-            retry_timeout=self.retry_timeout,
-            retry_timing=self.retry_timing,
-            max_concurrent=self.max_concurrent,
-            throttle_period=self.throttle_period,
-            flatten=self.flatten,
-            dropna=self.dropna,
-            unique_output=self.unique_output,
-            flatten_tuple_set=self.flatten_tuple_set,
-            **self.kwargs,
-        )
-
-
 async def bcall(
     input_: Any,
     func: Callable[..., T],
@@ -944,52 +818,6 @@ async def bcall(
             unique_output=unique_output,
             flatten_tuple_set=flatten_tuple_set,
             **kwargs,
-        )
-
-
-class BCallParams(CallParams):
-    func: Any = None
-    batch_size: int
-    sanitize_input: bool = False
-    unique_input: bool = False
-    num_retries: int = 0
-    initial_delay: float = 0
-    retry_delay: float = 0
-    backoff_factor: float = 1
-    retry_default: Any = UNDEFINED
-    retry_timeout: float | None = None
-    retry_timing: bool = False
-    max_concurrent: int | None = None
-    throttle_period: float | None = None
-    flatten: bool = False
-    dropna: bool = False
-    unique_output: bool = False
-    flatten_tuple_set: bool = False
-
-    async def __call__(self, input_, func=None):
-        if self.func is None and func is None:
-            raise ValueError("a sync/async func must be provided")
-        return await bcall(
-            input_,
-            func or self.func,
-            *self.args,
-            batch_size=self.batch_size,
-            sanitize_input=self.sanitize_input,
-            unique_input=self.unique_input,
-            num_retries=self.num_retries,
-            initial_delay=self.initial_delay,
-            retry_delay=self.retry_delay,
-            backoff_factor=self.backoff_factor,
-            retry_default=self.retry_default,
-            retry_timeout=self.retry_timeout,
-            retry_timing=self.retry_timing,
-            max_concurrent=self.max_concurrent,
-            throttle_period=self.throttle_period,
-            flatten=self.flatten,
-            dropna=self.dropna,
-            unique_output=self.unique_output,
-            flatten_tuple_set=self.flatten_tuple_set,
-            **self.kwargs,
         )
 
 
@@ -1064,33 +892,6 @@ def create_path(
         )
 
     return full_path
-
-
-class CreatePathParams(Params):
-    directory: Path | str
-    filename: str
-    extension: str = None
-    timestamp: bool = False
-    dir_exist_ok: bool = True
-    file_exist_ok: bool = False
-    time_prefix: bool = False
-    timestamp_format: str | None = None
-    random_hash_digits: int = 0
-
-    def __call__(
-        self, directory: Path | str = None, filename: str = None
-    ) -> Path:
-        return create_path(
-            directory or self.directory,
-            filename or self.filename,
-            extension=self.extension,
-            timestamp=self.timestamp,
-            dir_exist_ok=self.dir_exist_ok,
-            file_exist_ok=self.file_exist_ok,
-            time_prefix=self.time_prefix,
-            timestamp_format=self.timestamp_format,
-            random_hash_digits=self.random_hash_digits,
-        )
 
 
 # --- JSON and XML Conversion ---
@@ -2389,3 +2190,158 @@ def run_package_manager_command(
         check=True,
         capture_output=True,
     )
+
+
+def check_import(
+    package_name: str,
+    module_name: str | None = None,
+    import_name: str | None = None,
+    pip_name: str | None = None,
+    attempt_install: bool = True,
+    error_message: str = "",
+):
+    """
+    Check if a package is installed, attempt to install if not.
+
+    Args:
+        package_name: The name of the package to check.
+        module_name: The specific module to import (if any).
+        import_name: The specific name to import from the module (if any).
+        pip_name: The name to use for pip installation (if different).
+        attempt_install: Whether to attempt installation if not found.
+        error_message: Custom error message to use if package not found.
+
+    Raises:
+        ImportError: If the package is not found and not installed.
+        ValueError: If the import fails after installation attempt.
+    """
+    if not is_import_installed(package_name):
+        if attempt_install:
+            logging.info(
+                f"Package {package_name} not found. Attempting " "to install.",
+            )
+            try:
+                return install_import(
+                    package_name=package_name,
+                    module_name=module_name,
+                    import_name=import_name,
+                    pip_name=pip_name,
+                )
+            except ImportError as e:
+                raise ValueError(
+                    f"Failed to install {package_name}: {e}"
+                ) from e
+        else:
+            logging.info(
+                f"Package {package_name} not found. {error_message}",
+            )
+            raise ImportError(
+                f"Package {package_name} not found. {error_message}",
+            )
+
+    return import_module(
+        package_name=package_name,
+        module_name=module_name,
+        import_name=import_name,
+    )
+
+
+def import_module(
+    package_name: str,
+    module_name: str = None,
+    import_name: str | list = None,
+) -> Any:
+    """
+    Import a module by its path.
+
+    Args:
+        module_path: The path of the module to import.
+
+    Returns:
+        The imported module.
+
+    Raises:
+        ImportError: If the module cannot be imported.
+    """
+    try:
+        full_import_path = (
+            f"{package_name}.{module_name}" if module_name else package_name
+        )
+
+        if import_name:
+            import_name = (
+                [import_name]
+                if not isinstance(import_name, list)
+                else import_name
+            )
+            a = __import__(
+                full_import_path,
+                fromlist=import_name,
+            )
+            if len(import_name) == 1:
+                return getattr(a, import_name[0])
+            return [getattr(a, name) for name in import_name]
+        else:
+            return __import__(full_import_path)
+
+    except ImportError as e:
+        raise ImportError(
+            f"Failed to import module {full_import_path}: {e}"
+        ) from e
+
+
+def install_import(
+    package_name: str,
+    module_name: str | None = None,
+    import_name: str | None = None,
+    pip_name: str | None = None,
+):
+    """
+    Attempt to import a package, installing it if not found.
+
+    Args:
+        package_name: The name of the package to import.
+        module_name: The specific module to import (if any).
+        import_name: The specific name to import from the module (if any).
+        pip_name: The name to use for pip installation (if different).
+
+    Raises:
+        ImportError: If the package cannot be imported or installed.
+        subprocess.CalledProcessError: If pip installation fails.
+    """
+    pip_name = pip_name or package_name
+
+    try:
+        return import_module(
+            package_name=package_name,
+            module_name=module_name,
+            import_name=import_name,
+        )
+    except ImportError:
+        logging.info(f"Installing {pip_name}...")
+        try:
+            run_package_manager_command(["install", pip_name])
+            return import_module(
+                package_name=package_name,
+                module_name=module_name,
+                import_name=import_name,
+            )
+        except subprocess.CalledProcessError as e:
+            raise ImportError(f"Failed to install {pip_name}: {e}") from e
+        except ImportError as e:
+            raise ImportError(
+                f"Failed to import {pip_name} after installation: {e}"
+            ) from e
+
+
+def is_import_installed(package_name: str) -> bool:
+    """
+    Check if a package is installed.
+
+    Args:
+        package_name: The name of the package to check.
+
+    Returns:
+        bool: True if the package is installed, False otherwise.
+    """
+    return importlib.util.find_spec(package_name) is not None
