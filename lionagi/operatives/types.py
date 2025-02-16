@@ -2,17 +2,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .action.function_calling import FunctionCalling
-from .action.manager import ActionManager
-from .action.tool import FuncTool, FuncToolRef, Tool, ToolRef
-from .fields.action import ActionRequestModel, ActionResponseModel
-from .fields.instruct import (
+from ..libs.fields.action import ActionRequestModel, ActionResponseModel
+from ..libs.fields.instruct import (
     INSTRUCT_FIELD,
     LIST_INSTRUCT_FIELD,
     Instruct,
     InstructResponse,
 )
-from .fields.reason import CONFIDENCE_SCORE_FIELD, REASON_FIELD, Reason
+from ..libs.fields.reason import CONFIDENCE_SCORE_FIELD, REASON_FIELD, Reason
+from .action.function_calling import FunctionCalling
+from .action.manager import ActionManager
+from .action.tool import FuncTool, FuncToolRef, Tool, ToolRef
 from .forms.base import BaseForm
 from .forms.flow import FlowDefinition, FlowStep
 from .forms.form import Form
