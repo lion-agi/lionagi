@@ -165,7 +165,13 @@ class Params(BaseModel):
 
 
 class DataClass(ABC):
-    pass
+    """
+    Must have slots, objects designed to use only as internal data structure
+    """
+
+    def to_dict(self) -> dict:
+        """json serializable dict"""
+        return NotImplemented
 
 
 # --- Create a global UNDEFINED object ---

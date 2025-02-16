@@ -237,32 +237,6 @@ class EndPoint(ABC):
             "is_cached": is_cached,
         }
 
-    async def invoke(
-        self,
-        payload: dict,
-        headers: dict,
-        is_cached: bool = False,
-        **kwargs,
-    ):
-        """Invokes this endpoint with the given payload and headers.
-
-        Args:
-            payload (dict):
-                The request data to send.
-            headers (dict):
-                Extra HTTP headers for the request.
-            is_cached (bool):
-                Whether caching should be applied to this request.
-            **kwargs:
-                Additional arguments for the invocation.
-
-        Returns:
-            The result of the `_invoke` or `_cached_invoke` method.
-        """
-        if is_cached:
-            return await self._cached_invoke(payload, headers, **kwargs)
-        return await self._invoke(payload, headers, **kwargs)
-
     async def _invoke(self, payload: dict, headers: dict, **kwargs) -> Any:
         """Performs the actual HTTP request for non-streaming endpoints.
 
@@ -296,20 +270,6 @@ class EndPoint(ABC):
                 If the subclass has not overridden this for streaming endpoints.
         """
         raise NotImplementedError
-
-    @cached(**Settings.API.CACHED_CONFIG)
-    async def _cached_invoke(self, payload: dict, headers: dict, **kwargs):
-        """Cached version of `_invoke` using aiocache.
-
-        Args:
-            payload (dict): The data to send in the request.
-            headers (dict): Extra headers to include.
-            **kwargs: Additional arguments for `_invoke`.
-
-        Returns:
-            Any: Cached or newly obtained response data.
-        """
-        return await self._invoke(payload, headers, **kwargs)
 
     def calculate_tokens(self, payload: dict) -> int:
         """Calculates the number of tokens needed for a request.
