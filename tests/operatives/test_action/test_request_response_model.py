@@ -1,20 +1,16 @@
-import pytest
 from pydantic import BaseModel
 
-from lionagi.operatives.action.utils import (
+from lionagi.libs.fields.action import (
     ACTION_REQUIRED_FIELD,
     ARGUMENTS_FIELD,
     FUNCTION_FIELD,
+    ActionRequestModel,
+    ActionResponseModel,
     parse_action_request,
     validate_arguments,
     validate_boolean_field,
     validate_function_name,
 )
-
-# Import the relevant parts from your code
-# Make sure the import paths match your actual code layout
-from lionagi.operatives.models.field_model import FieldModel
-from lionagi.operatives.types import ActionRequestModel, ActionResponseModel
 
 #######################################
 #         Test Helper Classes         #

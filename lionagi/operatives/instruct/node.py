@@ -2,9 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from lionagi.libs.fields.instruct import INSTRUCT_FIELD, Instruct
 from lionagi.protocols.types import Node
-
-from .instruct import INSTRUCT_FIELD, Instruct
 
 __all__ = ("InstructNode",)
 

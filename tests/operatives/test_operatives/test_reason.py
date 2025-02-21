@@ -1,6 +1,6 @@
 """Tests for the reason module."""
 
-from lionagi.operatives.instruct.reason import (
+from lionagi.libs.fields.reason import (
     CONFIDENCE_SCORE_FIELD,
     REASON_FIELD,
     Reason,

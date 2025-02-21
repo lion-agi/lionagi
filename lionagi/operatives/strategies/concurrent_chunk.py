@@ -4,7 +4,7 @@
 
 from typing import ClassVar
 
-from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
+from lionagi.libs.fields.instruct import Instruct, InstructResponse
 from lionagi.utils import bcall, to_list
 
 from .concurrent import ConcurrentExecutor

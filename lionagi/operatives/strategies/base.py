@@ -6,7 +6,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, model_validator
 
-from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
+from lionagi.libs.fields.instruct import Instruct, InstructResponse
 from lionagi.session.session import Branch, Session
 
 from .params import StrategyParams

@@ -2,12 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from ..libs.fields.action import ActionRequestModel, ActionResponseModel
+from ..libs.fields.instruct import (
+    INSTRUCT_FIELD,
+    LIST_INSTRUCT_FIELD,
+    Instruct,
+    InstructResponse,
+)
+from ..libs.fields.reason import CONFIDENCE_SCORE_FIELD, REASON_FIELD, Reason
 from .action.function_calling import FunctionCalling
 from .action.manager import ActionManager
-from .action.request_response_model import (
-    ActionRequestModel,
-    ActionResponseModel,
-)
 from .action.tool import FuncTool, FuncToolRef, Tool, ToolRef
 from .forms.base import BaseForm
 from .forms.flow import FlowDefinition, FlowStep
@@ -20,14 +24,7 @@ from .instruct.base import (
     INSTRUCTION_FIELD,
     REASON_FIELD,
 )
-from .instruct.instruct import (
-    INSTRUCT_FIELD,
-    LIST_INSTRUCT_FIELD_MODEL,
-    Instruct,
-    InstructResponse,
-)
 from .instruct.node import InstructNode
-from .instruct.reason import CONFIDENCE_SCORE_FIELD, REASON_FIELD, Reason
 from .models.field_model import FieldModel
 from .models.model_params import ModelParams
 from .models.note import Note
@@ -50,7 +47,7 @@ __all__ = (
     "Instruct",
     "InstructNode",
     "InstructResponse",
-    "LIST_INSTRUCT_FIELD_MODEL",
+    "LIST_INSTRUCT_FIELD",
     "ModelParams",
     "Note",
     "OperableModel",

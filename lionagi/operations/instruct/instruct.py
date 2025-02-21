@@ -4,7 +4,7 @@
 
 from typing import TYPE_CHECKING, Any
 
-from lionagi.operatives.types import Instruct
+from lionagi.libs.fields.instruct import Instruct
 
 if TYPE_CHECKING:
     from lionagi.session.branch import Branch

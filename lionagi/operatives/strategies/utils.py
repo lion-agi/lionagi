@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from lionagi.operatives.instruct.instruct import Instruct
+from lionagi.libs.fields.instruct import Instruct
 from lionagi.session.session import Branch, Session
 from lionagi.utils import alcall
 

@@ -1,11 +1,7 @@
 import pytest
 
-from lionagi.operatives.types import (
-    ActionManager,
-    ActionRequestModel,
-    FunctionCalling,
-    Tool,
-)
+from lionagi.libs.fields.action import ActionRequestModel
+from lionagi.operatives.types import ActionManager, FunctionCalling, Tool
 from lionagi.protocols.generic.event import EventStatus
 from lionagi.protocols.types import ActionRequest
 

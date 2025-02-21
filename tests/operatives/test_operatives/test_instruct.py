@@ -2,6 +2,7 @@
 
 from pydantic import JsonValue
 
+from lionagi.libs.fields.instruct import Instruct
 from lionagi.operatives.instruct.base import (
     ACTIONS_FIELD,
     CONTEXT_FIELD,
@@ -11,7 +12,6 @@ from lionagi.operatives.instruct.base import (
     validate_boolean_field,
     validate_nullable_jsonvalue_field,
 )
-from lionagi.operatives.instruct.instruct import Instruct
 
 
 class TestValidators:

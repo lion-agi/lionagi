@@ -6,10 +6,7 @@ from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from lionagi.operatives.instruct.instruct import (
-    LIST_INSTRUCT_FIELD_MODEL,
-    Instruct,
-)
+from lionagi.libs.fields.instruct import LIST_INSTRUCT_FIELD, Instruct
 from lionagi.operatives.types import FieldModel, SchemaModel
 from lionagi.session.session import Branch, Session
 
@@ -56,7 +53,7 @@ class StrategyParams(SchemaModel):
     )
     auto_run: bool = False
     auto_execute: bool = False
-    instruct_model_field: type[FieldModel] = LIST_INSTRUCT_FIELD_MODEL
+    instruct_model_field: type[FieldModel] = LIST_INSTRUCT_FIELD
 
     @field_validator("branch_kwargs", mode="before")
     def _validate_branch_kwargs(cls, v: Any) -> dict:
