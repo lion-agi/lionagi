@@ -2,6 +2,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
+from lionagi.operatives.models.field_model import FieldModel
+
 
 class File(BaseModel):
     """
@@ -110,3 +112,22 @@ class Documentation(File):
             "# API Reference\\n## Session Class\\n...",
         ],
     )
+
+
+FILE_FIELD = FieldModel(
+    name="file",
+    annotation=File | None,
+    default=None,
+)
+
+CODE_FILE_FIELD = FieldModel(
+    name="code_file",
+    annotation=CodeFile | None,
+    default=None,
+)
+
+DOCUMENTATION_FIELD = FieldModel(
+    name="documentation",
+    annotation=Documentation | None,
+    default=None,
+)

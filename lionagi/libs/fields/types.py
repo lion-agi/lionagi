@@ -7,7 +7,14 @@ from .action import (
     ActionRequestModel,
     ActionResponseModel,
 )
-from .file import CodeFile, Documentation, File
+from .file import (
+    CODE_FILE_FIELD,
+    DOCUMENTATION_FIELD,
+    FILE_FIELD,
+    CodeFile,
+    Documentation,
+    File,
+)
 from .instruct import (
     INSTRUCT_FIELD,
     LIST_INSTRUCT_FIELD,
@@ -33,4 +40,7 @@ __all__ = (
     "LIST_INSTRUCT_FIELD",
     "Instruct",
     "InstructResponse",
+    "FILE_FIELD",
+    "CODE_FILE_FIELD",
+    "DOCUMENTATION_FIELD",
 )
