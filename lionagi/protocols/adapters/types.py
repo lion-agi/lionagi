@@ -4,6 +4,7 @@ from .pandas_.csv_adapter import CSVFileAdapter
 from .pandas_.excel_adapter import ExcelFileAdapter
 from .pandas_.pd_dataframe_adapter import PandasDataFrameAdapter
 from .pandas_.pd_series_adapter import PandasSeriesAdapter
+from .toml_adapter import TomlAdapter, TomlFileAdapter
 
 __all__ = (
     "Adapter",
@@ -15,4 +16,6 @@ __all__ = (
     "PandasSeriesAdapter",
     "PandasDataFrameAdapter",
     "ExcelFileAdapter",
+    "TomlAdapter",
+    "TomlFileAdapter",
 )
