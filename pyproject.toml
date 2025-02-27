@@ -1,6 +1,6 @@
 [project]
 name = "lionagi"
-version = "0.9.13"
+version = "0.9.14"
 description = "An Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "python-dotenv>=1.0.1",
     "tiktoken>=0.8.0",
+    "toml>=0.9.0",
 ]
 license = {file = "LICENSE"}
 classifiers=[

@@ -145,7 +145,9 @@ class TokenCalculator:
         /,
         encoding_name: str | None = None,
         tokenizer: Callable | None = None,
+        decoder: Callable | None = None,
         return_tokens: bool = False,
+        return_decoded: bool = False,
     ) -> int | list[int]:
 
         if not s_:
@@ -154,8 +156,14 @@ class TokenCalculator:
         if not callable(tokenizer):
             encoding_name = get_encoding_name(encoding_name)
             tokenizer = tiktoken.get_encoding(encoding_name).encode
+        if not callable(decoder):
+            decoder = tiktoken.get_encoding(encoding_name).decode
+
         try:
             if return_tokens:
+                if return_decoded:
+                    a = tokenizer(s_)
+                    return len(a), decoder(a)
                 return tokenizer(s_)
             return len(tokenizer(s_))
         except Exception:

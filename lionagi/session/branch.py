@@ -1503,8 +1503,8 @@ class Branch(Element, Communicatable, Relational):
     async def compress(
         self,
         text: str,
-        system_msg: str = None,
-        target_ratio: float = 0.2,
+        system: str = None,
+        compression_ratio: float = 0.2,
         n_samples: int = 5,
         max_tokens_per_sample=80,
         verbose=True,
@@ -1515,9 +1515,9 @@ class Branch(Element, Communicatable, Relational):
         Args:
             text (str):
                 The text to compress.
-            system_msg (str, optional):
+            system (str, optional):
                 System-level instructions, appended to the prompt.
-            target_ratio (float):
+            compression_ratio (float):
                 Desired compression ratio (0.0-1.0).
             n_samples (int):
                 How many compression attempts to combine or evaluate.
@@ -1531,8 +1531,8 @@ class Branch(Element, Communicatable, Relational):
         """
         return await self.chat_model.compress_text(
             text=text,
-            system_msg=system_msg,
-            target_ratio=target_ratio,
+            system=system,
+            compression_ratio=compression_ratio,
             n_samples=n_samples,
             max_tokens_per_sample=max_tokens_per_sample,
             verbose=verbose,

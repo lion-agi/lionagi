@@ -1,0 +1,11 @@
+id = "518a9d70-ebb7-4f6c-aa7a-e6c8238a6671"
+created_at = 1740602563.169808
+content = "\n## Union and Intersection\n`A ∪ B` and `A ∩ B`\n\n### Reflective Pattern\n↹ problem•domains•constraints\n⊕ identify => common•elements\n⊕ analyze => unique•aspects\n⊕ synthesize => unified•solution\nΣ integrated•approach + shared•insights\n\n### Example Prompt\n\"Consider two different approaches to solving this problem. How might we combine their strengths (union) while identifying their common successful elements (intersection)?\"\n\n## Power Set\n`P(A) = {x | x ⊆ A}`\n\n### Reflective Pattern\n↹ solution•space•constraints\n⊕ enumerate => possibilities\n⊕ analyze => subsets\n⊕ evaluate => combinations\nΣ comprehensive•analysis + feasibility•matrix\n\n### Example Prompt\n\"What are all possible combinations of approaches we could take? How do these subsets of solutions interact with each other?\"\n\n## Complement\n`A' = {x ∈ U | x ∉ A}`\n\n### Reflective Pattern\n↹ current•approach•limitations\n⊕ identify => gaps\n⊕ explore => alternatives\n⊕ analyze => completeness\nΣ holistic•perspective + blind•spots\n"
+category = "framework"
+
+[metadata]
+title = "Set Theory Reflective Analysis"
+domain = "Symbolic Compression"
+version = "1.0"
+overview = "Exploration of fundamental set theory concepts and operations."
+lion_class = "lionagi.libs.token_transform.synthlang_.base.SynthlangFramework"

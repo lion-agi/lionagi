@@ -1,0 +1,52 @@
+{
+    "options": {
+        "math": {
+            "name": "Mathematical Framework",
+            "description": "Offers a suite of math glyphs and notation rules.",
+            "glyphs": [
+                {
+                    "symbol": "\u21b9",
+                    "name": "Focus/Filter",
+                    "description": "Used for focusing instructions"
+                },
+                {
+                    "symbol": "\u03a3",
+                    "name": "Summarize",
+                    "description": "Condense large sets of data"
+                },
+                {
+                    "symbol": "\u2295",
+                    "name": "Combine/Merge",
+                    "description": "Merge multiple data sources"
+                },
+                {
+                    "symbol": "\u2022",
+                    "name": "Group Operation",
+                    "description": "Binary operation in group theory"
+                }
+            ]
+        },
+        "optim": {
+            "name": "Optimization Framework",
+            "description": "Compression and optimization for code/math expressions.",
+            "glyphs": [
+                {
+                    "symbol": "IF",
+                    "name": "Conditional Operator",
+                    "description": "Represents branching logic"
+                }
+            ]
+        },
+        "custom_algebra": {
+            "name": "Custom Algebraic Framework",
+            "description": "Extra rules for ring, group, field expansions.",
+            "glyphs": [
+                {
+                    "symbol": "\u221e",
+                    "name": "Infinite Operator",
+                    "description": "Represents unbounded algebraic ops"
+                }
+            ]
+        }
+    }
+}

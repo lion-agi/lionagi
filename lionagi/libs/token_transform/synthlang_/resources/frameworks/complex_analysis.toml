@@ -1,0 +1,11 @@
+id = "f7ea039c-829b-453c-a562-85e8e66df2b0"
+created_at = 1740602435.49488
+content = "\n# Complex Analysis Reflective Prompts\n\n## Residue Theorem\n`∮_C f(z)dz = 2πi ∑Res(f,ak)`\n\n### Reflective Pattern\n↹ local•global•interactions\n⊕ analyze => singularities\n⊕ integrate => effects\n⊕ synthesize => global•view\nΣ comprehensive•understanding + local•insights\n\n### Example Prompt\n\"How do local decisions and singular points in our approach contribute to the overall solution?\"\n\n## Analytic Continuation\n`f(z)` extends uniquely\n\n### Reflective Pattern\n↹ partial•solution•constraints\n⊕ extend => domain\n⊕ preserve => consistency\n⊕ validate => uniqueness\nΣ complete•solution + coherence•check\n"
+category = "framework"
+
+[metadata]
+title = "Complex Analysis Foundations"
+domain = "Symbolic Compression"
+version = "1.0"
+overview = "Advanced study of complex functions, including integration and residue theory."
+lion_class = "lionagi.libs.token_transform.synthlang_.base.SynthlangFramework"

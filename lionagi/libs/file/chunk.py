@@ -216,7 +216,7 @@ def chunk_content(
     chunk_size: int = 1024,
     overlap: float = 0,
     threshold: int = 256,
-    metadata: dict[str, Any] = {},
+    metadata: dict[str, Any] = None,
     return_tokens: bool = False,
     as_node: bool = False,
     **kwargs: Any,
@@ -268,7 +268,7 @@ def chunk_content(
                     "chunk_id": i + 1,
                     "total_chunks": len(chunks),
                     "chunk_size": len(chunk),
-                    **metadata,
+                    **(metadata or {}),
                 },
             )
             for i, chunk in enumerate(chunks)
@@ -280,7 +280,7 @@ def chunk_content(
             "chunk_id": i + 1,
             "total_chunks": len(chunks),
             "chunk_size": len(chunk),
-            **metadata,
+            **(metadata or {}),
         }
         for i, chunk in enumerate(chunks)
     ]
