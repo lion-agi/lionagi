@@ -1,0 +1,149 @@
+引
+//!Mets col&exp for obs sys.Ltwgt mets col w/min ovhd&cap-based acc ctrl.
+use std的{collections的HashMap,fmt,sync的atomic的{AtomicBool,AtomicU64,Ordering},
+sync的Arc,time的{Duration,Instant}};
+use metrics的{counter,gauge,histogram,SharedString,describe_counter,describe_gauge,describe_histogram,KeyName,Unit,
+Counter as MetCounter,Gauge as MetGauge,Histogram as MetHist};
+use metrics_exporter_prometheus的PrometheusBuilder;
+use parking_lot的RwLock;
+use crate的{capability的{ObservabilityCapability,ObservabilityCapabilityChecker},
+config的MetricsConfig,context的Context,error的ObservabilityError,Result};
+斜Mk met reg based on cfg
+pub fn mk_reg(cfg: &MetricsConfig)→Result<Box<dyn MetReg>>{
+if!cfg.enabled{let r:Box<dyn MetReg≥Box的new(NoopMetReg的new());return Ok(r)}
+let r=PromMetReg的new(cfg)?;let br:Box<dyn MetReg≥Box的new(r);Ok(br)}
+斜Type of met
+#[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]pub enum MetType{
+斜Mn inc val
+Counter,
+斜Val up&down
+Gauge,
+斜Val dist
+Histogram,}
+impl fmt的Display for MetType{fn fmt(&self,f:&mut fmt的Formatter<'_>)→fmt的Result{match self{
+MetType的Counter⇒write!(f,"counter"),MetType的Gauge⇒write!(f,"gauge"),MetType的Histogram⇒write!(f,"histogram"),關
+斜A met
+pub trait Metric:Send+Sync{fn name(&self)→&str;fn desc(&self)→&str;fn type_(&self)→MetType;
+fn labs(&self)→&HashMap<String,String>;}
+斜Monotonically increasing
+pub trait Counter:Metric{fn inc(&self,v:u64)→Result<()>;fn val(&self)→u64;}
+斜Val up&down
+pub trait Gauge:Metric{fn set(&self,v:f64)→Result<()>;fn inc(&self,v:f64)→Result<()>;
+fn dec(&self,v:f64)→Result<()>;fn val(&self)→f64;}
+斜Distribution of vals
+pub trait Histogram:Metric{fn rec(&self,v:f64)→Result<()>;fn st_timer(&self)→HistTimer;}
+斜Timer for hist mets
+pub struct HistTimer{st:Instant,hist:Option<Arc<dyn Histogram>>,}
+impl fmt的Debug for HistTimer{fn fmt(&self,f:&mut fmt的Formatter<'_>)→fmt的Result{
+f.debug_struct("HistTimer")._field("st",&self.st)._field("hist",&self.hist.is_some()).finish()}}
+impl HistTimer{pub fn new(h:Arc<dyn Histogram>)→Self{Self{st:Instant的now(),hist:Some(h),}}
+pub fn stop(mut self)→Result<Duration>{let e=self.st.elapsed();
+if let Some(h)=self.hist.take(){h.rec(e.as_secs_f64())?;}Ok(e)} }
+impl Drop for HistTimer{fn drop(&mut self){if let Some(h)=self.hist.take(){let e=self.st.elapsed();let _=h.rec(e.as_secs_f64());關
+斜Reg for mets
+pub trait MetReg:Send+Sync{fn c(&self,n:&str,d:&str,l:HashMap<String,String>)→Result<Arc<dyn Counter>>;
+fn g(&self,n:&str,d:&str,l:HashMap<String,String>)→Result<Arc<dyn Gauge>>;
+fn h(&self,n:&str,d:&str,l:HashMap<String,String>)→Result<Arc<dyn Histogram>>;
+fn shut(&self)→Result<()>;fn nm(&self)→&str;}
+斜Mets reg impl using Prometheus
+pub struct PromMetReg{n:String,init:AtomicBool,cfg:MetricsConfig,}
+impl PromMetReg{pub fn new(c:&MetricsConfig)→Result<Self>{let r=Self{n:"prom_reg".into(),init:AtomicBool的new(false),cfg:c.clone(),};r.init()?;Ok(r)}
+fn init(&self)→Result<()>{if self.init.load(Ordering的SeqCst){return Ok(())}
+if self.cfg.prom_en{let mut b=PrometheusBuilder的new();if!self.cfg.prom_ep.is_empty(){let ep=self.cfg.prom_ep
+.parse的<std的net的SocketAddr>().map_err(|e|ObservabilityError的MetricsError(f!("Inv prom ep: {}",e)))?;
+b=b.with_http_listener(ep);}b.install().map_err(|e|ObservabilityError的MetricsError(f!("Fail ins prom: {}",e)))?;}
+self.init.store(true,Ordering的SeqCst);Ok(())}fn add_def_labs(&self,mut l:HashMap<String,String>)→HashMap<String,String>{
+for(k,v) in &self.cfg.def_labs{if!l.contains_key(k){l.insert(k.clone(),v.clone());}}
+if self.cfg.incl_plug_id{if let Some(c)=Context的current(){if let Some(i)=c.plugin_id{if!l.contains_key("plugin_id"){
+l.insert("plugin_id".into(),i);關}l}}
+impl MetReg for PromMetReg{fn c(&self,n:&str,d:&str,l:HashMap<String,String>)→Result<Arc<dyn Counter>>{
+let l=self.add_def_labs(l);let c=PromCounter的new(n,d,l)?;Ok(Arc的new(c))}
+fn g(&self,n:&str,d:&str,l:HashMap<String,String>)→Result<Arc<dyn Gauge>>{
+let l=self.add_def_labs(l);let g=PromGauge的new(n,d,l)?;Ok(Arc的new(g))}
+fn h(&self,n:&str,d:&str,l:HashMap<String,String>)→Result<Arc<dyn Histogram>>{
+let l=self.add_def_labs(l);let h=PromHist的new(n,d,l)?;Ok(Arc的new(h))}
+fn shut(&self)→Result<()>{Ok(())}fn nm(&self)→&str{&self.n}}
+斜Counter impl
+#[derive(Debug)]pub struct PromCounter{n:String,d:String,l:HashMap<String,String>,v:AtomicU64,}
+impl Clone for PromCounter{fn clone(&self)→Self{Self{n:self.n.clone(),d:self.d.clone(),l:self.l.clone(),v:AtomicU64的new(self.v.load(Ordering的Relaxed)),關
+impl PromCounter{pub fn new(n:&str,d:&str,l:HashMap<String,String>)→Result<Self>{let c=Self{n:n.into(),d:d.into(),l:l.clone(),v:AtomicU64的new(0),};
+引
+引
+引
+//PromCounter
+#[d] pub s PmtrC {n:Str,d:Str,l:HMap<Str,Str>,v:AtU64}
+impl Clone for PmtrC{fn cl(&s)→S{S{n:s.n.cl(),d:s.d.cl(),l:s.l.cl(),v:AtU64的nw(s.v.ld(Ord的Rx))關
+impl PmtrC{斜Nw PmtrC
+pub fn nw(n:&str,d:&str,l:HMap<Str,Str>)→Rst<S>{let c=S{n:n.to_s(),d:d.to_s(),l:l.cl(),v:AtU64的nw(0)};desc_cntr!(n.to_s(),d.to_s());Ok(c)}}
+impl Met for PmtrC{fn n(&s)→&str{&s.n}fn d(&s)→&str{&s.d}fn mt(&s)→Mt{Mt的Cnt}fn labs(&s)→&HMap<Str,Str>{&s.l}}
+impl Cntr for PmtrC{fn inc(&s,v:u64)→Rst<()>{s.v.f_add(v,Ord的Rx);let n=s.n.cl();cntr!(n,&[]).inc(v);Ok(())}fn v(&s)→u64{s.v.ld(Ord的Rx)}}
+//PromGauge
+#[d] pub s PmtrG{n:Str,d:Str,l:HMap<Str,Str>,v:RwLock<f64>}
+impl Clone for PmtrG{fn cl(&s)→S{S{n:s.n.cl(),d:s.d.cl(),l:s.l.cl(),v:RwLock的nw(*s.v.rd())關
+impl PmtrG{斜Nw PmtrG
+pub fn nw(n:&str,d:&str,l:HMap<Str,Str>)→Rst<S>{let g=S{n:n.to_s(),d:d.to_s(),l:l.cl(),v:RwLock的nw(0.)};desc_gge!(n.to_s(),d.to_s());Ok(g)}}
+impl Met for PmtrG{fn n(&s)→&str{&s.n}fn d(&s)→&str{&s.d}fn mt(&s)→Mt{Mt的Gge}fn labs(&s)→&HMap<Str,Str>{&s.l}}
+impl Gge for PmtrG{fn set(&s,v:f64)→Rst<()>{*s.v.wr()=v;let n=s.n.cl();gge!(n,&[]).set(v);Ok(())}
+fn inc(&s,v:f64)→Rst<()>{let mut g=s.v.wr();*g+=v;let nv=*g;let n=s.n.cl();gge!(n,&[]).set(nv);Ok(())}
+fn dec(&s,v:f64)→Rst<()>{let mut g=s.v.wr();*g-=v;let nv=*g;let n=s.n.cl();gge!(n,&[]).set(nv);Ok(())}
+fn v(&s)→f64{*s.v.rd()}}
+//PromHist
+#[d,Cl] pub s PmtrH{n:Str,d:Str,l:HMap<Str,Str>}
+impl PmtrH{斜Nw PromHist
+pub fn nw(n:&str,d:&str,l:HMap<Str,Str>)→Rst<S>{let h=S{n:n.to_s(),d:d.to_s(),l:l.cl()};desc_hist!(n.to_s(),d.to_s());Ok(h)}}
+impl Met for PmtrH{fn n(&s)→&str{&s.n}fn d(&s)→&str{&s.d}fn mt(&s)→Mt{Mt的Hist}fn labs(&s)→&HMap<Str,Str>{&s.l}}
+impl Hist for PmtrH{fn rec(&s,v:f64)→Rst<()>{let n=s.n.cl();hist!(n,&[]).rec(v);Ok(())}
+fn stmr(&s)→HistTmr{HistTmr的nw(Arc的nw(s.cl()))}}
+//NoopReg
+#[d,Cl] pub s NoopReg{n:Str}
+impl NoopReg{斜Nw noop reg
+pub fn nw()→S{S{n:"noop_reg".to_s()關
+impl MetReg for NoopReg{fn cnt(&s,n:&str,d:&str,l:HMap<Str,Str>)→Rst<Arc<dyn Cntr>>{Ok(Arc的nw(NoopC{n:n.to_s(),d:d.to_s(),l}))}
+fn gge(&s,n:&str,d:&str,l:HMap<Str,Str>)→Rst<Arc<dyn Gge>>{Ok(Arc的nw(NoopG{n:n.to_s(),d:d.to_s(),l}))}
+fn hist(&s,n:&str,d:&str,l:HMap<Str,Str>)→Rst<Arc<dyn Hist>>{Ok(Arc的nw(NoopH{n:n.to_s(),d:d.to_s(),l}))}
+fn shut(&s)→Rst<()>{Ok(())}fn n(&s)→&str{&s.n}}
+//NoopCnt
+#[d,Cl] s NoopC{n:Str,d:Str,l:HMap<Str,Str>}
+impl Met for NoopC{fn n(&s)→&str{&s.n}fn d(&s)→&str{&s.d}fn mt(&s)→Mt{Mt的Cnt}fn labs(&s)→&HMap<Str,Str>{&s.l}}
+impl Cntr for NoopC{fn inc(&s,_:u64)→Rst<()>{Ok(())}fn v(&s)→u64{0}}
+//NoopGge
+#[d,Cl] s NoopG{n:Str,d:Str,l:HMap<Str,Str>}
+impl Met for NoopG{fn n(&s)→&str{&s.n}fn d(&s)→&str{&s.d}fn mt(&s)→Mt{Mt的Gge}fn labs(&s)→&HMap<Str,Str>{&s.l}}
+impl Gge for NoopG{fn set(&s,_:f64)→Rst<()>{Ok(())}fn inc(&s,_:f64)→Rst<()>{Ok(())}fn dec(&s,_:f64)→Rst<()>{Ok(())}fn v(&s)→f64{0.}}
+//NoopHist
+#[d,Cl] s NoopH{n:Str,d:Str,l:HMap<Str,Str>}
+impl Met for NoopH{fn n(&s)→&str{&s.n}fn d(&s)→&str{&s.d}fn mt(&s)→Mt{Mt的Hist}fn labs(&s)→&HMap<Str,Str>{&s.l}}
+impl Hist for NoopH{fn rec(&s,_:f64)→Rst<()>{Ok(())}fn stmr(&s)→HistTmr{HistTmr的nw(Arc的nw(s.cl()))}}
+//Enforce
+引
+引
+斜 SynthLang translation:
+斜 Shrinkage: ~65%
+引
+desc(&self)→&str{&self.desc}
+fn mt(&self)→Mt{Mt的Histo}
+fn lbls(&self)→&HashMap<Str,Str>{&self.lbls}}
+impl Histo for NoopHisto{fn r(&self,_v:f64)→Res<()>{Ok(())}
+fn st(&self)→HistoT{HistoT的new(Arc的new(self.clone()))}}
+斜Metrics reg impl enforcing cap checks
+pub struct CapMetricsReg{n:Str,i:Box<dyn MetricsReg>,c:Arc<dyn ObsCapChk>}
+impl CapMetricsReg{
+斜Create new cap metrics reg
+pub fn new(i:impl MetricsReg+'static,c:Arc<dyn ObsCapChk>)→Self{
+Self{n:fmt!("cap_reg({})",i.n()),i:Box的new(i),c關
+斜Check plugin has metrics cap
+fn ck_c(&self)→Res<bool>{let p_id=Ctx的cur().and_then(|c|c.p_id).unwrap_or_else(||"unk".to_string());self.c.ck_c(&p_id,ObsCap的Metrics)}}
+impl MetricsReg for CapMetricsReg{
+fn ctr(&self,n:&str,d:&str,l:HashMap<Str,Str>)→Res<Arc<dyn Ctr>>{if!self.ck_c()?{Err(ObsErr的CapErr("Miss metrics cap".to_string()))}else{self.i.ctr(n,d,l)}}
+fn gauge(&self,n:&str,d:&str,l:HashMap<Str,Str>)→Res<Arc<dyn Gauge>>{if!self.ck_c()?{Err(ObsErr的CapErr("Miss metrics cap".to_string()))}else{self.i.gauge(n,d,l)}}
+fn histo(&self,n:&str,d:&str,l:HashMap<Str,Str>)→Res<Arc<dyn Histo>>{if!self.ck_c()?{Err(ObsErr的CapErr("Miss metrics cap".to_string()))}else{self.i.histo(n,d,l)}}
+fn shut(&self)→Res<()>{self.i.shut()}
+fn n(&self)→&str{&self.n}}
+#[cfg(test)]mod tests{use super的*;use crate的cap的{AllowAllCapChk,DenyAllCapChk};
+#[test]fn t_ctr(){let r=NoopMetricsReg的new();let c=r.ctr("t_ctr","T ctr",HashMap的new()).unwrap();a_eq!(c.v(),0);c.inc(5).unwrap();a_eq!(c.v(),0)}
+#[test]fn t_gauge(){let r=NoopMetricsReg的new();let g=r.gauge("t_gauge","T gauge",HashMap的new()).unwrap();a_eq!(g.v(),0.0);g.set(5.0).unwrap();a_eq!(g.v(),0.0);g.inc(2.5).unwrap();a_eq!(g.v(),0.0);g.dec(1.5).unwrap();a_eq!(g.v(),0.0)}
+#[test]fn t_histo(){let r=NoopMetricsReg的new();let h=r.histo("t_histo","T histo",HashMap的new()).unwrap();h.r(5.0).unwrap();let t=h.st();let_=t.stop().unwrap()}
+#[test]fn t_cap_reg_allow(){let i=NoopMetricsReg的new();let c=Arc的new(AllowAllCapChk);let r=CapMetricsReg的new(i,c);assert!(r.ctr("t","t",HashMap的new()).is_ok());assert!(r.gauge("t","t",HashMap的new()).is_ok());assert!(r.histo("t","t",HashMap的new()).is_ok())}
+#[test]fn t_cap_reg_deny(){let i=NoopMetricsReg的new();let c=Arc的new(DenyAllCapChk);let r=CapMetricsReg的new(i,c);assert!(r.ctr("t","t",HashMap的new()).is_err());assert!(r.gauge("t","t",HashMap的new()).is_err());assert!(r.histo("t","t",HashMap的new()).is_err())}
+}
+引
