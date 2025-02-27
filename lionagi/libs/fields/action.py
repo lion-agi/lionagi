@@ -13,23 +13,48 @@ from typing import Any
 from pydantic import Field, field_validator
 
 from lionagi.libs.validate.common_field_validators import (
+    validate_boolean_field,
     validate_nullable_string_field,
 )
+from lionagi.operatives.models.field_model import FieldModel
 from lionagi.utils import HashableModel, to_dict
 
-from ..models.field_model import FieldModel
-from .utils import (
-    action_requests_field_description,
-    arguments_field_description,
-    function_field_description,
-    parse_action_request,
-)
+from .utils import parse_action_request
 
 __all__ = (
     "ActionRequestModel",
-    "ACTION_REQUESTS_FIELD",
     "ActionResponseModel",
+    "ACTION_REQUESTS_FIELD",
     "ACTION_RESPONSES_FIELD",
+    "ACTION_REQUIRED_FIELD",
+    "FUNCTION_FIELD",
+    "ARGUMENTS_FIELD",
+)
+
+
+function_field_description = (
+    "Name of the function to call from the provided `tool_schemas`. "
+    "If no `tool_schemas` exist, set to None or leave blank. "
+    "Never invent new function names outside what's given."
+)
+
+arguments_field_description = (
+    "Dictionary of arguments for the chosen function. "
+    "Use only argument names/types defined in `tool_schemas`. "
+    "Never introduce extra argument names."
+)
+
+action_required_field_description = (
+    "Whether this step strictly requires performing actions. "
+    "If true, the requests in `action_requests` must be fulfilled, "
+    "assuming `tool_schemas` are available. "
+    "If false or no `tool_schemas` exist, actions are optional."
+)
+
+action_requests_field_description = (
+    "List of actions to be executed when `action_required` is true. "
+    "Each action must align with the available `tool_schemas`. "
+    "Leave empty if no actions are needed."
 )
 
 
@@ -117,5 +142,51 @@ ACTION_RESPONSES_FIELD = FieldModel(
     title="Actions",
     description="**do not fill**",
 )
+
+
+def validate_function_name(cls, value: Any) -> str | None:
+    return validate_nullable_string_field(cls, value, strict=False)
+
+
+def validate_arguments(cls, value: Any) -> dict:
+    return to_dict(
+        value,
+        fuzzy_parse=True,
+        suppress=True,
+        recursive=True,
+    )
+
+
+FUNCTION_FIELD = FieldModel(
+    name="function",
+    default=None,
+    annotation=str | None,
+    title="Function",
+    description=function_field_description,
+    examples=["add", "multiply", "divide"],
+    validator=validate_function_name,
+)
+
+ARGUMENTS_FIELD = FieldModel(
+    name="arguments",
+    annotation=dict | None,
+    default_factory=dict,
+    title="Action Arguments",
+    description=arguments_field_description,
+    examples=[{"num1": 1, "num2": 2}, {"x": "hello", "y": "world"}],
+    validator=validate_arguments,
+    validator_kwargs={"mode": "before"},
+)
+
+ACTION_REQUIRED_FIELD = FieldModel(
+    name="action_required",
+    annotation=bool,
+    default=False,
+    title="Action Required",
+    description=action_required_field_description,
+    validator=lambda cls, v: validate_boolean_field(cls, v, False),
+    validator_kwargs={"mode": "before"},
+)
+
 
 # File: lionagi/operatives/action/request_response_model.py

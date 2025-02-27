@@ -6,8 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from lionagi.operatives.types import (
-    LIST_INSTRUCT_FIELD_MODEL,
+from lionagi.libs.fields.instruct import (
+    LIST_INSTRUCT_FIELD,
     Instruct,
     InstructResponse,
 )
@@ -168,8 +168,8 @@ async def plan(
 
     # Ensure the correct field model
     field_models: list = kwargs.get("field_models", [])
-    if LIST_INSTRUCT_FIELD_MODEL not in field_models:
-        field_models.append(LIST_INSTRUCT_FIELD_MODEL)
+    if LIST_INSTRUCT_FIELD not in field_models:
+        field_models.append(LIST_INSTRUCT_FIELD)
     kwargs["field_models"] = field_models
 
     # Prepare session/branch

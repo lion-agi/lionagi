@@ -6,8 +6,9 @@ from functools import lru_cache
 
 from pydantic import BaseModel
 
+from lionagi.libs.fields.instruct import INSTRUCT_FIELD, Instruct
+
 from ..models.model_params import ModelParams
-from .instruct import INSTRUCT_FIELD, Instruct
 from .node import InstructNode
 
 __all__ = ("InstructCollection",)

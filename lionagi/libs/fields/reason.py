@@ -4,13 +4,13 @@
 
 from pydantic import BaseModel, Field, field_validator
 
+from lionagi.operatives.models.field_model import FieldModel
 from lionagi.utils import to_num
-
-from ..models.field_model import FieldModel
 
 __all__ = (
     "Reason",
     "REASON_FIELD",
+    "CONFIDENCE_SCORE_FIELD",
 )
 
 

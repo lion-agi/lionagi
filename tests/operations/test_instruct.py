@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from lionagi.operatives.types import Instruct
+from lionagi.libs.fields.instruct import Instruct
 from lionagi.protocols.generic.event import EventStatus
 from lionagi.service.endpoints.base import APICalling, EndPoint
 from lionagi.service.imodel import iModel
