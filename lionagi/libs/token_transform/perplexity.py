@@ -101,7 +101,7 @@ async def compute_perplexity(
     chat_model: iModel,
     initial_context: str = None,
     tokens: list[str] = None,
-    system_msg: str = None,
+    system: str = None,
     n_samples: int = 1,
     use_residue: bool = True,
     **kwargs,
@@ -142,9 +142,9 @@ async def compute_perplexity(
     api_calls = []
     for sample_txt in sampless:
         messages = []
-        if system_msg:
+        if system:
             if not chat_model.sequential_exchange:
-                messages.append({"role": "system", "content": system_msg})
+                messages.append({"role": "system", "content": system})
             messages.append({"role": "user", "content": sample_txt})
         else:
             messages.append({"role": "user", "content": sample_txt})
@@ -171,7 +171,7 @@ class LLMCompressor:
     def __init__(
         self,
         chat_model: iModel,
-        system_msg=None,
+        system=None,
         tokenizer=None,
         splitter=None,
         compression_ratio=0.2,
@@ -193,9 +193,7 @@ class LLMCompressor:
         self.chat_model = chat_model
         self.tokenizer = tokenizer
         self.splitter = splitter
-        self.system_msg = (
-            system_msg or "Concisely summarize content for storage:"
-        )
+        self.system = system or "Concisely summarize content for storage:"
         self.compression_ratio = compression_ratio
         self.n_samples = n_samples
         self.chunk_size = chunk_size
@@ -281,7 +279,7 @@ class LLMCompressor:
                 initial_context=initial_text,
                 tokens=item_toks,
                 n_samples=n_samples or self.n_samples,
-                system_msg=self.system_msg,
+                system=self.system,
                 use_residue=use_residue,
                 **kwargs,
             )
@@ -420,7 +418,7 @@ class LLMCompressor:
 async def compress_text(
     text: str,
     chat_model: iModel,
-    system_msg: str = None,
+    system: str = None,
     compression_ratio: float = 0.2,
     n_samples: int = 5,
     max_tokens_per_sample=80,
@@ -436,7 +434,7 @@ async def compress_text(
     """
     compressor = LLMCompressor(
         chat_model=chat_model,
-        system_msg=system_msg,
+        system=system,
         compression_ratio=compression_ratio,
         n_samples=n_samples,
         max_tokens_per_sample=max_tokens_per_sample,
