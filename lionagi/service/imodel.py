@@ -398,23 +398,24 @@ class iModel:
     async def compress_text(
         self,
         text: str,
-        system_msg: str = None,
-        target_ratio: float = 0.2,
+        system: str = None,
+        compression_ratio: float = 0.2,
         n_samples: int = 5,
         max_tokens_per_sample=80,
         verbose=True,
+        initial_text=None,
+        cumulative=False,
+        split_kwargs=None,
+        min_pplx=None,
+        **kwargs,
     ) -> str:
         """
         Convenience function that instantiates LLMCompressor and compresses text.
         """
-        from lionagi.libs.token_transform.perplexity import LLMCompressor
+        from lionagi.libs.token_transform.perplexity import compress_text
 
-        compressor = LLMCompressor(
-            chat_model=self,
-            system_msg=system_msg,
-            target_ratio=target_ratio,
-            n_samples=n_samples,
-            max_tokens_per_sample=max_tokens_per_sample,
-            verbose=verbose,
-        )
-        return await compressor.compress(text)
+        params = {
+            k: v for k, v in locals().items() if k not in ("self", "kwargs")
+        }
+        params.update(kwargs)
+        return await compress_text(**params)
