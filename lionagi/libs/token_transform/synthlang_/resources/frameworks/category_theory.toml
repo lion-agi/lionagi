@@ -1,0 +1,11 @@
+id = "b8588217-3da0-4809-8a8e-1bc9489a718a"
+created_at = 1740606718.863813
+content = "\n# Category Theory Reflective Prompts\n\n## Functors\n`F: C → D`\n\n### Reflective Pattern\n↹ domain•codomain•mapping\n⊕ preserve => structure\n⊕ transform => concepts\n⊕ maintain => relationships\nΣ transformed•insight + preserved•properties\n\n### Example Prompt\n\"How can we translate this solution from one context to another while preserving its essential properties?\"\n\n## Natural Transformations\n`η: F ⇒ G`\n\n### Reflective Pattern\n↹ approaches•methods•transitions\n⊕ compare => strategies\n⊕ identify => transformations\n⊕ validate => coherence\nΣ systematic•evolution + consistency•check\n"
+category = "framework"
+
+[metadata]
+title = "Category Theory Concepts Symbolic Compression"
+domain = "Symbolic Compression"
+version = "1.0"
+overview = "Abstract mathematical framework dealing with mathematical structures and relationships between them."
+lion_class = "lionagi.libs.token_transform.synthlang_.base.SynthlangFramework"

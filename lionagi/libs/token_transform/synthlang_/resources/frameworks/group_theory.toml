@@ -1,0 +1,11 @@
+id = "c077186b-30cd-42d9-88ae-563859a00db3"
+created_at = 1740602288.669331
+content = "# Structures\nLet G be a group with operation •\nLet H be a subgroup of G\nLet N be a normal subgroup of G\n\n# Properties\nP(x): \"x is a homomorphism\"\nQ(x): \"x preserves group structure\"\nR(x): \"x maps to kernel\"\n\n# Objectives\n1. Prove fundamental homomorphism theorem\n2. Show group action properties\n3. Analyze quotient groups\n"
+category = "framework"
+
+[metadata]
+title = "Group Theory Analysis"
+domain = "Symbolic Compression"
+version = "1.0"
+overview = "Investigation of algebraic structures using group theory and ring theory."
+lion_class = "lionagi.libs.token_transform.synthlang_.base.SynthlangFramework"

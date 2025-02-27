@@ -1,0 +1,11 @@
+id = "bc244d9c-3fcc-4e7c-9a13-d0e208904c22"
+created_at = 1740602490.430191
+content = "\n# Sets and Axioms\nLet A be the set of all logical propositions.\nLet T be the subset of A that are tautologies.\nLet C be the subset of A that are contradictions.\n\n# Predicates\nP(x): \"x is a well-formed formula\"\nQ(x): \"x is satisfiable\"\nR(x): \"x is valid\"\n\n# Objectives\n1. Prove completeness theorem using predicate calculus\n2. Demonstrate soundness of the system\n3. Show relationship between syntax and semantics\n\n# Complex Integration\n∮ f(z)dz = 2πi∑Res(f,ak)\nLet f(z) = ∑(n=0 to ∞) an(z-z₀)ⁿ\nRes(f,a) = 1/(2πi)∮ f(z)dz\nw = f(z) preserves angles\n∂u/∂x = ∂v/∂y\n∂u/∂y = -∂v/∂x\n"
+category = "framework"
+
+[metadata]
+title = "Mathematical Logic Foundations"
+domain = "Symbolic Compression"
+version = "1.0"
+overview = "Exploration of fundamental mathematical logic concepts using set theory and predicate calculus."
+lion_class = "lionagi.libs.token_transform.synthlang_.base.SynthlangFramework"

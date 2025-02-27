@@ -1,0 +1,11 @@
+id = "11968433-1402-4783-b167-25afbe0a6c4f"
+created_at = 1740606622.114634
+content = "\n## Group Actions\n`G × X → X`\n\n### Reflective Pattern\n↹ transformations•symmetries•invariants\n⊕ identify => patterns\n⊕ analyze => operations\n⊕ preserve => structure\nΣ systematic•approach + invariant•properties\n\n### Example Prompt\n\"What patterns remain constant as we apply different transformations to our approach?\"\n\n## Ring Structure\n`(R, +, ×)`\n\n### Reflective Pattern\n↹ operations•interactions•composition\n⊕ combine => methods\n⊕ distribute => resources\n⊕ verify => closure\nΣ integrated•framework + operational•rules\n"
+category = "framework"
+
+[metadata]
+title = "Abstract Algebra Reflective Symbolic Compression"
+domain = "Symbolic Compression"
+version = "1.0"
+overview = "A resource for learning and exploring abstract algebra concepts."
+lion_class = "lionagi.libs.token_transform.synthlang_.base.SynthlangFramework"
