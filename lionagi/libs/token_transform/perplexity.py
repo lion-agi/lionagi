@@ -174,7 +174,7 @@ class LLMCompressor:
         system_msg=None,
         tokenizer=None,
         splitter=None,
-        target_ratio=0.2,
+        compression_ratio=0.2,
         n_samples=5,
         chunk_size=64,
         max_tokens_per_sample=80,
@@ -196,7 +196,7 @@ class LLMCompressor:
         self.system_msg = (
             system_msg or "Concisely summarize content for storage:"
         )
-        self.target_ratio = target_ratio
+        self.compression_ratio = compression_ratio
         self.n_samples = n_samples
         self.chunk_size = chunk_size
         self.max_tokens_per_sample = max_tokens_per_sample
@@ -347,6 +347,7 @@ class LLMCompressor:
         # Tokenize once to get total length
         all_tokens = self.tokenize(text)
         original_len = len(all_tokens)
+        ttl_chars = len(text)
 
         # Split text
         items = self.split(text, **split_kwargs)
@@ -363,26 +364,26 @@ class LLMCompressor:
         # Select
         selected = self.select_by_pplex(
             ranked_items=ranked,
-            target_compression_ratio=compression_ratio or self.target_ratio,
+            target_compression_ratio=compression_ratio
+            or self.compression_ratio,
             original_length=original_len,
             min_pplx=min_pplx or self.min_pplx,
         )
 
-        if self.verbose:
-            compressed_len = sum(
-                len(to_list(self.tokenize(x), dropna=True, flatten=True))
-                for x in selected
-            )
-            ratio = compressed_len / original_len if original_len else 1
-            print(
-                f"Original tokens: {original_len}\n"
-                f"Selected tokens: {compressed_len}\n"
-                f"Compression ratio: {ratio:.3f}\n"
-                f"Time: {timer() - start:.3f}s\n"
-            )
-
         # Join final
         out_str = " ".join(selected)
+
+        if self.verbose:
+            compressed_chars = len(out_str)
+            ratio = compressed_chars / ttl_chars if original_len else 1
+            msg = "------------------------------------------\n"
+            msg += f"Compression Method: Perplexity\n"
+            msg += f"Compressed Characters number: {compressed_chars}\n"
+            msg += f"Character Compression Ratio: {ratio:.1%}\n"
+            msg += f"Compression Time: {timer() - start:.3f}s\n"
+            msg += f"Compression Model: {self.chat_model.model_name}\n"
+            print(msg)
+
         return out_str.strip()
 
     def select_by_pplex(
@@ -420,10 +421,15 @@ async def compress_text(
     text: str,
     chat_model: iModel,
     system_msg: str = None,
-    target_ratio: float = 0.2,
+    compression_ratio: float = 0.2,
     n_samples: int = 5,
     max_tokens_per_sample=80,
     verbose=True,
+    initial_text=None,
+    cumulative=False,
+    split_kwargs=None,
+    min_pplx=None,
+    **kwargs,
 ) -> str:
     """
     Convenience function that instantiates LLMCompressor and compresses text.
@@ -431,9 +437,17 @@ async def compress_text(
     compressor = LLMCompressor(
         chat_model=chat_model,
         system_msg=system_msg,
-        target_ratio=target_ratio,
+        compression_ratio=compression_ratio,
         n_samples=n_samples,
         max_tokens_per_sample=max_tokens_per_sample,
         verbose=verbose,
     )
-    return await compressor.compress(text)
+    return await compressor.compress(
+        text,
+        compression_ratio=compression_ratio,
+        initial_text=initial_text,
+        cumulative=cumulative,
+        split_kwargs=split_kwargs,
+        min_pplx=min_pplx,
+        **kwargs,
+    )
