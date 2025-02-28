@@ -104,6 +104,7 @@ async def symbolic_compress_context(
             chunk_size=chunk_size,
             overlap=overlap,
             threshold=threshold,
+            as_node=True,
         )
         texts = [i.content for i in chunks if i.content]
 
