@@ -3,7 +3,7 @@ created_at = 1740946382.550635
 category = "utility"
 
 [metadata]
-title = "LionAGI-Emoji Symbolic Encoding Mappingt"
+title = "LionAGI-Emoji Symbolic Encoding Mapping"
 domain = "Symbolic Compression"
 version = "1.0"
 overview = "This resource provides a mapping of lionagi emoji symbolic encoding for compressing lionagi python codebase. When using, should keep the semantic structure of original python codes, do not translate into emoji nor any natural language."
