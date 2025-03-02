@@ -11,6 +11,9 @@ from .synthlang_.base import SynthlangFramework, SynthlangTemplate
 
 FRAMEWORK_OPTIONS = SynthlangFramework.load_framework_options()
 FRAMEWORK_CHOICES = Literal["math", "optim", "custom_algebra"]
+DEFAULT_INVOKATION_PROMPT = (
+    "The light-speed brown fox jumps over the lazy dog with great agility."
+)
 
 
 async def symbolic_compress_context(
@@ -127,7 +130,7 @@ async def symbolic_compress_context(
         _inner,
         max_concurrent=max_concurrent,
         retry_default=None,
-        num_retries=2,
+        num_retries=3,
         throttle_period=throttle_period,
         retry_delay=1,
         backoff_factor=2,
@@ -136,6 +139,7 @@ async def symbolic_compress_context(
         unique_output=True,
     )
     text = "\n".join(results)
+    text = DEFAULT_INVOKATION_PROMPT + text
 
     if output_path:
         fp = Path(output_path)
