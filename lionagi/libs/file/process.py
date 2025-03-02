@@ -164,10 +164,12 @@ def file_to_chunks(
 
 
 def chunk(
-    url_or_path: str | Path,
     *,
+    text: str | None = None,
+    url_or_path: str | Path = None,
     file_types: list[str] | None = None,  # only local files
     recursive: bool = False,  # only local files
+    tokenizer: Callable[[str], list[str]] = None,
     chunk_by: Literal["chars", "tokens"] = "chars",
     chunk_size: int = 1500,
     overlap: float = 0.1,
@@ -175,45 +177,52 @@ def chunk(
     output_file: str | Path | None = None,
     metadata: dict[str, Any] | None = None,
     reader_tool: Callable = None,
-):
-    if isinstance(url_or_path, str):
-        url_or_path = Path(url_or_path)
+    as_node: bool = False,
+) -> list:
+    texts = []
+    if not text:
+        if isinstance(url_or_path, str):
+            url_or_path = Path(url_or_path)
 
-    chunks = None
-    files = None
-    if url_or_path.exists():
-        if url_or_path.is_dir():
-            files = dir_to_files(
-                directory=url_or_path,
-                file_types=file_types,
-                recursive=recursive,
+        chunks = None
+        files = None
+        if url_or_path.exists():
+            if url_or_path.is_dir():
+                files = dir_to_files(
+                    directory=url_or_path,
+                    file_types=file_types,
+                    recursive=recursive,
+                )
+            elif url_or_path.is_file():
+                files = [url_or_path]
+        else:
+            files = (
+                [str(url_or_path)]
+                if not isinstance(url_or_path, list)
+                else url_or_path
             )
-        elif url_or_path.is_file():
-            files = [url_or_path]
+
+        if reader_tool is None:
+            reader_tool = lambda x: x.read_text(encoding="utf-8")
+
+        if reader_tool == "docling":
+            from lionagi.libs.package.imports import check_import
+
+            DocumentConverter = check_import(
+                "docling",
+                module_name="document_converter",
+                import_name="DocumentConverter",
+            )
+            converter = DocumentConverter()
+            reader_tool = lambda x: converter.convert(
+                x
+            ).document.export_to_markdown()
+
+        texts = lcall(files, reader_tool)
+
     else:
-        files = (
-            [str(url_or_path)]
-            if not isinstance(url_or_path, list)
-            else url_or_path
-        )
+        texts = [text]
 
-    if reader_tool is None:
-        reader_tool = lambda x: x.read_text(encoding="utf-8")
-
-    if reader_tool == "docling":
-        from lionagi.libs.package.imports import check_import
-
-        DocumentConverter = check_import(
-            "docling",
-            module_name="document_converter",
-            import_name="DocumentConverter",
-        )
-        converter = DocumentConverter()
-        reader_tool = lambda x: converter.convert(
-            x
-        ).document.export_to_markdown()
-
-    texts = lcall(files, reader_tool)
     chunks = lcall(
         texts,
         chunk_content,
@@ -224,6 +233,7 @@ def chunk(
         metadata=metadata,
         as_node=True,
         flatten=True,
+        tokenizer=tokenizer or str.split,
     )
     if threshold:
         chunks = [c for c in chunks if len(c.content) > threshold]
@@ -247,4 +257,7 @@ def chunk(
         else:
             raise ValueError(f"Unsupported output file format: {output_file}")
 
-    return chunks
+    if as_node:
+        return chunks
+
+    return [c.content for c in chunks]
