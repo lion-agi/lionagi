@@ -4,7 +4,7 @@ from typing import Literal
 
 from lionagi.service.imodel import iModel
 from lionagi.session.branch import Branch
-from lionagi.utils import alcall
+from lionagi.utils import alcall, get_bins
 
 from .base import TokenMapping, TokenMappingTemplate
 from .synthlang_.base import SynthlangFramework, SynthlangTemplate
@@ -19,10 +19,10 @@ async def symbolic_compress_context(
     url_or_path: str | Path = None,
     chunk_by="tokens",
     chunk_size: int = 1000,
-    chunk_tokenizer: Callable = str.split,
+    chunk_tokenizer: Callable = None,
     threshold=50,
     output_path: Path | str = None,
-    overlap=0.05,
+    overlap=0.025,
     system: str = None,
     chat_model: iModel = None,
     use_lion_system_message: bool = True,
@@ -42,8 +42,8 @@ async def symbolic_compress_context(
     compress_min_pplx=None,
     encode_token_map: TokenMappingTemplate | dict | TokenMapping = None,
     num_encodings: int = 3,
-    encode_output: bool = False,
-    num_output_encodings: int = None,
+    encode_output: bool = True,
+    num_output_encodings: int = 1,
     verbose: bool = True,
     branch: Branch = None,
     additional_text: str = "",
@@ -96,7 +96,7 @@ async def symbolic_compress_context(
 
     from lionagi.libs.file.process import chunk, chunk_content
 
-    texts = []
+    chunks = []
     if url_or_path:
         chunks = chunk(
             url_or_path=url_or_path,
@@ -105,26 +105,35 @@ async def symbolic_compress_context(
             overlap=overlap,
             threshold=threshold,
         )
-        texts = [i.content for i in chunks if i.content]
 
     elif text:
-        texts = chunk_content(
+        chunks = chunk_content(
             text=text,
             chunk_by=chunk_by,
             chunk_size=chunk_size,
             overlap=overlap,
             threshold=threshold,
-            tokenizer=chunk_tokenizer,
+            tokenizer=chunk_tokenizer or str.split,
         )
 
+    texts = [str(i).strip() for i in chunks if str(i).strip()]
+    bins = get_bins(texts, upper=chunk_size)
+    textss = []
+    for i in bins:
+        textss.append("\n".join([texts[j] for j in i]))
+
     results = await alcall(
-        texts,
+        textss,
         _inner,
         max_concurrent=max_concurrent,
         retry_default=None,
+        num_retries=2,
         throttle_period=throttle_period,
+        retry_delay=1,
+        backoff_factor=2,
         flatten=True,
         dropna=True,
+        unique_output=True,
     )
     text = "\n".join(results)
 

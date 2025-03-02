@@ -45,14 +45,18 @@ async def translate_to_synthlang(
             encode_token_map = TokenMapping.load_from_template(
                 encode_token_map
             )
+            additional_text += (
+                f"\nTransforming text with {encode_token_map.metadata['title']}"
+                f"\nOverview: {encode_token_map.metadata['overview']}"
+            )
             encode_token_map = encode_token_map.content
         if not isinstance(encode_token_map, dict):
             raise ValueError(
                 "encode_token_map must be a dict or TokenMappingTemplate"
             )
         for _ in range(num_encodings):
-            text = "\n".join(
-                [str(i).strip() for i in text.split("\n") if i.strip()]
+            text = " ".join(
+                [str(i).strip() for i in text.split() if i.strip()]
             )
             for k, v in encode_token_map.items():
                 text = text.replace(k, v)
@@ -60,7 +64,6 @@ async def translate_to_synthlang(
         additional_text += (
             f"\nthesaurus, lexicon, glossary:\n{encode_token_map}"
         )
-
     if not isinstance(framework_template, SynthlangFramework):
         framework_template = SynthlangFramework.load_from_template(
             framework_template
@@ -98,9 +101,10 @@ async def translate_to_synthlang(
 
     kwargs["guidance"] = (
         "Following SynthLang, translate the provided text into SynthLang syntax. "
-        "Reasonably shrink the token size by 50-80%. Return only the translated text"
-        "enclosed by ```synthlang...```. "
-        "\n\n" + kwargs.get("guidance", "")
+        "Reasonably reduce the token count by up to 80%. Return only the transformed"
+        " string enclosed by ```synthlang...```. \n\n"
+        "DO NOT include anything else, no comments, no explanations, no additional "
+        "text, just the transformed string." + kwargs.get("guidance", "")
     )
 
     out = await branch.chat(
@@ -114,8 +118,8 @@ async def translate_to_synthlang(
     if encode_output:
         if isinstance(num_output_encodings, int) and num_output_encodings > 0:
             for _ in range(num_output_encodings):
-                out = "\n".join(
-                    [str(i).strip() for i in out.split("\n") if i.strip()]
+                out = " ".join(
+                    [str(i).strip() for i in out.split(" ") if i.strip()]
                 )
                 for k, v in encode_token_map.items():
                     out = out.replace(k, v).strip()
@@ -123,7 +127,7 @@ async def translate_to_synthlang(
     if sys1:
         branch.msgs.add_message(system=sys1)
 
-    len_ = calculator.tokenize(out, return_tokens=False)
+    len_ = calculator.tokenize(out)
     if verbose:
         msg = "------------------------------------------\n"
         msg += f"Compression Method: SynthLang\n"
