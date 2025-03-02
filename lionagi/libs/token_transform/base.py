@@ -13,6 +13,7 @@ MAPPING_PATH = "synthlang_/resources/mapping"
 
 class TokenMappingTemplate(str, Enum):
     RUST_CHINESE = "rust_chinese"
+    LION_EMOJI = "lion_emoji"
 
     @property
     def fp(self) -> Path:
