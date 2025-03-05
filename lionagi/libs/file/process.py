@@ -30,14 +30,15 @@ def dir_to_files(
 
     Args:
         directory (Union[str, Path]): The directory to process.
-        file_types (Optional[List[str]]): List of file extensions to include (e.g., ['.txt', '.pdf']).
-                                          If None, include all file types.
-        max_workers (Optional[int]): Maximum number of worker threads for concurrent processing.
-                                     If None, uses the default ThreadPoolExecutor behavior.
-        ignore_errors (bool): If True, log warnings for errors instead of raising exceptions.
+        file_types (Optional[List[str]]): List of file extensions to include (e.g.,
+            ['.txt', '.pdf']). If None, include all file types.
+        max_workers (Optional[int]): Maximum number of worker threads for concurrent
+            processing. If None, uses the default ThreadPoolExecutor behavior.
+        ignore_errors (bool): If True, log warnings for errors instead of raising
+            exceptions.
         verbose (bool): If True, print verbose output.
         recursive (bool): If True, process directories recursively (the default).
-                          If False, only process files in the top-level directory.
+            If False, only process files in the top-level directory.
 
     Returns:
         List[Path]: A list of Path objects representing the files found.
@@ -47,6 +48,8 @@ def dir_to_files(
     """
     directory_path = Path(directory)
     if not directory_path.is_dir():
+        if directory_path.is_file():
+            return [directory_path]
         raise ValueError(
             f"The provided path is not a valid directory: {directory}"
         )
@@ -203,7 +206,7 @@ def chunk(
             )
 
         if reader_tool is None:
-            reader_tool = lambda x: x.read_text(encoding="utf-8")
+            reader_tool = lambda x: Path(x).read_text(encoding="utf-8")
 
         if reader_tool == "docling":
             from lionagi.libs.package.imports import check_import

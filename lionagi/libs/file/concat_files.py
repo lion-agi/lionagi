@@ -47,6 +47,7 @@ def concat_files(
     data_path = sorted(data_path)
     data_path = [Path(dp) for dp in data_path if Path(dp).exists()]
 
+    fps_ = []
     for dp in data_path:
         fps = dir_to_files(dp, recursive=recursive, file_types=file_types)
 
@@ -57,6 +58,7 @@ def concat_files(
 
         for fp in data_path:
             text = fp.read_text(encoding="utf-8")
+            fps_.append(fp)
             if len(text) >= threshold:
                 fp_text = (
                     "\n----------------------------------------------------\n"
@@ -66,6 +68,7 @@ def concat_files(
                 text = fp_text + text
                 texts.append(text)
 
+    fps = sorted(fps_)
     text = "\n".join(texts)
     if persist_path:
         persist_path.write_text(text, encoding="utf-8")
