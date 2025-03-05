@@ -17,6 +17,9 @@ FRAMEWORK_CHOICES = Literal["math", "optim", "custom_algebra"]
 __all__ = (
     "SynthlangFramework",
     "SynthlangTemplate",
+    "FRAMEWORK_OPTIONS",
+    "FRAMEWORK_CHOICES",
+    "SYNTHLANG_SPECIAL_MAPPING",
 )
 
 
@@ -128,3 +131,18 @@ class SynthlangTemplate(str, Enum):
             raise ValueError(f"Invalid synthlang framework name: {framework}")
 
         return SynthlangFramework.adapt_from(framework.fp, ".toml", many=False)
+
+
+FRAMEWORK_OPTIONS = SynthlangFramework.load_framework_options()
+
+SYNTHLANG_SPECIAL_MAPPING = {
+    "```synthlang\n```synthlang\n```synthlang": "```synthlang",
+    "```synthlang\n```synthlang": "```synthlang",
+}
+
+SYNTHLANG_GUIDANCE = """
+Following SynthLang, translate the provided text into SynthLang syntax.
+Reasonably reduce the token count by up to 80%. Return only the transformed
+string enclosed by ```synthlang...```. \n\nDO NOT include anything else, no
+comments, no explanations, no additional text, just the transformed string.
+"""

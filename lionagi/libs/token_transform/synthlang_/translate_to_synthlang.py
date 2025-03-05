@@ -1,14 +1,17 @@
 from timeit import default_timer as timer
-from typing import Literal
 
+from lionagi.service.endpoints.token_calculator import TokenCalculator
 from lionagi.service.imodel import iModel
 from lionagi.session.branch import Branch
 
 from ..base import TokenMapping, TokenMappingTemplate
-from .base import SynthlangFramework, SynthlangTemplate
-
-FRAMEWORK_OPTIONS = SynthlangFramework.load_framework_options()
-FRAMEWORK_CHOICES = Literal["math", "optim", "custom_algebra"]
+from .base import (
+    FRAMEWORK_CHOICES,
+    SYNTHLANG_GUIDANCE,
+    SYNTHLANG_SPECIAL_MAPPING,
+    SynthlangFramework,
+    SynthlangTemplate,
+)
 
 
 async def translate_to_synthlang(
@@ -58,6 +61,9 @@ async def translate_to_synthlang(
             text = " ".join(
                 [str(i).strip() for i in text.split() if i.strip()]
             )
+            for k, v in SYNTHLANG_SPECIAL_MAPPING.items():
+                text = text.replace(k, v)
+                text = text.strip()
             for k, v in encode_token_map.items():
                 text = text.replace(k, v)
                 text = text.strip()
@@ -93,19 +99,9 @@ async def translate_to_synthlang(
     else:
         branch = Branch(system=final_prompt, chat_model=chat_model)
 
-    from lionagi.service.endpoints.token_calculator import TokenCalculator
+    len_tokens = TokenCalculator.tokenize(text)
 
-    calculator = TokenCalculator()
-
-    len_tokens = calculator.tokenize(text, return_tokens=False)
-
-    kwargs["guidance"] = (
-        "Following SynthLang, translate the provided text into SynthLang syntax. "
-        "Reasonably reduce the token count by up to 80%. Return only the transformed"
-        " string enclosed by ```synthlang...```. \n\n"
-        "DO NOT include anything else, no comments, no explanations, no additional "
-        "text, just the transformed string." + kwargs.get("guidance", "")
-    )
+    kwargs["guidance"] = SYNTHLANG_GUIDANCE + kwargs.get("guidance", "")
 
     out = await branch.chat(
         instruction=f"Converts the given text into SynthLang's hyper-efficient format.",
@@ -127,7 +123,7 @@ async def translate_to_synthlang(
     if sys1:
         branch.msgs.add_message(system=sys1)
 
-    len_ = calculator.tokenize(out)
+    len_ = TokenCalculator.tokenize(out)
     if verbose:
         msg = "------------------------------------------\n"
         msg += f"Compression Method: SynthLang\n"
