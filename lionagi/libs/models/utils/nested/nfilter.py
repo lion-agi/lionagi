@@ -20,14 +20,6 @@ def nfilter(
 
     Returns:
         The filtered nested structure.
-
-    Raises:
-        TypeError: If nested_structure is not a dict or list.
-
-    Example:
-        >>> data = {"a": 1, "b": {"c": 2, "d": 3}, "e": [4, 5, 6]}
-        >>> nfilter(data, lambda x: isinstance(x, int) and x > 2)
-        {'b': {'d': 3}, 'e': [4, 5, 6]}
     """
     if isinstance(nested_structure, dict):
         return _filter_dict(nested_structure, condition)

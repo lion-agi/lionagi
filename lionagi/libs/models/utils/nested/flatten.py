@@ -4,37 +4,9 @@
 
 from collections import deque
 from collections.abc import Mapping, Sequence
-from typing import Any, Literal, TypeVar, overload
+from typing import Any, Literal, TypeVar
 
 T = TypeVar("T")
-
-
-@overload
-def flatten(
-    nested_structure: T,
-    /,
-    *,
-    parent_key: tuple = (),
-    sep: str = "|",
-    coerce_keys: Literal[True] = True,
-    dynamic: bool = True,
-    coerce_sequence: Literal["dict", None] = None,
-    max_depth: int | None = None,
-) -> dict[str, Any] | None: ...
-
-
-@overload
-def flatten(
-    nested_structure: T,
-    /,
-    *,
-    parent_key: tuple = (),
-    sep: str = "|",
-    coerce_keys: Literal[False],
-    dynamic: bool = True,
-    coerce_sequence: Literal["dict", "list", None] = None,
-    max_depth: int | None = None,
-) -> dict[tuple, Any] | None: ...
 
 
 def flatten(
@@ -69,19 +41,6 @@ def flatten(
     Returns:
         A flattened dictionary with keys as tuples or strings (based on
         coerce_keys) representing the path to each value.
-
-    Raises:
-        ValueError: If coerce_sequence is "list" and coerce_keys is True.
-
-    Example:
-        >>> nested = {"a": 1, "b": {"c": 2, "d": [3, 4]}}
-        >>> flatten(nested)
-        {'a': 1, 'b|c': 2, 'b|d|0': 3, 'b|d|1': 4}
-
-    Note:
-        - Preserves order of keys in dicts and indices in sequences.
-        - With dynamic=True, treats sequences (except strings) as nestable.
-        - coerce_sequence allows forcing sequence handling for homogeneity.
     """
 
     if coerce_keys and coerce_sequence == "list":

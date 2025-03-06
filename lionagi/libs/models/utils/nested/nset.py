@@ -27,20 +27,6 @@ def nset(
         nested_structure: The nested structure to modify.
         indices: The path of indices leading to the target location.
         value: The value to set at the specified location.
-
-    Raises:
-        ValueError: If the indices sequence is empty.
-        TypeError: If the target container is not a list or dictionary,
-                   or if the index type is incorrect.
-
-    Examples:
-        >>> data = {'a': {'b': [10, 20]}}
-        >>> nset(data, ['a', 'b', 1], 99)
-        >>> assert data == {'a': {'b': [10, 99]}}
-
-        >>> data = [0, [1, 2], 3]
-        >>> nset(data, [1, 1], 99)
-        >>> assert data == [0, [1, 99], 3]
     """
 
     if not indices:

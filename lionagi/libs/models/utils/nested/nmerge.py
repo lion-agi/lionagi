@@ -38,10 +38,6 @@ def nmerge(
     Returns:
         A merged dictionary or list, depending on the types present in
         `nested_structure`.
-
-    Raises:
-        TypeError: If `nested_structure` contains objects of incompatible
-            types that cannot be merged.
     """
     if not isinstance(nested_structure, list):
         raise TypeError("Please input a list")
@@ -59,16 +55,6 @@ def nmerge(
 def _deep_merge_dicts(
     dict1: dict[str, Any], dict2: dict[str, Any]
 ) -> dict[str, Any]:
-    """
-    Recursively merges two dictionaries, combining values where keys overlap.
-
-    Args:
-        dict1: The first dictionary.
-        dict2: The second dictionary.
-
-    Returns:
-        The merged dictionary.
-    """
     for key in dict2:
         if key in dict1:
             if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
@@ -87,20 +73,6 @@ def _merge_dicts(
     dict_update: bool,
     dict_sequence: bool,
 ) -> dict[str, Any]:
-    """
-    Merges a list of dictionaries into a single dictionary, with options for
-    handling duplicate keys and sequences.
-
-    Args:
-        iterables: A list of dictionaries to merge.
-        dict_update: If True, overwrite existing keys in dictionaries
-            with those from subsequent dictionaries.
-        dict_sequence: Enables unique key generation for duplicate keys
-            by appending a sequence number
-
-    Returns:
-        The merged dictionary.
-    """
     merged_dict = {}  # {'a': [1, 2]}
     sequence_counters = defaultdict(int)
     list_values = {}
@@ -137,19 +109,6 @@ def _merge_sequences(
     sort_list: bool,
     custom_sort: Callable[[Any], Any] | None = None,
 ) -> list[Any]:
-    """
-    Merges a list of lists into a single list, with options for sorting and
-    custom sorting logic.
-
-    Args:
-        iterables: A list of lists to merge.
-        sort_list: When True, sort the resulting list after merging.
-        custom_sort: An optional callable that defines custom sorting logic
-            for the merged list.
-
-    Returns:
-        The merged list.
-    """
     merged_list = list(chain(*iterables))
     if sort_list:
         if custom_sort:

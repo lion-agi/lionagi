@@ -28,19 +28,6 @@ def ninsert(
         value: The value to insert at the specified location.
         current_depth: Internal use only; tracks the current depth during
             recursive calls.
-
-    Raises:
-        ValueError: If the indices list is empty.
-        TypeError: If an invalid key or container type is encountered.
-
-    Examples:
-        >>> subject_ = {'a': {'b': [1, 2]}}
-        >>> ninsert(subject_, ['a', 'b', 2], 3)
-        >>> assert subject_ == {'a': {'b': [1, 2, 3]}}
-
-        >>> subject_ = []
-        >>> ninsert(subject_, [0, 'a'], 1)
-        >>> assert subject_ == [{'a': 1}]
     """
     if not indices:
         raise ValueError("Indices list cannot be empty")

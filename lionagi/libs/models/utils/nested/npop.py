@@ -29,12 +29,6 @@ def npop(
 
     Returns:
         The value at the specified nested location.
-
-    Raises:
-        ValueError: If the indices list is empty.
-        KeyError: If a key is not found in a dictionary.
-        IndexError: If an index is out of range for a list.
-        TypeError: If an operation is not supported on the current data type.
     """
     if not indices:
         raise ValueError("Indices list cannot be empty")
