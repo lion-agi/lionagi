@@ -129,6 +129,49 @@ async def brainstorm(
     branch_as_default: bool = True,
     operative_model: type[BaseModel] | None = None,
     **kwargs: Any,
+):
+    out = []
+    async for res in brainstormStream(
+        instruct=instruct,
+        num_instruct=num_instruct,
+        session=session,
+        branch=branch,
+        auto_run=auto_run,
+        auto_explore=auto_explore,
+        explore_kwargs=explore_kwargs,
+        explore_strategy=explore_strategy,
+        branch_kwargs=branch_kwargs,
+        return_session=return_session,
+        verbose=verbose,
+        branch_as_default=branch_as_default,
+        operative_model=operative_model,
+        **kwargs,
+    ):
+        out.append(res)
+
+    return out[-1]
+
+
+async def brainstormStream(
+    instruct: Instruct | dict[str, Any],
+    num_instruct: int = 2,
+    session: Session | None = None,
+    branch: Branch | ID.Ref | None = None,
+    auto_run: bool = True,
+    auto_explore: bool = False,
+    explore_kwargs: dict[str, Any] | None = None,
+    explore_strategy: Literal[
+        "concurrent",
+        "sequential",
+        "sequential_concurrent_chunk",
+        "concurrent_sequential_chunk",
+    ] = "concurrent",
+    branch_kwargs: dict[str, Any] | None = None,
+    return_session: bool = False,
+    verbose: bool = False,
+    branch_as_default: bool = True,
+    operative_model: type[BaseModel] | None = None,
+    **kwargs: Any,
 ) -> Any:
     """
     High-level function to perform a brainstorming session.
@@ -171,6 +214,8 @@ async def brainstorm(
     # 1. Initial Brainstorm
     # -----------------------------------------------------------------
     res1 = await branch.operate(**instruct, **kwargs)
+    yield res1
+
     out = BrainstormOperation(initial=res1)
 
     if verbose:
@@ -195,8 +240,10 @@ async def brainstorm(
     # -----------------------------------------------------------------
     if not auto_run:
         if return_session:
-            return out, session
-        return out
+            yield out, session
+        yield out
+
+        return
 
     # We run inside the context manager for branching
     async with session.branches:
@@ -227,6 +274,7 @@ async def brainstorm(
             # Insert the initial result at index 0 for reference
             filtered.insert(0, res1)
             response_ = filtered
+            yield response_
 
         # -----------------------------------------------------------------
         # 3. Explore the results (if auto_explore = True)
@@ -281,6 +329,7 @@ async def brainstorm(
                             i.model_dump_json() for i in res_explore
                         )
                     )
+                    yield res_explore
 
                 # ---------------------------------------------------------
                 # Strategy B: SEQUENTIAL
@@ -310,9 +359,11 @@ async def brainstorm(
                         seq_res = await branch.instruct(
                             i, **(explore_kwargs or {})
                         )
-                        explore_results.append(
-                            InstructResponse(instruct=i, response=seq_res)
+                        ins_res = InstructResponse(
+                            instruct=i, response=seq_res
                         )
+                        explore_results.append(ins_res)
+                        yield ins_res
 
                     out.explore = explore_results
 
@@ -367,6 +418,7 @@ async def brainstorm(
                             chunk, branch
                         )
                         all_responses.extend(chunk_result)
+                        yield chunk_result
 
                     out.explore = all_responses
 
@@ -431,6 +483,7 @@ async def brainstorm(
                             i.model_dump_json() for i in all_responses
                         )
                     )
+                    yield all_responses
 
     if branch_as_default:
         session.change_default_branch(branch)
@@ -439,5 +492,5 @@ async def brainstorm(
     # 4. Return Results
     # -----------------------------------------------------------------
     if return_session:
-        return out, session
-    return out
+        yield out, session
+    yield out
