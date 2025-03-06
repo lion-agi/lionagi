@@ -25,15 +25,6 @@ def chunk_by_chars(
 
     Returns:
         List[str]: A list of text chunks.
-
-    Raises:
-        ValueError: If an error occurs during the chunking process.
-
-    Examples:
-        >>> text = "This is a sample text for chunking."
-        >>> chunks = chunk_by_chars(text, chunk_size=10, overlap=0.2)
-        >>> print(chunks)
-        ['This is a ', 'a sample ', 'le text fo', 'for chunki', 'king.']
     """
     try:
         n_chunks = math.ceil(len(text) / chunk_size)
