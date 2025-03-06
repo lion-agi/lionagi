@@ -6,14 +6,24 @@ from lionagi.service.imodel import iModel
 from lionagi.session.branch import Branch
 from lionagi.utils import alcall, get_bins
 
-from .base import TokenMapping, TokenMappingTemplate
+from ..base import TokenMapping, TokenMappingTemplate
 from .synthlang_.base import SynthlangFramework, SynthlangTemplate
 
 FRAMEWORK_OPTIONS = SynthlangFramework.load_framework_options()
 FRAMEWORK_CHOICES = Literal["math", "optim", "custom_algebra"]
-DEFAULT_INVOKATION_PROMPT = (
+DEFAULT_INVOCATION_PROMPT = (
     "The light-speed brown fox jumps over the lazy dog with great agility."
 )
+
+
+class TextCompressor:
+
+    def __init__(
+        self,
+    ):
+        pass
+
+    ...
 
 
 async def symbolic_compress_context(
@@ -139,7 +149,7 @@ async def symbolic_compress_context(
         unique_output=True,
     )
     text = "\n".join(results)
-    text = DEFAULT_INVOKATION_PROMPT + text
+    text = DEFAULT_INVOCATION_PROMPT + text
 
     if output_path:
         fp = Path(output_path)

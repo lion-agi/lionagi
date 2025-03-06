@@ -235,7 +235,7 @@ class LLMCompressor:
         Split text into segments. If no custom splitter, default to chunk_content from lionagi.
         """
         if not self.splitter:
-            from lionagi.libs.file.chunk import chunk_content
+            from lionagi.libs.file.chunk.chunk import chunk_content
 
             contents = chunk_content(
                 content=text,

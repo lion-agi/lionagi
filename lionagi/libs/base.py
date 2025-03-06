@@ -34,6 +34,7 @@ class ResourceCategory(str, Enum):
     UTILITY = "utility"
     PROMPT = "prompt"
     OTHER = "other"
+    DOCUMENT = "document"
 
 
 class ResourceMeta(BaseModel):
@@ -75,4 +76,10 @@ class Resource(Node):
 class Prompt(Resource):
     category: ResourceCategory = Field(
         default=ResourceCategory.PROMPT, frozen=True
+    )
+
+
+class Document(Resource):
+    category: ResourceCategory = Field(
+        default=ResourceCategory.DOCUMENT, frozen=True
     )

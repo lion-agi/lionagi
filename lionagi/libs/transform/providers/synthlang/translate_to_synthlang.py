@@ -80,7 +80,7 @@ async def translate_to_synthlang(
     )
 
     if compress:
-        from ..perplexity import compress_text
+        from ..perplexity_score.perplexity_score import compress_text
 
         text = await compress_text(
             text,

@@ -2,7 +2,7 @@
 
 import pytest
 
-from lionagi.operatives.models.note import Note
+from lionagi.libs.nested.note import Note
 from lionagi.utils import UNDEFINED
 
 

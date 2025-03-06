@@ -30,7 +30,7 @@ from .instruct.node import InstructNode
 from .instruct.reason import CONFIDENCE_SCORE_FIELD, REASON_FIELD, Reason
 from .models.field_model import FieldModel
 from .models.model_params import ModelParams
-from .models.note import Note
+from ..libs.nested.note import Note
 from .models.operable_model import OperableModel
 from .models.schema_model import SchemaModel
 from .operative import Operative

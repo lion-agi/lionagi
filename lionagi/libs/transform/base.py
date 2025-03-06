@@ -3,8 +3,9 @@ from __future__ import annotations
 from enum import Enum
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
+from lionagi.protocols.generic.event import Event
 from lionagi.tools.base import Resource, ResourceCategory
 
 here = Path(__file__).parent.resolve()
@@ -14,6 +15,7 @@ MAPPING_PATH = "synthlang_/resources/mapping"
 class TokenMappingTemplate(str, Enum):
     RUST_CHINESE = "rust_chinese"
     LION_EMOJI = "lion_emoji"
+    PYTHON_MATH = "python_math"
 
     @property
     def fp(self) -> Path:
@@ -51,3 +53,12 @@ class TokenMapping(Resource):
         raise ValueError(
             f"Invalid template: {template}. Must be a TokenMappingTemplate or a valid path."
         )
+
+
+class TransformationCategory(str, Enum):
+    COMPRESS = "compress"
+    DECOMPRESS = "decompress"
+    SUMMARIZE = "summarize"
+
+
+class Transformation(Event): ...

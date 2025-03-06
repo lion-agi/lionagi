@@ -22,40 +22,6 @@ from .token_calculator import TokenCalculator
 
 
 class EndpointConfig(BaseModel):
-    """Represents configuration data for an API endpoint.
-
-    Attributes:
-        provider (str | None):
-            The name of the API provider (e.g., "openai").
-        base_url (str | None):
-            The base URL for the endpoint, if any.
-        endpoint (str):
-            The endpoint path or identifier (e.g., "/v1/chat/completions").
-        endpoint_params (dict | None):
-            Key-value pairs for dynamic endpoint formatting.
-        method (Literal["get","post","put","delete"]):
-            The HTTP method used when calling this endpoint.
-        openai_compatible (bool):
-            If True, indicates that the endpoint expects OpenAI-style requests.
-        required_kwargs (set[str]):
-            The names of required parameters for this endpoint.
-        optional_kwargs (set[str]):
-            The names of optional parameters for this endpoint.
-        deprecated_kwargs (set[str]):
-            The names of parameters that may still be accepted but are
-            deprecated.
-        is_invokeable (bool):
-            Whether this endpoint supports direct invocation.
-        is_streamable (bool):
-            Whether this endpoint supports streaming responses.
-        requires_tokens (bool):
-            Whether tokens must be calculated before sending a request.
-        api_version (str | None):
-            An optional version string for the API.
-        allowed_roles (list[str] | None):
-            If set, only these roles are allowed in message or conversation
-            data.
-    """
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -68,7 +34,7 @@ class EndpointConfig(BaseModel):
     provider: str | None = None
     base_url: str | None = None
     endpoint: str
-    endpoint_params: dict | None = None
+    endpoint_params: list[str] | None = None
     method: Literal["get", "post", "put", "delete"] = Field("post")
     openai_compatible: bool = False
     required_kwargs: set[str] = Field(default_factory=set)
@@ -84,22 +50,16 @@ class EndpointConfig(BaseModel):
 
 
 class EndPoint(ABC):
-    """Abstract base class representing an API endpoint.
 
-    This class wraps an `EndpointConfig` and provides methods for creating and
-    invoking API payloads, optionally with caching or streaming. Concrete
-    implementations should override `_invoke` and `_stream` to perform actual
-    HTTP requests.
-    """
 
     def __init__(
         self, config: dict | EndpointConfig | type[EndpointConfig], **kwargs
     ) -> None:
-        """Initializes the EndPoint with a given configuration.
-
-        Args:
-            config (dict | EndpointConfig): Configuration data that matches the EndpointConfig
-                schema.
+        """Initializes the EndPoint with a given configuration
+        - accepts a dict, which will be used to create an EndpointConfig instance
+        - accepts an EndpointConfig instance
+        - accepts a subclass of EndpointConfig, which will be instantiated
+        - accepts additional kwargs to update the configuration
         """
         if isinstance(config, dict):
             self.config = EndpointConfig(**config)
@@ -182,10 +142,18 @@ class EndPoint(ABC):
     @property
     def full_url(self) -> str:
         """str: The complete URL, including base_url and any parameters."""
+        data = self.config.model_dump()
+        path_dict = {}
         if self.config.endpoint_params:
-            return self.config.base_url + self.config.endpoint.format(
-                **self.endpoint_params
-            )
+            for param in self.config.endpoint_params:
+                if param not in data:
+                    raise ValueError(
+                        f"Invalid endpoint parameter: {type(param)}. "
+                        f"Expected one of: {self.config.model_fields.keys()}"
+                    )
+                path_dict[param] = data[param]
+            return self.config.base_url + "/" + self.config.endpoint.format(**path_dict)
+        
         return self.config.base_url + "/" + self.config.endpoint
 
     @property

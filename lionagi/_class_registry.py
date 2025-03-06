@@ -81,23 +81,6 @@ def get_class(class_name: str) -> type:
     If not found, it uses mor to dynamically import the class. The
     function ensures that the retrieved class is a subclass of the specified
     base_class.
-
-    Args:
-        class_name: The name of the class to retrieve.
-
-    Returns:
-        The requested class, which is a subclass of base_class.
-
-    Raises:
-        ValueError: If the class is not found or not a subclass of base_class.
-
-    Usage:
-        MyClass = get_class("MyClassName", BaseClass)
-        instance = MyClass()
-
-    Note:
-        This function automatically registers newly found classes in the
-        LION_CLASS_REGISTRY for future quick access.
     """
     if class_name in LION_CLASS_REGISTRY:
         return LION_CLASS_REGISTRY[class_name]

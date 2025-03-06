@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 from lionagi.utils import lcall
 
-from .chunk import chunk_content
+from .chunk.chunk import chunk_content
 from .save import save_chunks
 
 

@@ -44,6 +44,12 @@ from pydantic import BaseModel, model_validator
 from pydantic_core import PydanticUndefinedType
 from typing_extensions import Self
 
+import importlib.metadata
+import importlib.util
+import logging
+import subprocess
+from typing import Any
+
 from .settings import Settings
 
 R = TypeVar("R")
@@ -111,11 +117,6 @@ class UndefinedType:
 
     __slots__ = ["undefined"]
 
-
-class KeysDict(TypedDict, total=False):
-    """TypedDict for keys dictionary."""
-
-    key: Any  # Represents any key-type pair
 
 
 class HashableModel(BaseModel):
@@ -2364,28 +2365,3 @@ def _is_pydantic_model(x: Any) -> bool:
         return False
 
 
-def run_package_manager_command(
-    args: Sequence[str],
-) -> subprocess.CompletedProcess[bytes]:
-    """Run a package manager command, using uv if available, otherwise falling back to pip."""
-    # Check if uv is available in PATH
-    uv_path = shutil.which("uv")
-
-    if uv_path:
-        # Use uv if available
-        try:
-            return subprocess.run(
-                [uv_path] + list(args),
-                check=True,
-                capture_output=True,
-            )
-        except subprocess.CalledProcessError:
-            # If uv fails, fall back to pip
-            print("uv command failed, falling back to pip...")
-
-    # Fall back to pip
-    return subprocess.run(
-        [sys.executable, "-m", "pip"] + list(args),
-        check=True,
-        capture_output=True,
-    )
