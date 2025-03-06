@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, TypeVar
+from typing import Any
 
 from pydantic import (
     BaseModel,
@@ -17,40 +17,10 @@ from typing_extensions import Self, override
 
 from lionagi.utils import UNDEFINED, HashableModel, is_same_dtype
 
-from .field_model import FieldModel
-from .model_params import ModelParams
-
-FieldName = TypeVar("FieldName", bound=str)
+from .base import FieldModel, ModelParams
 
 
-__all__ = ("OperableModel",)
-
-
-class OperableModel(HashableModel):
-    """Base model supporting dynamic field management and operations.
-
-    A Pydantic model extension that enables runtime field modifications while
-    maintaining type safety and validation. Supports dynamic field addition,
-    updates, and removal, with full serialization capabilities.
-
-    Args:
-        **kwargs: Key-value pairs for initial field values.
-
-    Attributes:
-        extra_fields: Dictionary mapping field names to their FieldInfo
-            definitions for dynamically added fields.
-        extra_field_models: Dictionary mapping field names to their FieldModel
-            instances for fields with additional configuration.
-
-    Examples:
-        >>> class UserModel(OperableModel):
-        ...     name: str = "default"
-        ...
-        >>> user = UserModel()
-        >>> user.add_field("age", value=25, annotation=int)
-        >>> user.age
-        25
-    """
+class Operable(HashableModel):
 
     model_config = ConfigDict(
         extra="forbid",
@@ -267,7 +237,7 @@ class OperableModel(HashableModel):
 
     def add_field(
         self,
-        field_name: FieldName,
+        field_name: str,
         /,
         value: Any = UNDEFINED,
         annotation: type = UNDEFINED,
@@ -302,7 +272,7 @@ class OperableModel(HashableModel):
 
     def update_field(
         self,
-        field_name: FieldName,
+        field_name: str,
         /,
         value: Any = UNDEFINED,
         annotation: type = UNDEFINED,
@@ -384,7 +354,7 @@ class OperableModel(HashableModel):
 
         setattr(self, field_name, value)
 
-    def remove_field(self, field_name: FieldName, /):
+    def remove_field(self, field_name: str, /):
         if field_name in self.extra_fields:
             del self.extra_fields[field_name]
         if field_name in self.__dict__:
@@ -392,7 +362,7 @@ class OperableModel(HashableModel):
 
     def field_setattr(
         self,
-        field_name: FieldName,
+        field_name: str,
         attr: str,
         value: Any,
         /,
@@ -420,7 +390,7 @@ class OperableModel(HashableModel):
 
     def field_hasattr(
         self,
-        field_name: FieldName,
+        field_name: str,
         attr: str,
         /,
     ) -> bool:
@@ -450,7 +420,7 @@ class OperableModel(HashableModel):
 
     def field_getattr(
         self,
-        field_name: FieldName,
+        field_name: str,
         attr: str,
         default: Any = UNDEFINED,
         /,
@@ -537,17 +507,6 @@ class OperableModel(HashableModel):
 
         Raises:
             ValueError: If use_fields contains invalid field names.
-
-        Examples:
-            >>> model = OperableModel()
-            >>> model.add_field("name", value="test", annotation=str)
-            >>> model.add_field("age", value=25, annotation=int)
-            >>> NewModel = model.new_model(
-            ...     name="UserModel",
-            ...     use_fields={"name", "age"},
-            ...     frozen=True
-            ... )
-            >>> user = NewModel(name="Alice", age=30)
         """
 
         use_fields = (

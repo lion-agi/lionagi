@@ -8,12 +8,9 @@ from typing import Any, TypeAlias
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from typing_extensions import override
 
-from lionagi.libs.nested.flatten import flatten
-from lionagi.libs.nested.nget import nget
-from lionagi.libs.nested.ninsert import ninsert
-from lionagi.libs.nested.npop import npop
-from lionagi.libs.nested.nset import nset
 from lionagi.utils import UNDEFINED, copy, to_list
+
+from .utils.types import flatten, nget, ninsert, npop, nset
 
 IndiceType: TypeAlias = str | list[str | int]
 

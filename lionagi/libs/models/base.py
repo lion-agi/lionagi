@@ -4,9 +4,11 @@
 
 import inspect
 from collections.abc import Callable
+from typing import Any
 
 from pydantic import (
     BaseModel,
+    ConfigDict,
     Field,
     PrivateAttr,
     create_model,
@@ -18,18 +20,172 @@ from typing_extensions import Self
 
 from lionagi.libs.validate.common_field_validators import (
     validate_boolean_field,
+    validate_callable,
+    validate_dict_kwargs_params,
     validate_list_dict_str_keys,
     validate_model_to_type,
     validate_nullable_string_field,
     validate_same_dtype_flat_list,
     validate_str_str_dict,
 )
-from lionagi.utils import copy
+from lionagi.utils import UNDEFINED, HashableModel, UndefinedType, copy
 
-from .field_model import FieldModel
-from .schema_model import SchemaModel
 
-__all__ = ("ModelParams",)
+class SchemaModel(HashableModel):
+
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_default=False,
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
+
+    @classmethod
+    def keys(cls) -> list[str]:
+        """Get list of model field names.
+
+        Returns:
+            List of field names defined in model schema
+        """
+        return list(cls.model_fields.keys())
+
+
+class FieldModel(SchemaModel):
+    """Model for defining and configuring Pydantic field attributes.
+
+    This class provides a structured way to define fields with comprehensive
+    configuration options including type validation, default values, documentation,
+    and validation rules.
+    """
+
+    model_config = ConfigDict(
+        extra="allow",
+        validate_default=False,
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
+
+    # Required core attributes
+    name: str | UndefinedType = Field(
+        ...,
+        description="Field identifier, used as attribute name",
+        exclude=True,
+    )
+
+    annotation: type | Any = Field(
+        default=UNDEFINED,
+        description="Type annotation for the field",
+        exclude=True,
+    )
+
+    validator: Callable | Any = Field(
+        default=UNDEFINED,
+        description="Optional validation function",
+        exclude=True,
+    )
+
+    validator_kwargs: dict | None = Field(
+        default_factory=dict,
+        description="Configuration for validator decorator",
+        exclude=True,
+    )
+
+    # Field configuration
+    default: Any = Field(
+        default=UNDEFINED, description="Default value for the field"
+    )
+
+    default_factory: Callable | UndefinedType = Field(
+        default=UNDEFINED, description="Function to generate default values"
+    )
+
+    title: str | UndefinedType = Field(
+        default=UNDEFINED, description="Human-readable field title"
+    )
+
+    description: str | UndefinedType = Field(
+        default=UNDEFINED, description="Detailed field description"
+    )
+
+    examples: list | UndefinedType = Field(
+        default=UNDEFINED, description="Example values for documentation"
+    )
+
+    exclude: bool | UndefinedType = Field(
+        default=UNDEFINED, description="Whether to exclude from serialization"
+    )
+
+    deprecated: bool | UndefinedType = Field(
+        default=UNDEFINED, description="Whether the field is deprecated"
+    )
+
+    frozen: bool | UndefinedType = Field(
+        default=UNDEFINED, description="Whether the field is immutable"
+    )
+
+    alias: str | UndefinedType = Field(
+        default=UNDEFINED, description="Alternative field name"
+    )
+
+    alias_priority: int | UndefinedType = Field(
+        default=UNDEFINED, description="Priority for alias resolution"
+    )
+
+    @field_validator("validator_kwargs", mode="before")
+    def _validate_validator_kwargs(cls, value):
+        return validate_dict_kwargs_params(cls, value)
+
+    @field_validator("validator", mode="before")
+    def _validate_field_validator(cls, value) -> Callable | Any:
+        return validate_callable(cls, value)
+
+    @property
+    def field_info(self) -> FieldInfo:
+        """Generate Pydantic FieldInfo from current configuration.
+
+        Converts the current field configuration into a Pydantic FieldInfo object,
+        handling annotation defaults and field attributes.
+
+        Returns:
+            Configured Pydantic FieldInfo object.
+        """
+        annotation = (
+            self.annotation if self.annotation is not UNDEFINED else Any
+        )
+        field_obj = Field(**self.to_dict())  # type: ignore
+        field_obj.annotation = annotation
+        return field_obj
+
+    @property
+    def field_validator(self) -> dict[str, Callable] | None:
+        """Create field validator configuration.
+
+        Generates a validator configuration dictionary if a validator function
+        is defined, otherwise returns None.
+
+        Returns:
+            Dictionary mapping validator name to validator function if defined,
+            None otherwise.
+        """
+        if self.validator is UNDEFINED:
+            return None
+        kwargs = self.validator_kwargs or {}
+        return {
+            f"{self.name}_validator": field_validator(self.name, **kwargs)(
+                self.validator
+            )
+        }
+
+    @model_validator(mode="after")
+    def _validate_defaults(self) -> Self:
+        if (
+            self.default is not UNDEFINED
+            and self.default_factory is not UNDEFINED
+        ):
+            raise ValueError("Cannot have both default and default_factory")
+        return self
 
 
 class ModelParams(SchemaModel):
@@ -50,17 +206,6 @@ class ModelParams(SchemaModel):
         config_dict: Pydantic model configuration.
         doc: Docstring for the generated model.
         frozen: Whether the model should be immutable.
-
-    Examples:
-        >>> params = ModelParams(
-        ...     name="UserModel",
-        ...     field_models=[
-        ...         FieldModel(name="username", annotation=str),
-        ...         FieldModel(name="age", annotation=int, default=0)
-        ...     ],
-        ...     doc="A user model with basic attributes."
-        ... )
-        >>> UserModel = params.create_new_model()
     """
 
     name: str | None = Field(
@@ -133,17 +278,6 @@ class ModelParams(SchemaModel):
 
     @field_validator("parameter_fields", mode="before")
     def _validate_parameters(cls, value) -> dict[str, FieldInfo]:
-        """Validate parameter field definitions.
-
-        Args:
-            value: Value to validate.
-
-        Returns:
-            dict[str, FieldInfo]: Validated parameter fields.
-
-        Raises:
-            ValueError: If parameter fields are invalid.
-        """
         if value in [None, {}, []]:
             return {}
         if not isinstance(value, dict):
@@ -157,90 +291,26 @@ class ModelParams(SchemaModel):
 
     @field_validator("base_type", mode="before")
     def _validate_base(cls, value) -> type[BaseModel]:
-        """Validate base model type.
-
-        Args:
-            value: Value to validate.
-
-        Returns:
-            type[BaseModel]: Validated base model type.
-
-        Raises:
-            ValueError: If base type is invalid.
-        """
         return validate_model_to_type(cls, value)
 
     @field_validator("exclude_fields", mode="before")
     def _validate_fields(cls, value) -> list[str]:
-        """Validate excluded fields list.
-
-        Args:
-            value: Value to validate.
-
-        Returns:
-            list[str]: Validated list of field names to exclude.
-
-        Raises:
-            ValueError: If field names are invalid.
-        """
         return validate_list_dict_str_keys(cls, value)
 
     @field_validator("field_descriptions", mode="before")
     def _validate_field_descriptions(cls, value) -> dict[str, str]:
-        """Validate field descriptions dictionary.
-
-        Args:
-            value: Value to validate.
-
-        Returns:
-            dict[str, str]: Validated field descriptions.
-
-        Raises:
-            ValueError: If descriptions are invalid.
-        """
         return validate_str_str_dict(cls, value)
 
     @field_validator("inherit_base", mode="before")
     def _validate_inherit_base(cls, value) -> bool:
-        """Validate inherit_base flag.
-
-        Args:
-            value: Value to validate.
-
-        Returns:
-            bool: Validated inherit_base value.
-        """
         return validate_boolean_field(cls, value, default=True)
 
     @field_validator("name", mode="before")
     def _validate_name(cls, value) -> str | None:
-        """Validate model name.
-
-        Args:
-            value: Value to validate.
-
-        Returns:
-            str | None: Validated model name.
-
-        Raises:
-            ValueError: If name is invalid.
-        """
         return validate_nullable_string_field(cls, value, field_name="Name")
 
     @field_validator("field_models", mode="before")
     def _validate_field_models(cls, value) -> list[FieldModel]:
-        """Validate field model definitions.
-
-        Args:
-            value: Value to validate.
-
-        Returns:
-            list[FieldModel]: Validated field models.
-
-        Raises:
-            ValueError: If field models are invalid.
-        """
-
         return validate_same_dtype_flat_list(cls, value, FieldModel)
 
     @model_validator(mode="after")
@@ -297,14 +367,7 @@ class ModelParams(SchemaModel):
         return self
 
     def create_new_model(self) -> type[BaseModel]:
-        """Create new Pydantic model with specified configuration.
-
-        This method generates a new Pydantic model class based on the configured
-        parameters, including fields, validators, and inheritance settings.
-
-        Returns:
-            type[BaseModel]: Newly created Pydantic model class.
-        """
+        """Create new Pydantic model with specified configuration."""
         base_type = self.base_type if self.inherit_base else None
 
         if base_type and self.exclude_fields:
