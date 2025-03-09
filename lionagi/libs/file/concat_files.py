@@ -47,10 +47,11 @@ def concat_files(
     data_path = sorted(data_path)
     data_path = [Path(dp) for dp in data_path if Path(dp).exists()]
 
+    fps = []
     for dp in data_path:
-        fps = dir_to_files(dp, recursive=recursive, file_types=file_types)
+        _fps = dir_to_files(dp, recursive=recursive, file_types=file_types)
 
-        data_path = sorted([str(i) for i in fps])
+        data_path = sorted([str(i) for i in _fps])
         data_path: list[Path] = [
             Path(dp) for dp in data_path if Path(dp).exists()
         ]
@@ -65,6 +66,7 @@ def concat_files(
                 )
                 text = fp_text + text
                 texts.append(text)
+        fps.extend(data_path)
 
     text = "\n".join(texts)
     if persist_path:
