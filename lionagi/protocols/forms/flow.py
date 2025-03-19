@@ -1,4 +1,6 @@
-# forms/flow.py
+# Copyright (c) 2023 - 2025, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -71,3 +73,6 @@ class FlowDefinition(BaseModel):
         for st in self.steps:
             result.update(st.outputs)
         return result
+
+
+# File: lionagi/protocols/forms/flow.py
