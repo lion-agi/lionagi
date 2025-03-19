@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from lionagi.operatives.instruct.instruct import (
+from lionagi.libs.fields.instruct import (
     LIST_INSTRUCT_FIELD_MODEL,
     Instruct,
 )

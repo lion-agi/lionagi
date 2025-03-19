@@ -4,22 +4,20 @@
 
 from pydantic import model_validator
 
-from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
+from lionagi.libs.fields.instruct import Instruct, InstructResponse
 from lionagi.session.session import Branch, Session
-from lionagi.utils import alcall
 
 from .base import StrategyExecutor
-from .params import HybridStrategyParams
+from .params import ChunkStrategyParams
 
 
-class ConcurrentSequentialChunkExecutor(StrategyExecutor):
-    """Concurrent-sequential chunked executor:
-    1. Splits instructions into chunks
-    2. Processes chunks concurrently
-    3. Processes each instruction within a chunk sequentially.
+class SequentialChunkExecutor(StrategyExecutor):
+    """Executor for sequential chunked instruction processing.
+
+    Splits instructions into chunks and processes each chunk one by one.
     """
 
-    params: HybridStrategyParams
+    params: ChunkStrategyParams
     session: Session
     branch: Branch
 
@@ -27,19 +25,14 @@ class ConcurrentSequentialChunkExecutor(StrategyExecutor):
     def validate_execution_config(cls, values: dict) -> dict:
         params = values.get("params", None)
         if params is None:
-            params = HybridStrategyParams(**values)
-
-        if (
-            params.outer_mode != "concurrent"
-            or params.inner_mode != "sequential"
-        ):
-            raise ValueError(
-                "Requires outer_mode='concurrent' and inner_mode='sequential'"
-            )
+            params = ChunkStrategyParams(**values)
 
         session = values.get("session", params.session)
         if not session:
-            raise ValueError("Session is required")
+            raise ValueError(
+                "Session is required for sequential chunk execution"
+            )
+
         branch = values.get("branch", params.branch)
         if isinstance(branch, Branch):
             if branch not in session.branches:
@@ -62,11 +55,10 @@ class ConcurrentSequentialChunkExecutor(StrategyExecutor):
                 if len(ins_.instruction) > 100
                 else ins_.instruction
             )
-            print(
-                f"\n-----Executing Instruct {idx}/{ttl}-----\n{msg_}"
-                if ttl
-                else f"\n-----Executing Instruct {idx}-----\n{msg_}"
-            )
+            if idx and ttl:
+                print(f"\n-----Executing Instruct {idx}/{ttl}-----\n{msg_}")
+            else:
+                print(f"\n-----Executing Instruct-----\n{msg_}")
 
         res = await self.branch.instruct(ins_, **self.params.execute_kwargs)
         return InstructResponse(instruct=ins_, response=res)
@@ -74,12 +66,10 @@ class ConcurrentSequentialChunkExecutor(StrategyExecutor):
     async def _execute_chunk(
         self, chunk: list[tuple[Instruct, int, int]]
     ) -> list[InstructResponse]:
-        # Each chunk sequential
-        branch = self.session.split(self.branch)
         responses = []
         for ins_, idx, ttl in chunk:
-            r = await self._execute_single(ins_, idx, ttl)
-            responses.append(r)
+            res = await self._execute_single(ins_, idx, ttl)
+            responses.append(res)
         return responses
 
     async def execute(self) -> list[InstructResponse]:
@@ -91,18 +81,13 @@ class ConcurrentSequentialChunkExecutor(StrategyExecutor):
             chunk = [(ins, i + 1, total) for i, ins in enumerate(instructions)]
             return await self._execute_chunk(chunk)
 
-        chunks = []
+        responses = []
         for start in range(0, total, chunk_size):
             end = min(start + chunk_size, total)
             chunk = [
                 (instructions[i], i + 1, total) for i in range(start, end)
             ]
-            chunks.append(chunk)
+            chunk_responses = await self._execute_chunk(chunk)
+            responses.extend(chunk_responses)
 
-        chunk_responses = await alcall(
-            chunks, self._execute_chunk, max_workers=self.params.max_workers
-        )
-        responses = []
-        for c in chunk_responses:
-            responses.extend(c)
         return responses

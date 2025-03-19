@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 from lionagi.libs.validate.common_field_validators import (
+    validate_boolean_field,
     validate_nullable_string_field,
 )
 from lionagi.models import FieldModel, HashableModel
@@ -171,4 +172,19 @@ ACTION_RESPONSES_FIELD = FieldModel(
     description="**do not fill**",
 )
 
+
+ACTION_REQUIRED_FIELD = FieldModel(
+    name="action_required",
+    annotation=bool,
+    default=False,
+    title="Action Required",
+    description=(
+        "Whether this step strictly requires performing actions. "
+        "If true, the requests in `action_requests` must be fulfilled, "
+        "assuming `tool_schemas` are available. "
+        "If false or no `tool_schemas` exist, actions are optional."
+    ),
+    validator=lambda cls, v: validate_boolean_field(cls, v, False),
+    validator_kwargs={"mode": "before"},
+)
 # File: lionagi/libs/fields/action.py
