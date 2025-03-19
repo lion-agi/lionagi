@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `Tool` class, which wraps a Python callable (function/method)
-with optional pre/post-processing and schema auto-generation. Also includes
-type aliases for function references.
-"""
 
 import inspect
 from collections.abc import Callable
@@ -177,4 +172,4 @@ def func_to_tool(func: Callable[..., Any], **kwargs) -> Tool:
     return Tool(func_callable=func, **kwargs)
 
 
-# File: lionagi/operatives/action/tool.py
+# File: lionagi/protocols/action/tool.py

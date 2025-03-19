@@ -2,21 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `ActionManager` class, a specialized Manager that registers
-`Tool` objects (or callables) for function invocation. It can match
-incoming requests (ActionRequest) to a registered tool, then run it.
-"""
-
 from typing import Any
 
 from lionagi.protocols._concepts import Manager
-from lionagi.protocols.generic.event import Execution
 from lionagi.protocols.messages.action_request import ActionRequest
 from lionagi.utils import to_list
 
+from ...libs.fields.action import ActionRequestModel
 from .function_calling import FunctionCalling
-from .request_response_model import ActionRequestModel
 from .tool import FuncTool, FuncToolRef, Tool, ToolRef
 
 __all__ = ("ActionManager",)
@@ -255,4 +248,4 @@ class ActionManager(Manager):
 
 __all__ = ["ActionManager"]
 
-# File: lionagi/operatives/action/manager.py
+# File: lionagi/protocols/action/manager.py

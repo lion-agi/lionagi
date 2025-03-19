@@ -8,9 +8,9 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator, model_validator
 from typing_extensions import Self
 
-from lionagi.protocols.generic.event import Event, EventStatus
 from lionagi.utils import is_coro_func
 
+from ..generic.event import Event, EventStatus
 from .tool import Tool
 
 
@@ -145,3 +145,6 @@ class FunctionCalling(Event):
         dict_["function"] = self.function
         dict_["arguments"] = self.arguments
         return dict_
+
+
+# File: lionagi/protocols/action/function_calling.py
