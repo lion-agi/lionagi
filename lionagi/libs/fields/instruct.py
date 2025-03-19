@@ -13,7 +13,6 @@ from lionagi.libs.validate.common_field_validators import (
 from lionagi.models import FieldModel, HashableModel
 from lionagi.utils import to_num
 
-
 __all__ = (
     "Instruct",
     "InstructResponse",
