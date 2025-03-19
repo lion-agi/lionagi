@@ -11,7 +11,7 @@ from lionagi.libs.schema.extract_docstring import extract_docstring
 from lionagi.libs.validate.common_field_validators import (
     validate_model_to_type,
 )
-from lionagi.operatives.models.schema_model import SchemaModel
+from lionagi.models import SchemaModel
 
 py_json_msp = {
     "str": "string",

@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Provides the `Exchange` class, which orchestrates mail flows among
-sources that implement `Communicatable`. It collects pending outgoing
-mail from each source and delivers them to the appropriate recipients.
-"""
-
 import asyncio
 from typing import Any
 

@@ -5,9 +5,7 @@ from typing import Any
 import pytest
 from pydantic import Field
 
-from lionagi.operatives.models.field_model import FieldModel
-from lionagi.operatives.models.operable_model import OperableModel
-from lionagi.operatives.models.schema_model import SchemaModel
+from lionagi.models import FieldModel, OperableModel, SchemaModel
 
 
 class TestOperableModel:

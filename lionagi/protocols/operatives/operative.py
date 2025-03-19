@@ -7,10 +7,8 @@ from pydantic.fields import FieldInfo
 from typing_extensions import Self
 
 from lionagi.libs.validate.fuzzy_match_keys import fuzzy_match_keys
-from lionagi.operatives.models.schema_model import SchemaModel
+from lionagi.models import FieldModel, ModelParams, SchemaModel
 from lionagi.utils import UNDEFINED, to_json
-
-from .models.model_params import FieldModel, ModelParams
 
 
 class Operative(SchemaModel):

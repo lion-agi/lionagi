@@ -2,16 +2,17 @@ import pandas as pd
 import pytest
 from pydantic import BaseModel
 
-from lionagi.operatives.action.request_response_model import (
+from lionagi.libs.fields.action import (
     ActionResponseModel,
 )
-from lionagi.operatives.types import Instruct, Operative
+from lionagi.libs.fields.instruct import Instruct
 from lionagi.protocols.types import (
     ActionRequest,
     AssistantResponse,
     Instruction,
     LogManagerConfig,
     MessageRole,
+    Operative,
     PackageCategory,
     RoledMessage,
 )

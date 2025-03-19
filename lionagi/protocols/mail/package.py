@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines `Package` and `PackageCategory`, encapsulating the contents
-and classification of mail items. Also includes a simple validator
-to ensure categories are valid.
-"""
-
 from enum import Enum
 from typing import Any
 

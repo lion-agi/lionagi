@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Self
 
 from lionagi._errors import ExecutionError, RateLimitError
-from lionagi.protocols.generic.event import Event, EventStatus
+from lionagi.protocols.types import Event, EventStatus
 from lionagi.settings import Settings
 
 from .token_calculator import TokenCalculator

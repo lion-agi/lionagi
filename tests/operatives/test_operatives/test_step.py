@@ -3,16 +3,16 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.operatives.action.request_response_model import (
+from lionagi.libs.fields.action import (
     ACTION_REQUESTS_FIELD,
+    ACTION_REQUIRED_FIELD,
     ACTION_RESPONSES_FIELD,
     ActionRequestModel,
     ActionResponseModel,
 )
-from lionagi.operatives.action.utils import ACTION_REQUIRED_FIELD
-from lionagi.operatives.instruct.reason import Reason
-from lionagi.operatives.step import Step, StepModel
-from lionagi.operatives.types import ModelParams
+from lionagi.libs.fields.reason import Reason
+from lionagi.models import ModelParams
+from lionagi.protocols.operatives.step import Step, StepModel
 
 
 class SampleModel(BaseModel):

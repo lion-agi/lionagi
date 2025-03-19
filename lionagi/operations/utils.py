@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.operatives.types import Instruct
+from lionagi.libs.fields.instruct import Instruct
 from lionagi.session.session import Branch, Session
 
 

@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Implements the `MessageManager` class, a manager for collecting or
-manipulating sequences of `RoledMessage` objects, including system,
-instructions, or action requests/responses.
-"""
-
 from typing import Any, Literal
 
 from jinja2 import Template

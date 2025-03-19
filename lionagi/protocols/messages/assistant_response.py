@@ -2,10 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines `AssistantResponse`, a specialized `RoledMessage` for the AI's
-assistant replies (usually from LLM or related).
-"""
 from typing import Any
 
 from pydantic import BaseModel

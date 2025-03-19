@@ -11,16 +11,15 @@ from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
 from lionagi.libs.schema.as_readable import as_readable
-from lionagi.operatives.types import (
-    ActionManager,
-    FieldModel,
-    FuncTool,
-    Instruct,
-    ModelParams,
-    Operative,
-    Tool,
-    ToolRef,
-)
+from lionagi.models.field_model import FieldModel
+from lionagi.models.model_params import ModelParams
+from lionagi.protocols.action.manager import ActionManager
+from lionagi.protocols.action.tool import FuncTool, Tool, ToolRef
+from lionagi.protocols.operatives.operative import Operative
+
+# Forward reference for Instruct which will be imported in the methods that use it
+# to avoid circular imports
+Instruct = Any
 from lionagi.protocols.types import (
     ID,
     MESSAGE_FIELDS,

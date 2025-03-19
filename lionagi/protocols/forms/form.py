@@ -1,4 +1,6 @@
-# forms/form.py
+# Copyright (c) 2023 - 2025, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
 
@@ -80,3 +82,6 @@ class Form(BaseForm):
             "task": self.task,
             "required_outputs": self.output_fields,
         }
+
+
+# File: lionagi/protocols/forms/form.py

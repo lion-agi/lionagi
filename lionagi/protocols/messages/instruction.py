@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `Instruction` class, representing user commands or instructions
-sent to the system. Supports optional context, images, and schema requests.
-"""
-
 from typing import Any, Literal
 
 from pydantic import BaseModel, JsonValue, field_serializer

@@ -8,13 +8,12 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel
 
+from lionagi.libs.fields.instruct import Instruct
 from lionagi.libs.schema.as_readable import as_readable
 from lionagi.libs.validate.common_field_validators import (
     validate_model_to_type,
 )
-from lionagi.operatives.models.field_model import FieldModel
-from lionagi.operatives.models.model_params import ModelParams
-from lionagi.operatives.types import Instruct
+from lionagi.models import FieldModel, ModelParams
 from lionagi.service.imodel import iModel
 from lionagi.utils import copy
 

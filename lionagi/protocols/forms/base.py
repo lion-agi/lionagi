@@ -1,12 +1,15 @@
-# forms/base_form.py
+# Copyright (c) 2023 - 2025, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 from typing import Any, Literal
 
 from pydantic import ConfigDict, Field
 from pydantic_core import PydanticUndefined
 
-from lionagi.protocols.generic.element import Element
 from lionagi.utils import UNDEFINED
+
+from ..generic.element import Element
 
 
 class BaseForm(Element):
@@ -78,3 +81,6 @@ class BaseForm(Element):
                 continue
             results[f] = val
         return results
+
+
+# File: lionagi/protocols/forms/base.py

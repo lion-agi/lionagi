@@ -3,7 +3,7 @@
 import pytest
 from pydantic.fields import FieldInfo
 
-from lionagi.operatives.models.field_model import FieldModel
+from lionagi.models import FieldModel
 
 
 class TestFieldModel:

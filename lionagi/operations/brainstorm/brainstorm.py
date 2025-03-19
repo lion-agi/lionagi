@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from lionagi.operatives.instruct.instruct import (
+from lionagi.libs.fields.instruct import (
     LIST_INSTRUCT_FIELD_MODEL,
     Instruct,
     InstructResponse,

@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `System` class, representing system-level instructions or
-settings that guide the AI's behavior from a privileged role.
-"""
-
 from datetime import datetime
 from typing import Any, NoReturn
 

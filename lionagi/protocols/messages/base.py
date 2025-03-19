@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Holds foundational enumerations and types for messages, including
-roles like `SYSTEM`, `USER`, and helper functions for validating
-sender/recipient fields.
-"""
-
 from enum import Enum
 from typing import Any, TypeAlias
 

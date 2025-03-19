@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Implements a simple mailbox system for each Communicatable entity.
-Holds inbound and outbound mail, stored internally in a `Pile`.
-"""
-
 from lionagi.protocols.generic.element import IDType
 
 from ..generic.pile import Pile, Progression

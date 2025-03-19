@@ -1,9 +1,10 @@
-# forms/report.py
+# Copyright (c) 2023 - 2025, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 from pydantic import Field
 
-from lionagi.protocols.generic.pile import Pile
-
+from ..generic.pile import Pile
 from .base import BaseForm
 from .form import Form
 
@@ -43,3 +44,6 @@ class Report(BaseForm):
             for f_ in form.output_fields:
                 val = getattr(form, f_, None)
                 setattr(self, f_, val)
+
+
+# File: lionagi/protocols/forms/report.py
