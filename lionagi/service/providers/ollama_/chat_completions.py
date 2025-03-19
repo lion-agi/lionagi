@@ -53,8 +53,8 @@ class OllamaChatCompletionEndPoint(ChatCompletionEndPoint):
         check_import("openai")
         check_import("ollama")
 
-        from ollama import list, pull
-        from openai import AsyncOpenAI
+        from ollama import list, pull  # type: ignore
+        from openai import AsyncOpenAI  # type: ignore
 
         super().__init__(config)
         self.client = AsyncOpenAI(

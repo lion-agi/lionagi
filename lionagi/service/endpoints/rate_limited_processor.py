@@ -7,7 +7,7 @@ import logging
 
 from typing_extensions import Self, override
 
-from lionagi.protocols.generic.processor import Executor, Processor
+from lionagi.protocols.types import Executor, Processor
 
 from .base import APICalling
 

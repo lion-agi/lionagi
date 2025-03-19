@@ -11,8 +11,6 @@ from .service.imodel import iModel
 from .session.session import Branch, Session
 from .version import __version__
 
-LiteiModel = iModel
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -20,10 +18,7 @@ __all__ = (
     "Session",
     "Branch",
     "iModel",
-    "LiteiModel",
     "types",
-    "ops_types",
-    "op",
     "__version__",
     "BaseModel",
     "Field",
