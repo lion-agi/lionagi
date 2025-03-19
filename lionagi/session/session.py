@@ -15,6 +15,9 @@ from lionagi.protocols.types import (
     MESSAGE_FIELDS,
     ActionManager,
     Communicatable,
+    Exchange,
+    MailManager,
+    MessageFlag,
     Node,
     Pile,
     Progression,
@@ -24,10 +27,6 @@ from lionagi.protocols.types import (
     System,
     Tool,
     pile,
-    Exchange,
-    MailManager,
-    MessageFlag
-    
 )
 
 from .._errors import ItemNotFoundError
