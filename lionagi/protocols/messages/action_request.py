@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `ActionRequest` class, a specific `RoledMessage` for requesting
-a function or action call within LionAGI. It is typically accompanied by
-arguments and can later be answered by an `ActionResponse`.
-"""
-
 from collections.abc import Callable
 from typing import Any
 

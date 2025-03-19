@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines `ActionResponse`, an `RoledMessage` that answers an `ActionRequest`
-with output from a function call or action.
-"""
-
 from typing import Any
 
 from typing_extensions import override

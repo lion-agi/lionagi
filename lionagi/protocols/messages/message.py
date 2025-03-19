@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Implements the `RoledMessage` base for system, user, assistant,
-and action messages, plus Jinja2 environment and template loading.
-"""
-
 import json
 from pathlib import Path
 from typing import Any
