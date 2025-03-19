@@ -4,7 +4,7 @@
 
 from collections.abc import Callable
 from functools import partial
-from typing import TYPE_CHECKING, Any, ForwardRef
+from typing import Any
 
 import pandas as pd
 from pydantic import Field, JsonValue, model_validator
@@ -32,12 +32,8 @@ from lionagi.protocols.types import (
 from .._errors import ItemNotFoundError
 from ..service.imodel import iModel
 from ..utils import lcall
+from .branch import Branch
 
-if TYPE_CHECKING:
-    from .branch import Branch
-else:
-    # Forward reference to avoid circular import
-    Branch = ForwardRef("Branch")
 msg_pile = partial(pile, item_type={RoledMessage}, strict_type=False)
 
 
