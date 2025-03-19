@@ -10,9 +10,9 @@ from lionagi.libs.validate.common_field_validators import (
     validate_boolean_field,
     validate_nullable_jsonvalue_field,
 )
-from lionagi.utils import HashableModel, to_num
+from lionagi.models import FieldModel, HashableModel
+from lionagi.utils import to_num
 
-from ..models.field_model import FieldModel
 
 __all__ = (
     "Instruct",
@@ -134,20 +134,21 @@ class Instruct(HashableModel):
             return None
 
 
+class InstructResponse(HashableModel):
+    instruct: Instruct
+    response: Any | None = None
+
+
 INSTRUCT_FIELD = FieldModel(
     name="instruct_model",
     annotation=Instruct | None,
     default=None,
 )
 
-
-class InstructResponse(HashableModel):
-    instruct: Instruct
-    response: Any | None = None
-
-
 LIST_INSTRUCT_FIELD_MODEL = FieldModel(
     name="instruct_models",
     annotation=list[Instruct] | None,
     default=None,
 )
+
+# File: lionagi/libs/fields/instruct.py

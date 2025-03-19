@@ -2,28 +2,17 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines Pydantic models for action requests and responses. They typically map
-to conversation messages describing which function is called, with what arguments,
-and any returned output.
-"""
-
+import re
 from typing import Any
 
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from lionagi.libs.validate.common_field_validators import (
     validate_nullable_string_field,
 )
-from lionagi.utils import HashableModel, to_dict
+from lionagi.models import FieldModel, HashableModel
+from lionagi.utils import to_dict, to_json, to_list
 
-from ..models.field_model import FieldModel
-from .utils import (
-    action_requests_field_description,
-    arguments_field_description,
-    function_field_description,
-    parse_action_request,
-)
 
 __all__ = (
     "ActionRequestModel",
@@ -31,6 +20,59 @@ __all__ = (
     "ActionResponseModel",
     "ACTION_RESPONSES_FIELD",
 )
+
+
+def parse_action_request(content: str | dict) -> list[dict]:
+
+    json_blocks = []
+
+    if isinstance(content, BaseModel):
+        json_blocks = [content.model_dump()]
+
+    elif isinstance(content, str):
+        json_blocks = to_json(content, fuzzy_parse=True)
+        if not json_blocks:
+            pattern2 = r"```python\s*(.*?)\s*```"
+            _d = re.findall(pattern2, content, re.DOTALL)
+            json_blocks = [to_json(match, fuzzy_parse=True) for match in _d]
+            json_blocks = to_list(json_blocks, dropna=True)
+
+        print(json_blocks)
+
+    elif content and isinstance(content, dict):
+        json_blocks = [content]
+
+    if json_blocks and not isinstance(json_blocks, list):
+        json_blocks = [json_blocks]
+
+    out = []
+
+    for i in json_blocks:
+        j = {}
+        if isinstance(i, dict):
+            if "function" in i and isinstance(i["function"], dict):
+                if "name" in i["function"]:
+                    i["function"] = i["function"]["name"]
+            for k, v in i.items():
+                k = (
+                    k.replace("action_", "")
+                    .replace("recipient_", "")
+                    .replace("s", "")
+                )
+                if k in ["name", "function", "recipient"]:
+                    j["function"] = v
+                elif k in ["parameter", "argument", "arg", "param"]:
+                    j["arguments"] = to_dict(
+                        v, str_type="json", fuzzy_parse=True, suppress=True
+                    )
+            if (
+                j
+                and all(key in j for key in ["function", "arguments"])
+                and j["arguments"]
+            ):
+                out.append(j)
+
+    return out
 
 
 class ActionRequestModel(HashableModel):
@@ -42,13 +84,21 @@ class ActionRequestModel(HashableModel):
     function: str | None = Field(
         None,
         title="Function",
-        description=function_field_description,
+        description=(
+            "Name of the function to call from the provided `tool_schemas`. "
+            "If no `tool_schemas` exist, set to None or leave blank. "
+            "Never invent new function names outside what's given."
+        ),
         examples=["multiply", "create_user"],
     )
     arguments: dict[str, Any] | None = Field(
         None,
         title="Arguments",
-        description=arguments_field_description,
+        description=(
+            "Dictionary of arguments for the chosen function. "
+            "Use only argument names/types defined in `tool_schemas`. "
+            "Never introduce extra argument names."
+        ),
     )
 
     @field_validator("arguments", mode="before")
@@ -95,7 +145,11 @@ ACTION_REQUESTS_FIELD = FieldModel(
     annotation=list[ActionRequestModel],
     default_factory=list,
     title="Actions",
-    description=action_requests_field_description,
+    description=(
+        "List of actions to be executed when `action_required` is true. "
+        "Each action must align with the available `tool_schemas`. "
+        "Leave empty if no actions are needed."
+    ),
 )
 
 
@@ -118,4 +172,4 @@ ACTION_RESPONSES_FIELD = FieldModel(
     description="**do not fill**",
 )
 
-# File: lionagi/operatives/action/request_response_model.py
+# File: lionagi/libs/fields/action.py
