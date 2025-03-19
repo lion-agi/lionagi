@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `MailManager` class, which coordinates mail operations
-across multiple sources in a more abstract or high-level manner.
-"""
-
 import asyncio
 from collections import deque
 from typing import Any

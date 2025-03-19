@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Defines the `Mail` class, which is a `Sendable` element representing
-a single piece of mail, carrying a `Package` between a sender
-and recipient.
-"""
-
 from pydantic import field_validator
 
 from .._concepts import Sendable
