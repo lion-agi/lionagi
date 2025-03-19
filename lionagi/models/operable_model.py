@@ -15,9 +15,10 @@ from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 from typing_extensions import Self, override
 
-from lionagi.utils import UNDEFINED, HashableModel, is_same_dtype
+from lionagi.utils import UNDEFINED, is_same_dtype
 
 from .field_model import FieldModel
+from .hashable_model import HashableModel
 from .model_params import ModelParams
 
 FieldName = TypeVar("FieldName", bound=str)

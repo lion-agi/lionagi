@@ -4,7 +4,7 @@
 
 from pydantic import ConfigDict
 
-from lionagi.utils import HashableModel
+from .hashable_model import HashableModel
 
 __all__ = ("SchemaModel",)
 
