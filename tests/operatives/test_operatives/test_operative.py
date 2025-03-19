@@ -3,8 +3,7 @@
 import pytest
 from pydantic import BaseModel, Field
 
-from lionagi.operatives.models.field_model import FieldModel
-from lionagi.operatives.models.model_params import ModelParams
+from lionagi.models import FieldModel, ModelParams
 from lionagi.protocols.operatives.operative import Operative
 
 

@@ -3,8 +3,7 @@ from typing import Any
 
 import pytest
 
-from lionagi.operatives.types import FunctionCalling, Tool
-from lionagi.protocols.types import EventStatus
+from lionagi.protocols.types import EventStatus, FunctionCalling, Tool
 
 
 # Helper functions - not test cases

@@ -15,7 +15,7 @@ from pydantic import (
     model_validator,
 )
 
-from lionagi.operatives.action.tool import Tool
+from lionagi.protocols.action.tool import Tool
 from lionagi.protocols.graph.node import Node
 
 

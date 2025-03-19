@@ -16,8 +16,6 @@ from lionagi.libs.fields.reason import REASON_FIELD, Reason
 from lionagi.models import FieldModel, ModelParams
 from lionagi.protocols.operatives.operative import Operative
 
-from ..action import ACTION_REQUIRED_FIELD
-
 
 class StepModel(BaseModel):
     """Model representing a single operational step with optional reasoning and actions."""

@@ -7,8 +7,6 @@ import logging
 from pydantic import BaseModel, Field
 
 from . import _types as types
-from .operations import types as op
-from .operatives import types as ops_types  # deprecated
 from .service.imodel import iModel
 from .session.session import Branch, Session
 from .version import __version__

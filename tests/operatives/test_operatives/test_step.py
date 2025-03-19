@@ -5,13 +5,13 @@ from pydantic import BaseModel
 
 from lionagi.libs.fields.action import (
     ACTION_REQUESTS_FIELD,
+    ACTION_REQUIRED_FIELD,
     ACTION_RESPONSES_FIELD,
     ActionRequestModel,
     ActionResponseModel,
 )
 from lionagi.libs.fields.reason import Reason
-from lionagi.operatives.action.utils import ACTION_REQUIRED_FIELD
-from lionagi.operatives.types import ModelParams
+from lionagi.models import ModelParams
 from lionagi.protocols.operatives.step import Step, StepModel
 
 

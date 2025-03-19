@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import Field
 
-from lionagi.operatives.models.schema_model import SchemaModel
+from lionagi.models import SchemaModel
 from lionagi.utils import UNDEFINED
 
 

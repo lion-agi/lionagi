@@ -4,18 +4,16 @@
 
 from collections.abc import Callable
 from functools import partial
+from typing import TYPE_CHECKING, Any, ForwardRef
 
 import pandas as pd
 from pydantic import Field, JsonValue, model_validator
 from typing_extensions import Self
 
-from lionagi.operatives.types import ActionManager, Tool
-from lionagi.protocols.mail.exchange import Exchange
-from lionagi.protocols.mail.manager import MailManager
-from lionagi.protocols.messages.base import MessageFlag
 from lionagi.protocols.types import (
     ID,
     MESSAGE_FIELDS,
+    ActionManager,
     Communicatable,
     Node,
     Pile,
@@ -24,14 +22,23 @@ from lionagi.protocols.types import (
     RoledMessage,
     SenderRecipient,
     System,
+    Tool,
     pile,
+    Exchange,
+    MailManager,
+    MessageFlag
+    
 )
 
 from .._errors import ItemNotFoundError
 from ..service.imodel import iModel
 from ..utils import lcall
-from .branch import Branch
 
+if TYPE_CHECKING:
+    from .branch import Branch
+else:
+    # Forward reference to avoid circular import
+    Branch = ForwardRef("Branch")
 msg_pile = partial(pile, item_type={RoledMessage}, strict_type=False)
 
 
@@ -46,13 +53,21 @@ class Session(Node, Communicatable, Relational):
         mail_manager (MailManager | None): Manages mail operations.
     """
 
-    branches: Pile[Branch] = Field(default_factory=pile)
-    default_branch: Branch = Field(default_factory=Branch, exclude=True)
+    branches: Pile[Any] = Field(default_factory=pile)
+    default_branch: Any = Field(default=None, exclude=True)
     mail_transfer: Exchange = Field(default_factory=Exchange)
     mail_manager: MailManager = Field(
         default_factory=MailManager, exclude=True
     )
     name: str = Field(default="Session")
+
+    @model_validator(mode="after")
+    def _initialize_default_branch(self) -> Self:
+        if self.default_branch is None:
+            from .branch import Branch
+
+            self.default_branch = Branch()
+        return self
 
     @model_validator(mode="after")
     def _add_mail_sources(self) -> Self:
@@ -89,7 +104,9 @@ class Session(Node, Communicatable, Relational):
         kwargs["tools"] = tools
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
 
-        branch = Branch(**kwargs)
+        from .branch import Branch
+
+        branch = Branch(**kwargs)  # type: ignore
 
         self.branches.include(branch)
         self.mail_manager.add_sources(branch)

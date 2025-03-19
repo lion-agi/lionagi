@@ -10,6 +10,8 @@ from lionagi.utils import to_num
 __all__ = (
     "Reason",
     "REASON_FIELD",
+    "CONFIDENCE_SCORE_FIELD",
+    "validate_confidence_score",
 )
 
 
@@ -33,16 +35,29 @@ class Reason(BaseModel):
 
     @field_validator("confidence_score", mode="before")
     def _validate_confidence(cls, v):
-        try:
-            return to_num(
-                v,
-                upper_bound=1,
-                lower_bound=0,
-                num_type=float,
-                precision=3,
-            )
-        except Exception:
-            return -1
+        return validate_confidence_score(cls, v)
+
+
+def validate_confidence_score(cls, v):
+    try:
+        return to_num(
+            v,
+            upper_bound=1,
+            lower_bound=0,
+            num_type=float,
+            precision=3,
+        )
+    except Exception:
+        return -1
+
+
+CONFIDENCE_SCORE_FIELD = FieldModel(
+    name="confidence_score",
+    annotation=float | None,
+    default=None,
+    validator=validate_confidence_score,
+    validator_kwargs={"mode": "before"},
+)
 
 
 REASON_FIELD = FieldModel(

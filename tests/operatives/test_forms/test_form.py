@@ -3,7 +3,7 @@
 import pytest
 from pydantic import Field
 
-from lionagi.operatives.forms.form import Form
+from lionagi.protocols.types import Form
 from lionagi.utils import UNDEFINED
 
 

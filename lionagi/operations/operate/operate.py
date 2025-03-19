@@ -7,15 +7,16 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, JsonValue
 
-from lionagi.operatives.types import (
-    FieldModel,
-    Instruct,
-    ModelParams,
+from lionagi.libs.fields.instruct import Instruct
+from lionagi.models import FieldModel, ModelParams
+from lionagi.protocols.types import (
+    Instruction,
     Operative,
+    Progression,
+    SenderRecipient,
     Step,
     ToolRef,
 )
-from lionagi.protocols.types import Instruction, Progression, SenderRecipient
 from lionagi.service.imodel import iModel
 
 if TYPE_CHECKING:

@@ -2,7 +2,7 @@
 
 import pytest
 
-from lionagi.operatives.forms.flow import FlowDefinition, FlowStep
+from lionagi.protocols.types import FlowDefinition, FlowStep
 
 
 def test_flow_step_initialization():
