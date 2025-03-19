@@ -5,6 +5,11 @@ from pydantic import BaseModel, Field, field_validator
 from lionagi.models import FieldModel
 
 
+class Source(BaseModel):
+    title: str | None = None
+    url: str | None = None
+
+
 class File(BaseModel):
     """
     Represents a generic file with an optional name, content, and brief description.
@@ -111,6 +116,13 @@ class Documentation(File):
             "# Getting Started\\nThis guide walks you through ...",
             "# API Reference\\n## Session Class\\n...",
         ],
+    )
+    sources: list[Source] | None = Field(
+        default=None,
+        description=(
+            "List of sources or references used to create this documentation. "
+            "Each source should include a title and URL to the original content."
+        ),
     )
 
 
