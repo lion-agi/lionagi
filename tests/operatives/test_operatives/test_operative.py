@@ -1,7 +1,7 @@
 """Tests for the operative module."""
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from lionagi.models import FieldModel, ModelParams
 from lionagi.protocols.operatives.operative import Operative
