@@ -2,12 +2,13 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_validator
 
-from lionagi.models import FieldModel
+from .base import Source
 
-
-class Source(BaseModel):
-    title: str | None = None
-    url: str | None = None
+__all__ = (
+    "File",
+    "CodeFile",
+    "Documentation",
+)
 
 
 class File(BaseModel):
@@ -126,22 +127,4 @@ class Documentation(File):
     )
 
 
-FILE_FIELD = FieldModel(
-    name="file",
-    annotation=File | None,
-    default=None,
-)
-
-CODE_FILE_FIELD = FieldModel(
-    name="code_file",
-    annotation=CodeFile | None,
-    default=None,
-)
-
-DOCUMENTATION_FIELD = FieldModel(
-    name="documentation",
-    annotation=Documentation | None,
-    default=None,
-)
-
-# File: lionagi/libs/fields/file.py
+# File: lionagi/fields/file.py
