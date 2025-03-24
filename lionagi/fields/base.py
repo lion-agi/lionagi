@@ -1,8 +1,8 @@
 from enum import Enum
 
 from pydantic import Field, HttpUrl
-from lionagi.models import HashableModel
 
+from lionagi.models import HashableModel
 
 __all__ = (
     "Source",
@@ -25,7 +25,7 @@ class Source(HashableModel):
 
     title: str = Field(
         ...,
-        description="Short label or title for the reference (e.g. 'Pydantic Docs', 'RFC 3986')."
+        description="Short label or title for the reference (e.g. 'Pydantic Docs', 'RFC 3986').",
     )
 
     url: str | HttpUrl | None = Field(

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from pydantic import Field, field_validator
 
-from .base import Source, HashableModel
+from .base import HashableModel, Source
 
 __all__ = (
     "File",
