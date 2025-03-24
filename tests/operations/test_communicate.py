@@ -72,7 +72,7 @@ async def test_communicate_with_model_validation():
 
     parsed = await branch.communicate(
         instruction="Send typed output",
-        request_model=MySimpleModel,
+        response_format=MySimpleModel,
     )
     # We'll assume your code sets parsed.data = "mocked_response_string"
     assert parsed.data == "mocked_response_string"

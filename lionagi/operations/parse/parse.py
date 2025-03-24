@@ -57,7 +57,7 @@ async def parse(
             response_format=response_format or request_type,
             sender=branch.user,
             recipient=branch.id,
-            imodel=branch.parse_model,
+            chat_model=branch.parse_model,
             return_ins_res_message=True,
         )
         if operative is not None:
