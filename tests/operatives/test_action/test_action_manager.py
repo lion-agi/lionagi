@@ -1,6 +1,6 @@
 import pytest
 
-from lionagi.libs.fields.action import ActionRequestModel
+from lionagi.fields.action import ActionRequestModel
 from lionagi.protocols.generic.event import EventStatus
 from lionagi.protocols.types import (
     ActionManager,
