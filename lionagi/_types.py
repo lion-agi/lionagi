@@ -1,2 +1,2 @@
-from .protocols.types import *
 from .fields import *
+from .protocols.types import *
