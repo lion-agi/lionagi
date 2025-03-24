@@ -12,7 +12,6 @@ from lionagi.protocols.types import (
     Instruction,
     LogManagerConfig,
     MessageRole,
-    Operative,
     PackageCategory,
     RoledMessage,
 )
@@ -124,7 +123,7 @@ async def test_communicate_with_request_model(branch_with_mock_imodel: Branch):
 
     result = await branch_with_mock_imodel.communicate(
         instruction="We want typed output",
-        request_model=MyModel,
+        response_format=MyModel,
     )
     assert result.foo == "mocked_response"
     # user + assistant stored
@@ -170,22 +169,6 @@ async def test_operate_with_validation(branch_with_mock_imodel: Branch):
     # user + assistant stored
     msgs = branch_with_mock_imodel.messages
     assert len(msgs) == 2
-
-
-@pytest.mark.asyncio
-async def test_operate_return_operative(branch_with_mock_imodel: Branch):
-    """
-    If return_operative=True, we get the entire Operative instead of the final model/string.
-    """
-    final = await branch_with_mock_imodel.operate(
-        instruction="Testing return_operative",
-        invoke_actions=False,
-        skip_validation=True,
-        return_operative=True,
-    )
-    assert isinstance(final, Operative)
-    # user + assistant stored
-    assert len(branch_with_mock_imodel.messages) == 2
 
 
 @pytest.mark.asyncio
