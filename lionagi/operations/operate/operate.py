@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, JsonValue
 
-from lionagi.libs.fields.instruct import Instruct
+from lionagi.fields.instruct import Instruct
 from lionagi.models import FieldModel, ModelParams
 from lionagi.protocols.types import (
     Instruction,
