@@ -4,11 +4,11 @@
 
 from typing import Any
 
+from lionagi.fields.action import ActionRequestModel
 from lionagi.protocols._concepts import Manager
 from lionagi.protocols.messages.action_request import ActionRequest
 from lionagi.utils import to_list
 
-from ...libs.fields.action import ActionRequestModel
 from .function_calling import FunctionCalling
 from .tool import FuncTool, FuncToolRef, Tool, ToolRef
 
