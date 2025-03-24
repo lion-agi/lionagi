@@ -2,16 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, JsonValue
 
 from lionagi.fields.instruct import Instruct
-from lionagi.models import FieldModel, ModelParams
+from lionagi.models import FieldModel
 from lionagi.protocols.types import (
     Instruction,
-    Operative,
     Progression,
     SenderRecipient,
     Step,
@@ -33,7 +31,6 @@ async def operate(
     sender: SenderRecipient = None,
     recipient: SenderRecipient = None,
     progression: Progression = None,
-    imodel: iModel = None,  # deprecated, alias of chat_model
     chat_model: iModel = None,
     invoke_actions: bool = True,
     tool_schemas: list[dict] = None,
@@ -42,9 +39,7 @@ async def operate(
     parse_model: iModel = None,
     skip_validation: bool = False,
     tools: ToolRef = None,
-    operative: Operative = None,
     response_format: type[BaseModel] = None,  # alias of operative.request_type
-    return_operative: bool = False,
     actions: bool = False,
     reason: bool = False,
     action_kwargs: dict = None,
@@ -55,37 +50,15 @@ async def operate(
     verbose_action: bool = False,
     field_models: list[FieldModel] = None,
     exclude_fields: list | dict | None = None,
-    request_params: ModelParams = None,
-    request_param_kwargs: dict = None,
-    response_params: ModelParams = None,
-    response_param_kwargs: dict = None,
     handle_validation: Literal[
         "raise", "return_value", "return_none"
     ] = "return_value",
-    operative_model: type[BaseModel] = None,
-    request_model: type[BaseModel] = None,
     include_token_usage_to_model: bool = False,
     **kwargs,
 ) -> list | BaseModel | None | dict | str:
-    if operative_model:
-        logging.warning(
-            "`operative_model` is deprecated. Use `response_format` instead."
-        )
-    if (
-        (operative_model and response_format)
-        or (operative_model and request_model)
-        or (response_format and request_model)
-    ):
-        raise ValueError(
-            "Cannot specify both `operative_model` and `response_format` (or `request_model`) "
-            "as they are aliases of each other."
-        )
-
-    # Use the final chosen format
-    response_format = response_format or operative_model or request_model
 
     # Decide which chat model to use
-    chat_model = chat_model or imodel or branch.chat_model
+    chat_model = chat_model or branch.chat_model
     parse_model = parse_model or chat_model
 
     # Convert dict-based instructions to Instruct if needed
@@ -109,13 +82,11 @@ async def operate(
 
     # 1) Create or update the Operative
     operative = Step.request_operative(
-        request_params=request_params,
         reason=instruct.reason,
         actions=instruct.actions,
         exclude_fields=exclude_fields,
         base_type=response_format,
         field_models=field_models,
-        **(request_param_kwargs or {}),
     )
 
     # If the instruction signals actions, ensure tools are provided
@@ -135,7 +106,7 @@ async def operate(
         recipient=recipient,
         response_format=operative.request_type,
         progression=progression,
-        imodel=chat_model,  # or the override
+        chat_model=chat_model,  # or the override
         images=images,
         image_detail=image_detail,
         tool_schemas=tool_schemas,
@@ -151,7 +122,7 @@ async def operate(
 
     # 4) Possibly skip validation
     if skip_validation:
-        return operative if return_operative else operative.response_str_dict
+        return operative.response_str_dict
 
     # 5) Parse or validate the response into the operative's model
     response_model = operative.update_response_model(res.response)
@@ -181,7 +152,7 @@ async def operate(
 
     # 6) If no tool invocation is needed, return result or operative
     if not invoke_actions:
-        return operative if return_operative else operative.response_model
+        return operative.response_model
 
     # 7) If the model indicates an action is required, call the tools
     if (
@@ -204,11 +175,9 @@ async def operate(
         )
         # Possibly refine the operative with the tool outputs
         operative = Step.respond_operative(
-            response_params=response_params,
             operative=operative,
             additional_data={"action_responses": action_response_models},
-            **(response_param_kwargs or {}),
         )
 
     # Return final result or the full operative
-    return operative if return_operative else operative.response_model
+    return operative.response_model

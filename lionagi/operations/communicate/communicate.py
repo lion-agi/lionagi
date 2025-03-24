@@ -22,10 +22,8 @@ async def communicate(
     sender=None,
     recipient=None,
     progression=None,
-    request_model=None,
     response_format=None,
     request_fields=None,
-    imodel=None,
     chat_model=None,
     parse_model=None,
     skip_validation=False,
@@ -34,28 +32,10 @@ async def communicate(
     num_parse_retries=3,
     fuzzy_match_kwargs=None,
     clear_messages=False,
-    operative_model=None,
     include_token_usage_to_model: bool = False,
     **kwargs,
 ):
-    if operative_model:
-        logging.warning(
-            "operative_model is deprecated. Use response_format instead."
-        )
-    if (
-        (operative_model and response_format)
-        or (operative_model and request_model)
-        or (response_format and request_model)
-    ):
-        raise ValueError(
-            "Cannot specify both operative_model and response_format"
-            "or operative_model and request_model as they are aliases"
-            "for the same parameter."
-        )
-
-    response_format = response_format or operative_model or request_model
-
-    imodel = imodel or chat_model or branch.chat_model
+    chat_model = chat_model or branch.chat_model
     parse_model = parse_model or branch.parse_model
 
     if clear_messages:
@@ -76,7 +56,7 @@ async def communicate(
         recipient=recipient,
         response_format=response_format,
         progression=progression,
-        imodel=imodel,
+        chat_model=chat_model,
         images=images,
         image_detail=image_detail,
         plain_content=plain_content,

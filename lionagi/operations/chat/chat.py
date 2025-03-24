@@ -30,7 +30,7 @@ async def chat(
     request_fields=None,
     response_format: type[BaseModel] = None,
     progression=None,
-    imodel: iModel = None,
+    chat_model: iModel = None,
     tool_schemas=None,
     images: list = None,
     image_detail: Literal["low", "high", "auto"] = None,
@@ -122,8 +122,8 @@ async def chat(
                     _msgs.append(i)
         messages = _msgs
 
-    imodel = imodel or branch.chat_model
-    if branch.msgs.system and imodel.sequential_exchange:
+    chat_model = chat_model or branch.chat_model
+    if branch.msgs.system and chat_model.sequential_exchange:
         messages = [msg for msg in messages if msg.role != "system"]
         first_instruction = None
 
@@ -150,13 +150,13 @@ async def chat(
         messages.append(use_ins or ins)
 
     kwargs["messages"] = [i.chat_msg for i in messages]
-    imodel = imodel or branch.chat_model
+    chat_model = chat_model or branch.chat_model
 
-    meth = imodel.invoke
+    meth = chat_model.invoke
     if "stream" not in kwargs or not kwargs["stream"]:
         kwargs["include_token_usage_to_model"] = include_token_usage_to_model
     else:
-        meth = imodel.stream
+        meth = chat_model.stream
 
     api_call = await meth(**kwargs)
     branch._log_manager.log(Log.create(api_call))
