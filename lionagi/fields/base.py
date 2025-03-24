@@ -1,6 +1,8 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import Field, HttpUrl
+from lionagi.models import HashableModel
+
 
 __all__ = (
     "Source",
@@ -12,7 +14,7 @@ __all__ = (
 )
 
 
-class Source(BaseModel):
+class Source(HashableModel):
     """
     Represents a citation or external source, such as:
      - a website,
@@ -22,6 +24,7 @@ class Source(BaseModel):
     """
 
     title: str = Field(
+        ...,
         description="Short label or title for the reference (e.g. 'Pydantic Docs', 'RFC 3986')."
     )
 
@@ -43,7 +46,7 @@ class SnippetType(str, Enum):
     CODE = "code"
 
 
-class TextSnippet(BaseModel):
+class TextSnippet(HashableModel):
     """
     Specialized snippet for textual/prose content.
     """
@@ -62,7 +65,7 @@ class TextSnippet(BaseModel):
     )
 
 
-class CodeSnippet(BaseModel):
+class CodeSnippet(HashableModel):
     """
     Specialized snippet for source code or command-line examples.
     """
@@ -81,7 +84,7 @@ class CodeSnippet(BaseModel):
     )
 
 
-class Section(BaseModel):
+class Section(HashableModel):
     """
     A single section of a document or article. Each section has:
      - A title
@@ -112,7 +115,7 @@ class Section(BaseModel):
     )
 
 
-class OutlineItem(BaseModel):
+class OutlineItem(HashableModel):
     """
     Represents a single outline item, which could become a full section later.
     """
@@ -129,7 +132,7 @@ class OutlineItem(BaseModel):
     )
 
 
-class Outline(BaseModel):
+class Outline(HashableModel):
     """
     A top-level outline for a document or article.
     Usually used in early planning stages.

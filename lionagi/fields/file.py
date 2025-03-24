@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
-from .base import Source
+from .base import Source, HashableModel
 
 __all__ = (
     "File",
@@ -11,7 +11,7 @@ __all__ = (
 )
 
 
-class File(BaseModel):
+class File(HashableModel):
     """
     Represents a generic file with an optional name, content, and brief description.
     Useful for capturing and validating metadata about any kind of file within a project.
