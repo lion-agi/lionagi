@@ -6,6 +6,8 @@ import asyncio
 import contextlib
 import copy as _copy
 import functools
+import importlib.metadata
+import importlib.util
 import json
 import logging
 import re
@@ -2367,3 +2369,215 @@ def run_package_manager_command(
         check=True,
         capture_output=True,
     )
+
+
+def check_import(
+    package_name: str,
+    module_name: str | None = None,
+    import_name: str | None = None,
+    pip_name: str | None = None,
+    attempt_install: bool = True,
+    error_message: str = "",
+):
+    """
+    Check if a package is installed, attempt to install if not.
+
+    Args:
+        package_name: The name of the package to check.
+        module_name: The specific module to import (if any).
+        import_name: The specific name to import from the module (if any).
+        pip_name: The name to use for pip installation (if different).
+        attempt_install: Whether to attempt installation if not found.
+        error_message: Custom error message to use if package not found.
+
+    Raises:
+        ImportError: If the package is not found and not installed.
+        ValueError: If the import fails after installation attempt.
+    """
+    if not is_import_installed(package_name):
+        if attempt_install:
+            logging.info(
+                f"Package {package_name} not found. Attempting " "to install.",
+            )
+            try:
+                return install_import(
+                    package_name=package_name,
+                    module_name=module_name,
+                    import_name=import_name,
+                    pip_name=pip_name,
+                )
+            except ImportError as e:
+                raise ValueError(
+                    f"Failed to install {package_name}: {e}"
+                ) from e
+        else:
+            logging.info(
+                f"Package {package_name} not found. {error_message}",
+            )
+            raise ImportError(
+                f"Package {package_name} not found. {error_message}",
+            )
+
+    return import_module(
+        package_name=package_name,
+        module_name=module_name,
+        import_name=import_name,
+    )
+
+
+def import_module(
+    package_name: str,
+    module_name: str = None,
+    import_name: str | list = None,
+) -> Any:
+    """
+    Import a module by its path.
+
+    Args:
+        module_path: The path of the module to import.
+
+    Returns:
+        The imported module.
+
+    Raises:
+        ImportError: If the module cannot be imported.
+    """
+    try:
+        full_import_path = (
+            f"{package_name}.{module_name}" if module_name else package_name
+        )
+
+        if import_name:
+            import_name = (
+                [import_name]
+                if not isinstance(import_name, list)
+                else import_name
+            )
+            a = __import__(
+                full_import_path,
+                fromlist=import_name,
+            )
+            if len(import_name) == 1:
+                return getattr(a, import_name[0])
+            return [getattr(a, name) for name in import_name]
+        else:
+            return __import__(full_import_path)
+
+    except ImportError as e:
+        raise ImportError(
+            f"Failed to import module {full_import_path}: {e}"
+        ) from e
+
+
+def install_import(
+    package_name: str,
+    module_name: str | None = None,
+    import_name: str | None = None,
+    pip_name: str | None = None,
+):
+    """
+    Attempt to import a package, installing it if not found.
+
+    Args:
+        package_name: The name of the package to import.
+        module_name: The specific module to import (if any).
+        import_name: The specific name to import from the module (if any).
+        pip_name: The name to use for pip installation (if different).
+
+    Raises:
+        ImportError: If the package cannot be imported or installed.
+        subprocess.CalledProcessError: If pip installation fails.
+    """
+    pip_name = pip_name or package_name
+
+    try:
+        return import_module(
+            package_name=package_name,
+            module_name=module_name,
+            import_name=import_name,
+        )
+    except ImportError:
+        logging.info(f"Installing {pip_name}...")
+        try:
+            run_package_manager_command(["install", pip_name])
+            return import_module(
+                package_name=package_name,
+                module_name=module_name,
+                import_name=import_name,
+            )
+        except subprocess.CalledProcessError as e:
+            raise ImportError(f"Failed to install {pip_name}: {e}") from e
+        except ImportError as e:
+            raise ImportError(
+                f"Failed to import {pip_name} after installation: {e}"
+            ) from e
+
+
+def is_import_installed(package_name: str) -> bool:
+    """
+    Check if a package is installed.
+
+    Args:
+        package_name: The name of the package to check.
+
+    Returns:
+        bool: True if the package is installed, False otherwise.
+    """
+    return importlib.util.find_spec(package_name) is not None
+
+
+def read_image_to_base64(image_path: str | Path) -> str:
+    import base64
+
+    import cv2
+
+    image_path = str(image_path)
+    image = cv2.imread(image_path, cv2.COLOR_BGR2RGB)
+
+    if image is None:
+        raise ValueError(f"Could not read image from path: {image_path}")
+
+    file_extension = "." + image_path.split(".")[-1]
+
+    success, buffer = cv2.imencode(file_extension, image)
+    if not success:
+        raise ValueError(f"Could not encode image to {file_extension} format.")
+    encoded_image = base64.b64encode(buffer).decode("utf-8")
+    return encoded_image
+
+
+def pdf_to_images(
+    pdf_path: str, output_folder: str, dpi: int = 300, fmt: str = "jpeg"
+) -> list:
+    """
+    Convert a PDF file into images, one image per page.
+
+    Args:
+        pdf_path (str): Path to the input PDF file.
+        output_folder (str): Directory to save the output images.
+        dpi (int): Dots per inch (resolution) for conversion (default: 300).
+        fmt (str): Image format (default: 'jpeg'). Use 'png' if preferred.
+
+    Returns:
+        list: A list of file paths for the saved images.
+    """
+    import os
+
+    convert_from_path = check_import(
+        "pdf2image", import_name="convert_from_path"
+    )
+
+    # Ensure the output folder exists
+    os.makedirs(output_folder, exist_ok=True)
+
+    # Convert PDF to a list of PIL Image objects
+    images = convert_from_path(pdf_path, dpi=dpi)
+
+    saved_paths = []
+    for i, image in enumerate(images):
+        # Construct the output file name
+        image_file = os.path.join(output_folder, f"page_{i+1}.{fmt}")
+        image.save(image_file, fmt.upper())
+        saved_paths.append(image_file)
+
+    return saved_paths
