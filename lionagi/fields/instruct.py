@@ -16,8 +16,6 @@ from lionagi.utils import to_num
 __all__ = (
     "Instruct",
     "InstructResponse",
-    "INSTRUCT_FIELD",
-    "LIST_INSTRUCT_FIELD",
 )
 
 
@@ -150,4 +148,4 @@ LIST_INSTRUCT_FIELD_MODEL = FieldModel(
     default=None,
 )
 
-# File: lionagi/libs/fields/instruct.py
+# File: lionagi/fields/instruct.py

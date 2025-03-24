@@ -7,12 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 from lionagi.models import FieldModel
 from lionagi.utils import to_num
 
-__all__ = (
-    "Reason",
-    "REASON_FIELD",
-    "CONFIDENCE_SCORE_FIELD",
-    "validate_confidence_score",
-)
+__all__ = ("Reason",)
 
 
 class Reason(BaseModel):
@@ -51,15 +46,6 @@ def validate_confidence_score(cls, v):
         return -1
 
 
-CONFIDENCE_SCORE_FIELD = FieldModel(
-    name="confidence_score",
-    annotation=float | None,
-    default=None,
-    validator=validate_confidence_score,
-    validator_kwargs={"mode": "before"},
-)
-
-
 REASON_FIELD = FieldModel(
     name="reason",
     annotation=Reason | None,
@@ -67,4 +53,4 @@ REASON_FIELD = FieldModel(
     description="**Provide a concise reason for the decision made.**",
 )
 
-# File: lionagi/libs/fields/reason.py
+# File: lionagi/fields/reason.py
