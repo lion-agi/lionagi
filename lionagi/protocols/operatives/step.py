@@ -5,14 +5,14 @@
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 
-from lionagi.libs.fields.action import (
+from lionagi.fields.action import (
     ACTION_REQUESTS_FIELD,
     ACTION_REQUIRED_FIELD,
     ACTION_RESPONSES_FIELD,
     ActionRequestModel,
     ActionResponseModel,
 )
-from lionagi.libs.fields.reason import REASON_FIELD, Reason
+from lionagi.fields.reason import REASON_FIELD, Reason
 from lionagi.models import FieldModel, ModelParams
 from lionagi.protocols.operatives.operative import Operative
 
