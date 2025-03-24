@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel
 
-from lionagi.libs.fields.instruct import Instruct
+from lionagi.fields.instruct import Instruct
 from lionagi.libs.schema.as_readable import as_readable
 from lionagi.libs.validate.common_field_validators import (
     validate_model_to_type,

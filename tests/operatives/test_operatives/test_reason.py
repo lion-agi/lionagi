@@ -1,12 +1,9 @@
 """Tests for the reason module."""
 
-from lionagi.libs.fields.reason import (
-    CONFIDENCE_SCORE_FIELD,
-    REASON_FIELD,
+from lionagi.fields.reason import (
     Reason,
     validate_confidence_score,
 )
-from lionagi.utils import UNDEFINED
 
 
 class TestValidateConfidenceScore:
@@ -103,20 +100,3 @@ class TestReason:
         assert model.title is None
         assert model.content is None
         assert model.confidence_score == 0.75
-
-
-class TestFieldModels:
-    def test_confidence_score_field(self):
-        """Test CONFIDENCE_SCORE_FIELD configuration."""
-        assert CONFIDENCE_SCORE_FIELD.name == "confidence_score"
-        assert CONFIDENCE_SCORE_FIELD.annotation == (float | None)
-        assert CONFIDENCE_SCORE_FIELD.default is None
-        assert CONFIDENCE_SCORE_FIELD.validator == validate_confidence_score
-        assert CONFIDENCE_SCORE_FIELD.validator_kwargs == {"mode": "before"}
-
-    def test_reason_field(self):
-        """Test REASON_FIELD configuration."""
-        assert REASON_FIELD.name == "reason"
-        assert REASON_FIELD.annotation == Reason | None
-        assert REASON_FIELD.default is UNDEFINED
-        assert REASON_FIELD.title == "Reason"

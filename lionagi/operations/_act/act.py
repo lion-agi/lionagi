@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from lionagi.libs.fields.action import ActionResponseModel
+from lionagi.fields.action import ActionResponseModel
 from lionagi.protocols.types import ActionRequest, Log
 
 if TYPE_CHECKING:

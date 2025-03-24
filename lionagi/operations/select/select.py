@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
-from lionagi.libs.fields.instruct import Instruct
+from lionagi.fields.instruct import Instruct
 
 from .utils import SelectionModel
 
