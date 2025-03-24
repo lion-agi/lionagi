@@ -4,25 +4,20 @@
 
 from collections.abc import AsyncGenerator
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 import pandas as pd
 from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
+from lionagi.fields import Instruct
 from lionagi.libs.schema.as_readable import as_readable
 from lionagi.models.field_model import FieldModel
-from lionagi.models.model_params import ModelParams
-from lionagi.protocols.action.manager import ActionManager
 from lionagi.protocols.action.tool import FuncTool, Tool, ToolRef
-from lionagi.protocols.operatives.operative import Operative
-
-# Forward reference for Instruct which will be imported in the methods that use it
-# to avoid circular imports
-Instruct = Any
 from lionagi.protocols.types import (
     ID,
     MESSAGE_FIELDS,
+    ActionManager,
     ActionRequest,
     ActionResponse,
     AssistantResponse,
@@ -37,6 +32,7 @@ from lionagi.protocols.types import (
     Mailbox,
     MessageManager,
     MessageRole,
+    Operative,
     Package,
     PackageCategory,
     Pile,
@@ -53,10 +49,6 @@ from lionagi.tools.base import LionTool
 from lionagi.utils import UNDEFINED, alcall, bcall, copy
 
 from .prompts import LION_SYSTEM_MESSAGE
-
-if TYPE_CHECKING:
-    # Forward references for type checking (e.g., in operations or extended modules)
-    from lionagi.session.branch import Branch
 
 __all__ = ("Branch",)
 
@@ -907,7 +899,6 @@ class Branch(Element, Communicatable, Relational):
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
         progression: Progression = None,
-        imodel: iModel = None,  # deprecated, alias of chat_model
         chat_model: iModel = None,
         invoke_actions: bool = True,
         tool_schemas: list[dict] = None,
@@ -920,7 +911,6 @@ class Branch(Element, Communicatable, Relational):
         response_format: type[
             BaseModel
         ] = None,  # alias of operative.request_type
-        return_operative: bool = False,
         actions: bool = False,
         reason: bool = False,
         action_kwargs: dict = None,
@@ -931,15 +921,9 @@ class Branch(Element, Communicatable, Relational):
         verbose_action: bool = False,
         field_models: list[FieldModel] = None,
         exclude_fields: list | dict | None = None,
-        request_params: ModelParams = None,
-        request_param_kwargs: dict = None,
-        response_params: ModelParams = None,
-        response_param_kwargs: dict = None,
         handle_validation: Literal[
             "raise", "return_value", "return_none"
         ] = "return_value",
-        operative_model: type[BaseModel] = None,
-        request_model: type[BaseModel] = None,
         include_token_usage_to_model: bool = False,
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
@@ -973,8 +957,7 @@ class Branch(Element, Communicatable, Relational):
                 The recipient ID for newly added messages.
             progression (Progression, optional):
                 Custom ordering of conversation messages.
-            imodel (iModel, deprecated):
-                Alias of `chat_model`.
+
             chat_model (iModel, optional):
                 The LLM used for the main chat operation. Defaults to `branch.chat_model`.
             invoke_actions (bool, optional):
@@ -995,8 +978,6 @@ class Branch(Element, Communicatable, Relational):
                 If provided, reuses an existing operative's config for parsing/validation.
             response_format (type[BaseModel], optional):
                 Expected Pydantic model for the final response (alias for `operative.request_type`).
-            return_operative (bool, optional):
-                If `True`, returns the entire `Operative` object after processing
                 rather than the structured or raw output.
             actions (bool, optional):
                 If `True`, signals that function-calling or "action" usage is expected.
@@ -1014,20 +995,8 @@ class Branch(Element, Communicatable, Relational):
                 Field-level definitions or overrides for the model schema.
             exclude_fields (list|dict|None, optional):
                 Which fields to exclude from final validation or model building.
-            request_params (ModelParams | None, optional):
-                Extra config for building the request model in the operative.
-            request_param_kwargs (dict|None, optional):
-                Additional kwargs passed to the `ModelParams` constructor for the request.
-            response_params (ModelParams | None, optional):
-                Config for building the response model after actions.
-            response_param_kwargs (dict|None, optional):
-                Additional kwargs passed to the `ModelParams` constructor for the response.
             handle_validation (Literal["raise","return_value","return_none"], optional):
                 How to handle parsing failures (default: "return_value").
-            operative_model (type[BaseModel], deprecated):
-                Alias for `response_format`.
-            request_model (type[BaseModel], optional):
-                Another alias for `response_format`.
             include_token_usage_to_model:
                 If `True`, includes token usage in the model messages.
             **kwargs:
@@ -1065,7 +1034,6 @@ class Branch(Element, Communicatable, Relational):
             tools=tools,
             operative=operative,
             response_format=response_format,
-            return_operative=return_operative,
             actions=actions,
             reason=reason,
             action_kwargs=action_kwargs,
@@ -1074,14 +1042,7 @@ class Branch(Element, Communicatable, Relational):
             verbose_action=verbose_action,
             field_models=field_models,
             exclude_fields=exclude_fields,
-            request_params=request_params,
-            request_param_kwargs=request_param_kwargs,
-            response_params=response_params,
-            response_param_kwargs=response_param_kwargs,
             handle_validation=handle_validation,
-            operative_model=operative_model,
-            request_model=request_model,
-            imodel=imodel,
             include_token_usage_to_model=include_token_usage_to_model,
             **kwargs,
         )
@@ -1096,19 +1057,15 @@ class Branch(Element, Communicatable, Relational):
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
         progression: ID.IDSeq = None,
-        request_model: type[BaseModel] | BaseModel | None = None,
         response_format: type[BaseModel] = None,
         request_fields: dict | list[str] = None,
-        imodel: iModel = None,  # alias of chat_model
         chat_model: iModel = None,
         parse_model: iModel = None,
         skip_validation: bool = False,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
         num_parse_retries: int = 3,
-        fuzzy_match_kwargs: dict = None,
         clear_messages: bool = False,
-        operative_model: type[BaseModel] = None,
         include_token_usage_to_model: bool = False,
         **kwargs,
     ):
@@ -1135,14 +1092,10 @@ class Branch(Element, Communicatable, Relational):
                 Recipient ID (defaults to `self.id`).
             progression (ID.IDSeq, optional):
                 Custom ordering of messages.
-            request_model (type[BaseModel] | BaseModel | None, optional):
-                Model for validating or structuring the LLM's response.
             response_format (type[BaseModel], optional):
                 Alias for `request_model`. If both are provided, raises ValueError.
             request_fields (dict|list[str], optional):
                 If you only need certain fields from the LLM's response.
-            imodel (iModel, optional):
-                Deprecated alias for `chat_model`.
             chat_model (iModel, optional):
                 An alternative to the default chat model.
             parse_model (iModel, optional):
@@ -1155,12 +1108,8 @@ class Branch(Element, Communicatable, Relational):
                 Image detail level (if used).
             num_parse_retries (int, optional):
                 Maximum parsing retries (capped at 5).
-            fuzzy_match_kwargs (dict, optional):
-                Additional settings for fuzzy field matching (if used).
             clear_messages (bool, optional):
                 Whether to clear stored messages before sending.
-            operative_model (type[BaseModel], optional):
-                Deprecated, alias for `response_format`.
             **kwargs:
                 Additional arguments for the underlying LLM call.
 
@@ -1182,18 +1131,15 @@ class Branch(Element, Communicatable, Relational):
             sender=sender,
             recipient=recipient,
             progression=progression,
-            request_model=request_model,
             response_format=response_format,
             request_fields=request_fields,
-            chat_model=kwargs.pop("chat_model", None) or chat_model or imodel,
+            chat_model=chat_model,
             parse_model=parse_model,
             skip_validation=skip_validation,
             images=images,
             image_detail=image_detail,
             num_parse_retries=num_parse_retries,
-            fuzzy_match_kwargs=fuzzy_match_kwargs,
             clear_messages=clear_messages,
-            operative_model=operative_model,
             include_token_usage_to_model=include_token_usage_to_model,
             **kwargs,
         )
