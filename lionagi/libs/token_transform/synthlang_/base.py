@@ -31,7 +31,7 @@ class SynthlangFramework(Resource):
         import json
 
         fp = here / FRAMEWORK_PATH / "framework_options.json"
-        with open(fp, "r", encoding="utf-8") as f:
+        with open(fp, encoding="utf-8") as f:
             return json.load(f)
 
     @classmethod
