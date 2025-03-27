@@ -4,26 +4,35 @@
 
 from typing import ClassVar, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field, field_validator
+
+from lionagi.models import HashableModel
 
 
-class PlannedAction(BaseModel):
+class PlannedAction(HashableModel):
     """
-    Short descriptor for an upcoming action/tool invocation the LLM wants to perform.
-    The model can hold multiple actions in a single round if needed.
+    Short descriptor for an upcoming action/tool invocation the LLM wants to
+    perform. The model can hold multiple actions in a single round if needed.
     """
 
-    action_type: str = Field(
-        ...,
-        description="The name or type of tool/action to invoke (e.g., 'search_exa', 'reader_tool').",
+    action_type: str | None = Field(
+        default=None,
+        description=(
+            "The name or type of tool/action to invoke. "
+            "(e.g., 'search_exa', 'reader_tool')"
+        ),
     )
-    description: str = Field(
-        ...,
-        description="A short explanation of why or what is intended to achieve with this action.",
+    description: str | None = Field(
+        default=None,
+        description=(
+            "A short description of the action to perform. "
+            "This should be a concise summary of what the action entails."
+            "Also include your rationale for this action, if applicable."
+        ),
     )
 
 
-class ReActAnalysis(BaseModel):
+class ReActAnalysis(HashableModel):
     """
     Captures the ReAct chain-of-thought output each round:
     1) The LLM's 'analysis' (reasoning),
@@ -101,6 +110,16 @@ class ReActAnalysis(BaseModel):
     )
 
 
-class Analysis(BaseModel):
+class Analysis(HashableModel):
 
-    answer: str
+    answer: str | None = None
+
+    @field_validator("answer", mode="before")
+    def _validate_answer(cls, value):
+        if not value:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        if not isinstance(value, str):
+            raise ValueError("Answer must be a non-empty string.")
+        return value.strip()

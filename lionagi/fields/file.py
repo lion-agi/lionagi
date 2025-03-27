@@ -57,6 +57,21 @@ class File(HashableModel):
             return str(value)
         return value
 
+    @property
+    def md_content(self) -> str:
+        return self.content if self.content else ""
+
+    def persist(self, directory: Path | str, overwrite: bool = True) -> Path:
+        from lionagi.utils import create_path
+
+        fp = create_path(
+            directory=directory,
+            filename=self.file_name,
+            file_exist_ok=overwrite,
+        )
+        fp.write_text(self.md_content)
+        return fp
+
 
 class CodeFile(File):
     """
