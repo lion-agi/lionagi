@@ -39,8 +39,10 @@ class ReActAnalysis(HashableModel):
     2) A list of planned actions to perform before finalizing,
     3) Indication whether more expansions/rounds are needed,
     4) Additional tuning knobs: how to handle validation, how to execute actions, etc.
-    Remember do not repeat yourself, and aim to use the most efficient way to achieve
-    the goal to user's satisfaction.
+
+    Note:
+    - Retain from repeating yourself
+    - use the most efficient way to achieve the goal to user's satisfaction
     """
 
     # Standard ReAct strings for controlling expansions:

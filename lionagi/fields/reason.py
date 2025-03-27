@@ -22,10 +22,9 @@ class Reason(BaseModel):
             "how well you've met user expectations. Use this guide:\n"
             "  • 1.0: Highly confident\n"
             "  • 0.8-1.0: Reasonably sure\n"
-            "  • 0.5-0.8: Re-check or refine\n"
-            "  • 0.0-0.5: Off track"
+            "  • 0.5-0.8: Re-check, refine or backtrack\n"
+            "  • 0.0-0.5: Off track, stop"
         ),
-        examples=[0.821, 0.257, 0.923, 0.439],
     )
 
     @field_validator("confidence_score", mode="before")

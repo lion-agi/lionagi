@@ -13,15 +13,17 @@ __all__ = (
 
 class File(HashableModel):
     """
-    Represents a generic file with an optional name, content, and brief description.
-    Useful for capturing and validating metadata about any kind of file within a project.
+    Represents a generic file with an optional name, content, and brief
+    description. Useful for capturing and validating metadata about any
+    kind of file within a project.
     """
 
     file_name: str | None = Field(
         default=None,
         description=(
-            "Provide the name of the file or its relative path in the project. "
-            "If an absolute path is given, it will be converted to a string. "
+            "Provide the name of the file or its relative path in the "
+            "project. If an absolute path is given, it will be converted"
+            " to a string. "
         ),
         examples=[
             "session.py",
@@ -33,8 +35,8 @@ class File(HashableModel):
         default=None,
         description=(
             "Paste or generate the full textual content of the file here. "
-            "For example, this might include plain text, Markdown, or any other text format.\n"
-            "Examples:\n"
+            "For example, this might include plain text, Markdown, or any "
+            "other text format.\nExamples:\n"
             "  - '# My Title\\nSome description...'\n"
             "  - 'function greet() { return \"Hello\"; }'"
         ),
@@ -42,8 +44,9 @@ class File(HashableModel):
     description: str | None = Field(
         default=None,
         description=(
-            "Briefly explain the file's purpose or function within the project. "
-            "This can be a short summary describing why this file exists or what it does.\n"
+            "Briefly explain the file's purpose or function within the "
+            "project. This can be a short summary describing why this "
+            "file is needed and/or what it does."
         ),
         examples=[
             "Manages user session logic for the LionAGI framework.",
@@ -57,19 +60,36 @@ class File(HashableModel):
             return str(value)
         return value
 
-    @property
-    def md_content(self) -> str:
-        return self.content if self.content else ""
+    def render_content(
+        self,
+        header: str | None = None,
+        footer: str | None = None,
+    ) -> str:
+        text = f"\n{header}\n\n" if header else ""
+        text += self.content if self.content else ""
+        if not footer:
+            return text
+        return text + f"\n\n{footer}\n"
 
-    def persist(self, directory: Path | str, overwrite: bool = True) -> Path:
+    def persist(
+        self,
+        directory: Path | str,
+        overwrite: bool = True,
+        timestamp: bool = False,
+        random_hash_digits: int = None,
+        header: str | None = None,
+        footer: str | None = None,
+    ) -> Path:
         from lionagi.utils import create_path
 
         fp = create_path(
             directory=directory,
             filename=self.file_name,
             file_exist_ok=overwrite,
+            timestamp=timestamp,
+            random_hash_digits=random_hash_digits,
         )
-        fp.write_text(self.md_content)
+        fp.write_text(self.render_content(header=header, footer=footer))
         return fp
 
 
@@ -99,7 +119,7 @@ class CodeFile(File):
         default=None,
         description=(
             "Provide or generate the **full source code**. This should be the primary text content "
-            "of the code file, including all function/class definitions.\n"
+            "of the code file, including all function/class definitions.\nNo md codeblock, only raw code"
         ),
         examples=[
             'def my_function():\\n    print("Hello, world!")',
@@ -128,10 +148,6 @@ class Documentation(File):
             "Provide the primary Markdown (or similar) content for the documentation. "
             "This can include headings, bullet points, tables, code snippets, etc.\n"
         ),
-        examples=[
-            "# Getting Started\\nThis guide walks you through ...",
-            "# API Reference\\n## Session Class\\n...",
-        ],
     )
     sources: list[Source] | None = Field(
         default=None,
@@ -140,6 +156,23 @@ class Documentation(File):
             "Each source should include a title and URL to the original content."
         ),
     )
+
+    def render_content(
+        self,
+        header: str | None = None,
+        footer: str | None = None,
+        include_source: bool = False,
+    ) -> str:
+        """
+        Renders the documentation content, optionally including citations for sources.
+        """
+        footer = footer or ""
+        if include_source and self.sources:
+            footer = "\n\n## Sources\n"
+            for source in self.sources:
+                footer += f"- [{source.title}]({source.url})\n"
+                footer += f"  - {source.note}\n" if source.note else ""
+        return super().render_content(header=header, footer=footer)
 
 
 # File: lionagi/fields/file.py
