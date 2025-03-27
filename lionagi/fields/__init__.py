@@ -1,7 +1,4 @@
-from .action import (
-    ActionRequestModel,
-    ActionResponseModel,
-)
+from .action import ActionRequestModel, ActionResponseModel
 from .base import (
     CodeSnippet,
     Outline,
@@ -11,10 +8,7 @@ from .base import (
     TextSnippet,
 )
 from .file import CodeFile, Documentation, File
-from .instruct import (
-    Instruct,
-    InstructResponse,
-)
+from .instruct import Instruct, InstructResponse
 from .reason import Reason
 
 __all__ = (

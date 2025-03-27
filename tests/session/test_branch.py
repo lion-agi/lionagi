@@ -2,9 +2,7 @@ import pandas as pd
 import pytest
 from pydantic import BaseModel
 
-from lionagi.fields.action import (
-    ActionResponseModel,
-)
+from lionagi.fields.action import ActionResponseModel
 from lionagi.fields.instruct import Instruct
 from lionagi.protocols.types import (
     ActionRequest,

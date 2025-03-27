@@ -1,9 +1,6 @@
 """Tests for the reason module."""
 
-from lionagi.fields.reason import (
-    Reason,
-    validate_confidence_score,
-)
+from lionagi.fields.reason import Reason, validate_confidence_score
 
 
 class TestValidateConfidenceScore:

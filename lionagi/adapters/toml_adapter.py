@@ -141,7 +141,7 @@ class TomlFileAdapter(Adapter):
         dict | list[dict]
             The loaded data from file.
         """
-        with open(obj, "r", encoding="utf-8") as f:
+        with open(obj, encoding="utf-8") as f:
             result = toml.load(f, **kwargs)
 
         # Handle array of tables in TOML for "many" case
