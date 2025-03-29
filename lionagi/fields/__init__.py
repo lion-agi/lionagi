@@ -7,7 +7,7 @@ from .base import (
     Source,
     TextSnippet,
 )
-from .file import CodeFile, Documentation, File
+from .file import Documentation, File, Module, ResearchSummary
 from .instruct import Instruct, InstructResponse
 from .reason import Reason
 
@@ -21,7 +21,8 @@ __all__ = (
     "OutlineItem",
     "Outline",
     "File",
-    "CodeFile",
+    "Module",
+    "ResearchSummary",
     "Documentation",
     "Instruct",
     "InstructResponse",
