@@ -6,6 +6,7 @@ from lionagi.protocols._concepts import Manager
 from lionagi.utils import is_same_dtype
 
 from .endpoints.chat_completion import ChatCompletionEndPoint
+from .endpoints.tuning import TuningEndPoint
 from .imodel import iModel
 
 
@@ -33,12 +34,18 @@ class iModelManager(Manager):
     def parse(self) -> iModel | None:
         return self.registry.get("parse", None)
 
+    @property
+    def tuning(self) -> iModel | None:
+        return self.registry.get("tuning", None)
+
     def register_imodel(self, name: str, model: iModel):
         if isinstance(model.endpoint, ChatCompletionEndPoint):
             if name != "parse":
                 self.registry["chat"] = model
             else:
                 self.registry["parse"] = model
+        elif isinstance(model.endpoint, TuningEndPoint):
+            self.registry["tuning"] = model
         elif isinstance(model, iModel):
             self.registry[name] = model
         else:
