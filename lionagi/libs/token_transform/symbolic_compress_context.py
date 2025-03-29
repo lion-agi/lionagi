@@ -111,7 +111,7 @@ async def symbolic_compress_context(
 
     elif text:
         chunks = chunk_content(
-            text=text,
+            text,
             chunk_by=chunk_by,
             chunk_size=chunk_size,
             overlap=overlap,
