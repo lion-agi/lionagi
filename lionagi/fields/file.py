@@ -1,13 +1,17 @@
+from abc import abstractmethod
 from pathlib import Path
 
 from pydantic import Field, field_validator
 
 from .base import HashableModel, Source
+from .code import Class, Function, Import
+from .research import PotentialRisk, ResearchFinding
 
 __all__ = (
     "File",
-    "CodeFile",
     "Documentation",
+    "ResearchSummary",
+    "Module",
 )
 
 
@@ -31,16 +35,6 @@ class File(HashableModel):
             "/absolute/path/to/my_file.txt",
         ],
     )
-    content: str | None = Field(
-        default=None,
-        description=(
-            "Paste or generate the full textual content of the file here. "
-            "For example, this might include plain text, Markdown, or any "
-            "other text format.\nExamples:\n"
-            "  - '# My Title\\nSome description...'\n"
-            "  - 'function greet() { return \"Hello\"; }'"
-        ),
-    )
     description: str | None = Field(
         default=None,
         description=(
@@ -60,16 +54,13 @@ class File(HashableModel):
             return str(value)
         return value
 
+    @abstractmethod
     def render_content(
         self,
         header: str | None = None,
         footer: str | None = None,
     ) -> str:
-        text = f"\n{header}\n\n" if header else ""
-        text += self.content if self.content else ""
-        if not footer:
-            return text
-        return text + f"\n\n{footer}\n"
+        pass
 
     def persist(
         self,
@@ -91,41 +82,6 @@ class File(HashableModel):
         )
         fp.write_text(self.render_content(header=header, footer=footer))
         return fp
-
-
-class CodeFile(File):
-    """
-    Represents a code file with an identifiable programming language. Inherits
-    from the generic File model but specializes for code-related content.
-    """
-
-    language: str | None = Field(
-        default=None,
-        description=(
-            "Indicate the programming language of this code file. "
-            "LLMs or humans can use this info to apply specific formatting or syntax analysis."
-        ),
-        examples=[
-            "python",
-            "json",
-            "typescript",
-            "html",
-            "css",
-            "java",
-            "cpp",
-        ],
-    )
-    content: str | None = Field(
-        default=None,
-        description=(
-            "Provide or generate the **full source code**. This should be the primary text content "
-            "of the code file, including all function/class definitions.\nNo md codeblock, only raw code"
-        ),
-        examples=[
-            'def my_function():\\n    print("Hello, world!")',
-            'export function greet(): string { return "Hello"; }',
-        ],
-    )
 
 
 class Documentation(File):
@@ -161,7 +117,7 @@ class Documentation(File):
         self,
         header: str | None = None,
         footer: str | None = None,
-        include_source: bool = False,
+        include_source: bool = True,
     ) -> str:
         """
         Renders the documentation content, optionally including citations for sources.
@@ -172,7 +128,104 @@ class Documentation(File):
             for source in self.sources:
                 footer += f"- [{source.title}]({source.url})\n"
                 footer += f"  - {source.note}\n" if source.note else ""
-        return super().render_content(header=header, footer=footer)
+        return (header or "") + self.content + footer
+
+
+class ResearchSummary(Documentation):
+    """
+    Captures the final outcome of the deep research process.
+    """
+
+    scope: str | None = Field(
+        default=None,
+        description="Brief statement of what was investigated. E.g., 'Surveyed python-based ORMs.'",
+    )
+    main_takeaways: str = Field(
+        ...,
+        description="High-level summary of the most critical insights for the project.",
+    )
+    findings: list[ResearchFinding] = Field(
+        default_factory=list,
+        description="List of key facts or knowledge gained.",
+    )
+    risks: list[PotentialRisk] = Field(
+        default_factory=list,
+        description="Identified obstacles or concerns for the project.",
+    )
+
+    def render_content(
+        self,
+        header: str | None = None,
+        footer: str | None = None,
+    ) -> str:
+        """
+        Renders the documentation content, optionally including citations for sources.
+        """
+        content = self.model_dump(exclude_unset=True, exclude_none=True)
+
+        from lionagi.libs.schema.as_readable import as_readable
+
+        text = as_readable(content, md=True, format_curly=True)
+
+        footer = footer or ""
+        if self.sources:
+            footer = "\n\n## Sources\n"
+            for source in self.sources:
+                footer += f"- [{source.title}]({source.url})\n"
+                footer += f"  - {source.note}\n" if source.note else ""
+        return (header or "") + text + footer
+
+
+class Module(File):
+    """
+    Represents a single source file: docstring, imports, top-level functions, classes, etc.
+    """
+
+    name: str = Field(
+        ...,
+        description="Logical name for this file/module (e.g., 'utils', 'main', 'data_models').",
+    )
+    path: str | None = Field(
+        default=None,
+        description="Filesystem path if known (e.g., 'src/utils.py').",
+    )
+    docstring: str | None = Field(
+        default=None, description="File-level docstring or comments if any."
+    )
+    imports: list[Import] = Field(
+        default_factory=list,
+        description="All import statements / using directives / includes in this file.",
+    )
+    classes: list[Class] = Field(
+        default_factory=list,
+        description="All class or interface definitions in this file.",
+    )
+    functions: list[Function] = Field(
+        default_factory=list,
+        description="All top-level (non-class) functions in this file.",
+    )
+    variables: list = Field(
+        default_factory=list,
+        description="All top-level variables/constants in this file.",
+    )
+    language: str = Field(
+        default_factory=str,
+        description=(
+            "Indicate the programming language of this code file. e.g., 'python', 'typescript'. "
+            "LLMs or humans can use this info to apply specific formatting or syntax analysis."
+        ),
+    )
+
+    def render_content(
+        self,
+        header: str | None = None,
+        footer: str | None = None,
+    ) -> str:
+        """
+        Renders the documentation content, optionally including citations for sources.
+        """
+        text = self.model_dump_json(exclude_none=True, exclude_unset=True)
+        return header or "" + text + footer or ""
 
 
 # File: lionagi/fields/file.py

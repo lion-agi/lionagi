@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
-from lionagi.models import FieldModel
+from lionagi.models import FieldModel, HashableModel
 from lionagi.utils import to_num
 
 __all__ = ("Reason",)
 
 
-class Reason(BaseModel):
+class Reason(HashableModel):
 
     title: str | None = None
     content: str | None = None
