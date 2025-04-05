@@ -203,7 +203,7 @@ def chunk(
             )
 
         if reader_tool is None:
-            reader_tool = lambda x: x.read_text(encoding="utf-8")
+            reader_tool = lambda x: Path(x).read_text(encoding="utf-8")
 
         if reader_tool == "docling":
             from lionagi.libs.package.imports import check_import

@@ -16,8 +16,8 @@ class ResearchFinding(HashableModel):
     A single piece of information or insight from the research phase.
     """
 
-    summary: str = Field(
-        ...,
+    summary: str | None = Field(
+        None,
         description="Concise text describing the discovered fact, concept, or best practice.",
     )
     snippets: list[TextSnippet | CodeSnippet] = Field(
@@ -35,8 +35,8 @@ class PotentialRisk(HashableModel):
     Identifies a risk or challenge discovered during research.
     """
 
-    description: str = Field(
-        ...,
+    description: str | None = Field(
+        None,
         description="Short text describing the risk. E.g., 'Scalability concerns with chosen DB'.",
     )
     impact: str | None = Field(
